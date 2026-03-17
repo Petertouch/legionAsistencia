@@ -220,7 +220,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
     }
 
     // Detect referral intent
-    if (clientContext && referralStep === "idle" && (
+    const isReferralIntent = (
       msg.toLowerCase().includes("recomendar") ||
       msg.toLowerCase().includes("referir") ||
       msg.toLowerCase().includes("referido") ||
@@ -229,7 +229,20 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
       msg.toLowerCase().includes("invitar") ||
       msg.toLowerCase().includes("ganar") ||
       msg.toLowerCase().includes("mes gratis")
-    )) {
+    );
+
+    if (isReferralIntent && !clientContext) {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "user", content: msg, timestamp: new Date() },
+        { role: "bot", content: "🎁 ¡Genial que quieras recomendar a alguien! Pero primero necesito verificar tu identidad.\n\n🔐 **Ingresa tu cédula y contraseña** abajo para continuar:", timestamp: new Date() },
+      ]);
+      setInput("");
+      setShowAuthForm(true);
+      return;
+    }
+
+    if (isReferralIntent && clientContext && referralStep === "idle") {
       setDisplayMessages((prev) => [
         ...prev,
         { role: "user", content: msg, timestamp: new Date() },
