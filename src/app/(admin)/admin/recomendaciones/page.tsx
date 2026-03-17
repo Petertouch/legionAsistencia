@@ -44,7 +44,7 @@ export default function RecomendacionesPage() {
   const cerrados = referrals.filter((r) => r.status === "cerrado").length;
 
   const handleCopyLink = (code: string) => {
-    const url = `${window.location.origin}?ref=${code}`;
+    const url = `${window.location.origin}/r/${code}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado");
   };
@@ -201,7 +201,7 @@ export default function RecomendacionesPage() {
                     <Copy className="w-3 h-3" /> Copiar link
                   </button>
                   <a
-                    href={`https://wa.me/57${r.referred_phone}?text=Hola%20${encodeURIComponent(r.referred_name)},%20te%20recomendaron%20Legion%20Juridica.%20Mira%20nuestros%20servicios%20en%20${encodeURIComponent(window?.location?.origin || '')}%3Fref%3D${r.code}`}
+                    href={`https://wa.me/57${r.referred_phone}?text=Hola%20${encodeURIComponent(r.referred_name)},%20te%20recomendaron%20Legion%20Juridica.%20Mira%20nuestros%20servicios%20en%20${encodeURIComponent(window?.location?.origin || '')}/r/${r.code}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-xs text-beige/50 hover:text-green-400 bg-white/5 px-2.5 py-1.5 rounded-lg hover:bg-green-500/10 transition-colors"

@@ -368,7 +368,7 @@ export default function ChatBot() {
           referred_email: finalData.email,
         });
 
-        const link = `${window.location.origin}?ref=${referral.code}`;
+        const link = `${window.location.origin}/r/${referral.code}`;
 
         setDisplayMessages((prev) => [
           ...prev,
