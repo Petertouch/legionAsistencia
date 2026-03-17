@@ -112,9 +112,14 @@ export default function ChatBot() {
       const res = await fetch("/api/chat-auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim() }),
+        body: JSON.stringify({ cedula: cedula.trim(), clave }),
       });
 
+      if (res.status === 401) {
+        setAuthError("Contrasena incorrecta.");
+        setAuthLoading(false);
+        return;
+      }
       if (!res.ok) {
         setAuthError("Cedula no encontrada. Verifica el numero.");
         setAuthLoading(false);

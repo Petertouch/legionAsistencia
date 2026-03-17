@@ -67,7 +67,7 @@ export interface Seguimiento {
 // ── Suscriptores ────────────────────────────────────────────────
 export const MOCK_SUSCRIPTORES: Suscriptor[] = [
   {
-    id: "s1", nombre: "Sgto. Carlos Mendoza", telefono: "3176689001", email: "cmendoza@mail.com", cedula: "1098765432",
+    id: "s1", nombre: "Sgto. Carlos Mendoza", telefono: "3176689001", email: "cmendoza@mail.com", cedula: "123",
     plan: "Plus", estado_pago: "Al dia", rama: "Ejercito", rango: "Sargento Segundo",
     fecha_inicio: "2025-08-15", notas: "Cliente desde 2025", created_at: "2025-08-15T10:00:00Z", updated_at: "2026-03-01T10:00:00Z",
   },
