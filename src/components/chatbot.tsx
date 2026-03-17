@@ -99,6 +99,7 @@ export default function ChatBot() {
   const [referralStep, setReferralStep] = useState<"idle" | "name" | "phone" | "email">("idle");
   const [referralData, setReferralData] = useState({ name: "", phone: "", email: "" });
   const addReferral = useReferralStore((s) => s.addReferral);
+  const [pendingIntent, setPendingIntent] = useState<string | null>(null);
   const allKnowledgeItems = useKnowledgeStore((s) => s.items);
   const knowledgeItems = mounted ? allKnowledgeItems.filter((i) => i.activo) : [];
 
@@ -160,21 +161,36 @@ export default function ChatBot() {
 
       const casosCount = data.casos.length;
       const casosActivos = data.casos.filter((c) => !c.cerrado).length;
+      const intent = pendingIntent;
+      setPendingIntent(null);
 
-      const welcomeMsg = `✅ **¡Bienvenido, ${data.nombre}!**
-
-Estás identificado como cliente del **Plan ${data.plan}**.
-
-📋 Tienes **${casosCount} caso${casosCount !== 1 ? "s" : ""}** registrado${casosCount !== 1 ? "s" : ""} (${casosActivos} activo${casosActivos !== 1 ? "s" : ""}).
-
-Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier duda sobre tu plan.
-
-**¿Qué te gustaría saber?**`;
-
-      setDisplayMessages((prev) => [
-        ...prev,
-        { role: "bot", content: welcomeMsg, timestamp: new Date() },
-      ]);
+      if (intent === "referral") {
+        // Continue directly with referral flow
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "bot", content: `✅ **¡Hola, ${data.nombre}!** Identidad verificada.\n\n🎁 **Programa de recomendaciones:** por cada amigo que se afilie, te regalamos **$50.000** (un mes gratis).\n\n¿Cuál es el **nombre completo** de la persona que quieres recomendar?`, timestamp: new Date() },
+        ]);
+        setReferralStep("name");
+      } else if (intent) {
+        // Had a question before login — greet briefly and answer via AI
+        const greeting = `✅ **¡Hola, ${data.nombre}!** (Plan ${data.plan} • ${casosActivos} caso${casosActivos !== 1 ? "s" : ""} activo${casosActivos !== 1 ? "s" : ""})\n\nDéjame responder lo que me preguntabas...`;
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "bot", content: greeting, timestamp: new Date() },
+        ]);
+        // Re-send the original message to the AI with client context
+        setChatHistory([]);
+        setTimeout(() => {
+          handleSendWithContext(intent, data);
+        }, 300);
+      } else {
+        // Normal login — standard welcome
+        const welcomeMsg = `✅ **¡Bienvenido, ${data.nombre}!**\n\nEstás identificado como cliente del **Plan ${data.plan}**.\n\n📋 Tienes **${casosCount} caso${casosCount !== 1 ? "s" : ""}** registrado${casosCount !== 1 ? "s" : ""} (${casosActivos} activo${casosActivos !== 1 ? "s" : ""}).\n\nPuedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier duda sobre tu plan.\n\n**¿Qué te gustaría saber?**`;
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "bot", content: welcomeMsg, timestamp: new Date() },
+        ]);
+      }
       setChatHistory([]);
     } catch {
       setAuthError("Error de conexion. Intenta de nuevo.");
@@ -190,6 +206,36 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
       ...prev,
       { role: "bot", content: "👋 Sesión cerrada. Puedes seguir consultando información general o identificarte de nuevo.", timestamp: new Date() },
     ]);
+  };
+
+  const handleSendWithContext = async (text: string, ctx: ClientContext) => {
+    setIsTyping(true);
+    const msgs: Message[] = [{ role: "user", content: text }];
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: msgs,
+          clientContext: ctx,
+          knowledge: knowledgeItems.map((k) => ({ pregunta: k.pregunta, respuesta: k.respuesta, categoria: k.categoria })),
+        }),
+      });
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      setChatHistory([...msgs, { role: "assistant", content: data.content }]);
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "bot", content: data.content, timestamp: new Date() },
+      ]);
+    } catch {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "bot", content: "Lo siento, hubo un error. Puedes contactarnos por [WhatsApp](https://wa.me/573176689580).", timestamp: new Date() },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleSend = useCallback(async (text?: string) => {
@@ -209,6 +255,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
       msg.toLowerCase().includes("login") ||
       msg.toLowerCase().includes("acceder")
     )) {
+      setPendingIntent(msg);
       setDisplayMessages((prev) => [
         ...prev,
         { role: "user", content: msg, timestamp: new Date() },
@@ -232,6 +279,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
     );
 
     if (isReferralIntent && !clientContext) {
+      setPendingIntent("referral");
       setDisplayMessages((prev) => [
         ...prev,
         { role: "user", content: msg, timestamp: new Date() },
