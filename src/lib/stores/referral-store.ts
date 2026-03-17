@@ -20,7 +20,7 @@ export interface Referral {
   notes: string;
 }
 
-let idCounter = 0;
+let idCounter = 100;
 function nextId() { return `ref${++idCounter}`; }
 function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
