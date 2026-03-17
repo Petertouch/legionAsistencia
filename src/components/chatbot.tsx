@@ -100,6 +100,8 @@ export default function ChatBot() {
   const [referralData, setReferralData] = useState({ name: "", phone: "", email: "" });
   const addReferral = useReferralStore((s) => s.addReferral);
   const [pendingIntent, setPendingIntent] = useState<string | null>(null);
+  const [showDisambiguation, setShowDisambiguation] = useState(false);
+  const [disambiguationOptions, setDisambiguationOptions] = useState<Array<{label: string; action: string}>>([]);
   const allKnowledgeItems = useKnowledgeStore((s) => s.items);
   const knowledgeItems = mounted ? allKnowledgeItems.filter((i) => i.activo) : [];
 
@@ -267,16 +269,43 @@ export default function ChatBot() {
     }
 
     // Detect referral intent
+    const low = msg.toLowerCase();
     const isReferralIntent = (
-      msg.toLowerCase().includes("recomendar") ||
-      msg.toLowerCase().includes("referir") ||
-      msg.toLowerCase().includes("referido") ||
-      msg.toLowerCase().includes("recomendacion") ||
-      msg.toLowerCase().includes("recomendación") ||
-      msg.toLowerCase().includes("invitar") ||
-      msg.toLowerCase().includes("ganar") ||
-      msg.toLowerCase().includes("mes gratis")
+      low.includes("recomendar") ||
+      low.includes("recomendacion") ||
+      low.includes("recomendación") ||
+      low.includes("referir") ||
+      low.includes("referido") ||
+      low.includes("referenciar") ||
+      low.includes("referencia") ||
+      low.includes("invitar") ||
+      low.includes("mes gratis") ||
+      (low.includes("link") && (low.includes("amigo") || low.includes("lanza") || low.includes("parcero") || low.includes("compa"))) ||
+      ((low.includes("lanza") || low.includes("parcero") || low.includes("amigo") || low.includes("compa") || low.includes("hermano")) &&
+       (low.includes("recomendar") || low.includes("referir") || low.includes("referenciar") || low.includes("invitar") || low.includes("meter") || low.includes("traer")))
     );
+
+    // Ambiguous intent detection — could be referral or something else
+    const couldBeReferral = !isReferralIntent && (
+      low.includes("lanza") || low.includes("parcero") ||
+      ((low.includes("amigo") || low.includes("compa")) && (low.includes("quiero") || low.includes("puedo")))
+    );
+
+    if (couldBeReferral) {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "user", content: msg, timestamp: new Date() },
+        { role: "bot", content: "¿Qué necesitas exactamente?", timestamp: new Date() },
+      ]);
+      setInput("");
+      // Show disambiguation buttons — handled in render
+      setShowDisambiguation(true);
+      setDisambiguationOptions([
+        { label: "🎁 Referir a un amigo", action: "Quiero referir a un amigo para que se afilie" },
+        { label: "💬 Otra consulta", action: msg },
+      ]);
+      return;
+    }
 
     if (isReferralIntent && !clientContext) {
       setPendingIntent("referral");
@@ -544,8 +573,27 @@ export default function ChatBot() {
             </div>
           )}
 
+          {/* Disambiguation buttons */}
+          {showDisambiguation && (
+            <div className="flex flex-col gap-2 pt-1 px-1">
+              {disambiguationOptions.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => {
+                    setShowDisambiguation(false);
+                    setDisambiguationOptions([]);
+                    handleSend(opt.action);
+                  }}
+                  className="text-sm bg-oro/10 text-oro border border-oro/30 px-4 py-2.5 rounded-xl hover:bg-oro/20 transition-colors text-left"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Quick replies */}
-          {showQuickReplies && (
+          {showQuickReplies && !showDisambiguation && (
             <div className="flex flex-wrap gap-2 pt-1">
               {quickReplies.map((qr) => (
                 <button
