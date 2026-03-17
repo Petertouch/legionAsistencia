@@ -16,6 +16,7 @@ import {
   LogOut,
   X,
   BookOpen,
+  Gift,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["admin"] },
   { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
+  { href: "/admin/recomendaciones", label: "Recomendaciones", icon: Gift, roles: ["admin"] },
 ];
 
 export { NAV_ITEMS };

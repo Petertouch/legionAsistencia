@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { KeyRound, LogOut } from "lucide-react";
 import { useKnowledgeStore } from "@/lib/stores/knowledge-store";
+import { useReferralStore } from "@/lib/stores/referral-store";
 
 interface Message {
   role: "assistant" | "user";
@@ -46,6 +47,7 @@ const CLIENT_QUICK_REPLIES = [
   { label: "Próximos pasos", message: "¿Cuáles son los próximos pasos de mis casos?" },
   { label: "Hablar con abogado", message: "Necesito hablar con mi abogado" },
   { label: "Mi plan", message: "¿Qué plan tengo y qué incluye?" },
+  { label: "🎁 Recomendar amigo", message: "Quiero recomendar a un amigo" },
 ];
 
 const INITIAL_MESSAGE = `¡Hola! 👋 Soy **Gral. Pantoja**, tu asistente virtual de **Legión Jurídica**.
@@ -92,6 +94,11 @@ export default function ChatBot() {
   const [authError, setAuthError] = useState("");
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  // Referral flow state
+  const [referralStep, setReferralStep] = useState<"idle" | "name" | "phone" | "email">("idle");
+  const [referralData, setReferralData] = useState({ name: "", phone: "", email: "" });
+  const addReferral = useReferralStore((s) => s.addReferral);
   const allKnowledgeItems = useKnowledgeStore((s) => s.items);
   const knowledgeItems = mounted ? allKnowledgeItems.filter((i) => i.activo) : [];
 
@@ -210,6 +217,79 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
       setInput("");
       setShowAuthForm(true);
       return;
+    }
+
+    // Detect referral intent
+    if (clientContext && referralStep === "idle" && (
+      msg.toLowerCase().includes("recomendar") ||
+      msg.toLowerCase().includes("referir") ||
+      msg.toLowerCase().includes("referido") ||
+      msg.toLowerCase().includes("recomendacion") ||
+      msg.toLowerCase().includes("recomendación") ||
+      msg.toLowerCase().includes("invitar") ||
+      msg.toLowerCase().includes("ganar") ||
+      msg.toLowerCase().includes("mes gratis")
+    )) {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "user", content: msg, timestamp: new Date() },
+        { role: "bot", content: "🎁 **¡Programa de recomendaciones!**\n\nPor cada amigo que se afilie, te regalamos **$50.000** (un mes gratis).\n\n¿Cuál es el **nombre completo** de la persona que quieres recomendar?", timestamp: new Date() },
+      ]);
+      setInput("");
+      setReferralStep("name");
+      return;
+    }
+
+    // Handle referral flow steps
+    if (referralStep !== "idle") {
+      if (referralStep === "name") {
+        setReferralData((d) => ({ ...d, name: msg }));
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "user", content: msg, timestamp: new Date() },
+          { role: "bot", content: `👍 **${msg}**. Ahora dime su **número de teléfono** (celular).`, timestamp: new Date() },
+        ]);
+        setInput("");
+        setReferralStep("phone");
+        return;
+      }
+      if (referralStep === "phone") {
+        const phone = msg.replace(/\D/g, "");
+        setReferralData((d) => ({ ...d, phone }));
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "user", content: msg, timestamp: new Date() },
+          { role: "bot", content: `📱 **${phone}**. Por último, su **correo electrónico** (o escribe "no tiene").`, timestamp: new Date() },
+        ]);
+        setInput("");
+        setReferralStep("email");
+        return;
+      }
+      if (referralStep === "email") {
+        const email = msg.toLowerCase().includes("no tiene") ? "Sin email" : msg.trim();
+        const finalData = { ...referralData, email };
+
+        const referral = addReferral({
+          referrer_name: clientContext!.nombre,
+          referrer_cedula: clientContext!.casos[0]?.id || "",
+          referrer_suscriptor_id: "",
+          referred_name: finalData.name,
+          referred_phone: finalData.phone,
+          referred_email: finalData.email,
+        });
+
+        const link = `${window.location.origin}?ref=${referral.code}`;
+
+        setDisplayMessages((prev) => [
+          ...prev,
+          { role: "user", content: msg, timestamp: new Date() },
+          { role: "bot", content: `✅ **¡Recomendación registrada!**\n\n👤 **${finalData.name}**\n📱 ${finalData.phone}\n📧 ${finalData.email}\n\n🔗 Este es el link para tu amigo:\n[${link}](${link})\n\nCuando tu amigo se afilie, te acreditamos **$50.000** como recompensa. ¡Compártele el link!\n\n**¿Quieres recomendar a alguien más?**`, timestamp: new Date() },
+        ]);
+        setInput("");
+        setReferralStep("idle");
+        setReferralData({ name: "", phone: "", email: "" });
+        return;
+      }
     }
 
     setDisplayMessages((prev) => [
