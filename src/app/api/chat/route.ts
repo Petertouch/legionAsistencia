@@ -69,7 +69,7 @@ REGLAS ESPECIALES PARA CLIENTES AUTENTICADOS:
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, clientContext } = await request.json();
+    const { messages, clientContext, knowledge } = await request.json();
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
@@ -77,6 +77,23 @@ export async function POST(request: NextRequest) {
     }
 
     let systemPrompt = BASE_PROMPT;
+
+    // Inject knowledge base
+    if (knowledge && knowledge.length > 0) {
+      const grouped: Record<string, Array<{ pregunta: string; respuesta: string }>> = {};
+      for (const k of knowledge) {
+        if (!grouped[k.categoria]) grouped[k.categoria] = [];
+        grouped[k.categoria].push(k);
+      }
+      systemPrompt += "\n\nBASE DE CONOCIMIENTO (usa esta información para responder preguntas frecuentes):\n";
+      for (const [cat, items] of Object.entries(grouped)) {
+        systemPrompt += `\n### ${cat}\n`;
+        for (const item of items) {
+          systemPrompt += `P: ${item.pregunta}\nR: ${item.respuesta}\n\n`;
+        }
+      }
+      systemPrompt += "IMPORTANTE: Cuando el usuario haga una pregunta que coincida o se relacione con la base de conocimiento, prioriza esa información en tu respuesta. Puedes parafrasear pero mantén la esencia de la respuesta.\n";
+    }
 
     if (clientContext) {
       systemPrompt += `\n\nCLIENTE AUTENTICADO:

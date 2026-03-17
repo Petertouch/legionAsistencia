@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { KeyRound, LogOut } from "lucide-react";
+import { useKnowledgeStore } from "@/lib/stores/knowledge-store";
 
 interface Message {
   role: "assistant" | "user";
@@ -90,6 +91,7 @@ export default function ChatBot() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
+  const knowledgeItems = useKnowledgeStore((s) => s.items.filter((i) => i.activo));
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -220,6 +222,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
         body: JSON.stringify({
           messages: newHistory,
           clientContext: clientContext || undefined,
+          knowledge: knowledgeItems.map((k) => ({ pregunta: k.pregunta, respuesta: k.respuesta, categoria: k.categoria })),
         }),
       });
 
