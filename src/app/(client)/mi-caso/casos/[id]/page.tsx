@@ -21,7 +21,9 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const [mounted, setMounted] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatFullscreen, setChatFullscreen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -31,16 +33,48 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, chatFullscreen]);
 
-  // Lock body scroll when chat is fullscreen on mobile
+  // Lock body scroll + track visual viewport for keyboard resize
   useEffect(() => {
-    if (chatFullscreen) {
-      document.body.style.overflow = "hidden";
-    } else {
+    if (!chatFullscreen) {
       document.body.style.overflow = "";
+      return;
     }
-    return () => { document.body.style.overflow = ""; };
+
+    document.body.style.overflow = "hidden";
+    // Prevent iOS bounce/scroll
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.top = `-${window.scrollY}px`;
+
+    const vv = window.visualViewport;
+    if (vv) {
+      setViewportHeight(vv.height);
+      const onResize = () => {
+        setViewportHeight(vv.height);
+      };
+      vv.addEventListener("resize", onResize);
+      return () => {
+        vv.removeEventListener("resize", onResize);
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.top = "";
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      };
+    } else {
+      setViewportHeight(window.innerHeight);
+      return () => {
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.top = "";
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      };
+    }
   }, [chatFullscreen]);
 
   if (!mounted || !session) return null;
@@ -77,52 +111,9 @@ export default function ClientCaseDetailPage({ params }: Props) {
       content: chatInput.trim(),
     });
     setChatInput("");
+    // Keep focus on input after sending
+    inputRef.current?.focus();
   };
-
-  const chatContent = (
-    <>
-      <div className={`${chatFullscreen ? "flex-1 overflow-y-auto" : "max-h-[300px] overflow-y-auto"} px-4 py-3 space-y-3 bg-gray-50`}>
-        {caseMessages.length === 0 && (
-          <p className="text-gray-400 text-xs text-center py-6">No hay mensajes aún. Escribe para iniciar la conversación.</p>
-        )}
-        {caseMessages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
-              msg.sender === "cliente"
-                ? "bg-jungle-dark text-white rounded-br-md"
-                : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
-            }`}>
-              {msg.sender === "abogado" && (
-                <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>
-              )}
-              <p className="text-xs leading-relaxed">{msg.content}</p>
-              <p className={`text-[9px] mt-1 ${msg.sender === "cliente" ? "text-white/40" : "text-gray-400"}`}>
-                {new Date(msg.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })} {new Date(msg.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
-              </p>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex gap-2 bg-white flex-shrink-0">
-        <input
-          type="text"
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          placeholder="Escribe un mensaje..."
-          className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={!chatInput.trim()}
-          className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0"
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </form>
-    </>
-  );
 
   return (
     <div className="space-y-4">
@@ -209,7 +200,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
       </div>
 
       {/* Chat with lawyer - inline (default) */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden sm:block">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div
           className="bg-jungle-dark px-4 py-3 flex items-center gap-2 cursor-pointer sm:cursor-default"
           onClick={() => setChatFullscreen(true)}
@@ -221,7 +212,46 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
         {/* Desktop: inline chat */}
         <div className="hidden sm:flex sm:flex-col">
-          {chatContent}
+          <div className="max-h-[300px] overflow-y-auto px-4 py-3 space-y-3 bg-gray-50">
+            {caseMessages.length === 0 && (
+              <p className="text-gray-400 text-xs text-center py-6">No hay mensajes aún. Escribe para iniciar la conversación.</p>
+            )}
+            {caseMessages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
+                  msg.sender === "cliente"
+                    ? "bg-jungle-dark text-white rounded-br-md"
+                    : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
+                }`}>
+                  {msg.sender === "abogado" && (
+                    <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>
+                  )}
+                  <p className="text-xs leading-relaxed">{msg.content}</p>
+                  <p className={`text-[9px] mt-1 ${msg.sender === "cliente" ? "text-white/40" : "text-gray-400"}`}>
+                    {new Date(msg.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })} {new Date(msg.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div ref={!chatFullscreen ? messagesEndRef : undefined} />
+          </div>
+
+          <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex gap-2 bg-white">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
         </div>
 
         {/* Mobile: tap to open fullscreen */}
@@ -232,21 +262,65 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
       {/* Chat fullscreen overlay - mobile only */}
       {chatFullscreen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white sm:hidden">
-          {/* Header */}
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-white sm:hidden"
+          style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : "100dvh" }}
+        >
+          {/* Header - fixed height */}
           <div className="bg-jungle-dark px-4 py-3 flex items-center gap-2 flex-shrink-0">
             <MessageCircle className="w-4 h-4 text-oro" />
             <h3 className="text-white font-bold text-sm flex-1">Chat con {caso.abogado}</h3>
             <button
               onClick={() => setChatFullscreen(false)}
-              className="text-white/70 hover:text-white p-1"
+              className="text-white/70 hover:text-white p-1 -mr-1"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Chat content fills remaining space */}
-          {chatContent}
+          {/* Messages - fills all available space */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50 min-h-0">
+            {caseMessages.length === 0 && (
+              <p className="text-gray-400 text-xs text-center py-6">No hay mensajes aún. Escribe para iniciar la conversación.</p>
+            )}
+            {caseMessages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
+                  msg.sender === "cliente"
+                    ? "bg-jungle-dark text-white rounded-br-md"
+                    : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
+                }`}>
+                  {msg.sender === "abogado" && (
+                    <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>
+                  )}
+                  <p className="text-xs leading-relaxed">{msg.content}</p>
+                  <p className={`text-[9px] mt-1 ${msg.sender === "cliente" ? "text-white/40" : "text-gray-400"}`}>
+                    {new Date(msg.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })} {new Date(msg.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div ref={chatFullscreen ? messagesEndRef : undefined} />
+          </div>
+
+          {/* Input - fixed at bottom, never moves */}
+          <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex gap-2 bg-white flex-shrink-0">
+            <input
+              ref={inputRef}
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       )}
     </div>
