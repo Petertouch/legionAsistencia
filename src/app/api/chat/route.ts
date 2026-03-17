@@ -54,6 +54,7 @@ REGLAS ESPECIALES PARA CLIENTES AUTENTICADOS:
 - El cliente ya está identificado. Trátalo por su nombre.
 - Tienes acceso a la información de sus casos. Puedes responder preguntas sobre el estado, etapa, progreso y abogado asignado.
 - Si pregunta por un caso específico, dale los detalles que tienes.
+- IMPORTANTE: Cuando listes o menciones casos del cliente, SIEMPRE incluye un link clickeable para ver el detalle del caso. Usa el formato markdown: [Ver caso →](/mi-caso/ID_DEL_CASO). Cada caso tiene un link en sus datos, úsalo.
 - Si pregunta algo que va más allá de lo que tienes (fechas de audiencia, documentos, etc.), recomiéndale hablar directamente con su abogado asignado.
 - NO compartas información de otros clientes.
 - Si pregunta por pagos o estado de cuenta, muéstrale lo que tienes y sugiere contactar administración si necesita más detalle.`;
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
 
 CASOS DEL CLIENTE:
 ${clientContext.casos.map((c: { titulo: string; area: string; etapa: string; progreso: string; abogado: string; prioridad: string; descripcion: string; fecha_limite: string | null; cerrado: boolean }) =>
-  `• "${c.titulo}" (${c.area}) — Etapa: ${c.etapa} — Progreso: ${c.progreso} — Abogado: ${c.abogado} — Prioridad: ${c.prioridad}${c.fecha_limite ? ` — Fecha límite: ${c.fecha_limite}` : ""}${c.cerrado ? " — CERRADO" : ""}`
+  `• "${c.titulo}" (${c.area}) — Etapa: ${c.etapa} — Progreso: ${c.progreso} — Abogado: ${c.abogado} — Prioridad: ${c.prioridad}${c.fecha_limite ? ` — Fecha límite: ${c.fecha_limite}` : ""}${c.cerrado ? " — CERRADO" : ""} — Link: /mi-caso/${c.id}`
 ).join("\n")}`;
       systemPrompt += CLIENT_RULES;
     }
