@@ -103,6 +103,17 @@ export default function ChatBot() {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
 
+  // Lock body scroll on mobile when chat is open
+  useEffect(() => {
+    if (isOpen) {
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = ""; };
+      }
+    }
+  }, [isOpen]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -248,16 +259,18 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
 
   return (
     <>
-      {/* Chat Window */}
+      {/* Chat Window — fullscreen on mobile, floating on desktop */}
       <div
-        className={`fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] max-h-[70vh] bg-jungle-dark border border-oro/20 rounded-2xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden transition-all duration-300 ${
-          isOpen
+        className={`fixed z-50 bg-jungle-dark flex flex-col overflow-hidden transition-all duration-300
+          ${isOpen
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-4 pointer-events-none"
-        }`}
+          }
+          inset-0 sm:inset-auto sm:bottom-24 sm:right-6 sm:w-[400px] sm:max-h-[70vh] sm:rounded-2xl sm:border sm:border-oro/20 sm:shadow-2xl sm:shadow-black/40
+        `}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-jungle to-jungle-dark px-4 py-3 flex items-center gap-3 border-b border-oro/10">
+        <div className="bg-gradient-to-r from-jungle to-jungle-dark px-4 py-3 flex items-center gap-3 border-b border-oro/10 flex-shrink-0">
           <div className="relative">
             <div className="w-10 h-10 bg-oro/20 rounded-full flex items-center justify-center">
               <Image src="/images/logo.svg" alt="Legion" width={24} height={24} className="w-6 h-6" />
@@ -311,7 +324,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px] max-h-[50vh] scrollbar-thin">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin">
           {displayMessages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
@@ -414,7 +427,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
         </div>
 
         {/* Input */}
-        <div className="border-t border-white/10 px-3 py-2.5 flex gap-2 bg-jungle-dark/80">
+        <div className="border-t border-white/10 px-3 py-2.5 flex gap-2 bg-jungle-dark/80 flex-shrink-0">
           <input
             ref={inputRef}
             type="text"
@@ -437,7 +450,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
         </div>
 
         {/* Footer */}
-        <div className="text-center py-1.5 text-[10px] text-beige/30 bg-jungle-dark border-t border-white/5">
+        <div className="text-center py-1.5 text-[10px] text-beige/30 bg-jungle-dark border-t border-white/5 flex-shrink-0 pb-safe">
           {clientContext ? `🔓 Sesion activa • ${clientContext.nombre}` : "Potenciado por IA • Para casos específicos contacta un abogado"}
         </div>
       </div>
@@ -447,7 +460,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-5 right-20 sm:right-24 z-50 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 active:scale-90 sm:hover:scale-110 safe-bottom ${
           isOpen
-            ? "bg-red-500/90 hover:bg-red-600 rotate-0"
+            ? "opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto bg-red-500/90 hover:bg-red-600 rotate-0"
             : "bg-gradient-to-br from-jungle to-jungle-dark border-2 border-oro/40 hover:border-oro"
         }`}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
