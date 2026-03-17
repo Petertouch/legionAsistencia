@@ -1,0 +1,159 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { getDashboardStats, getSeguimientos } from "@/lib/db";
+import { useAuth } from "@/components/providers/auth-provider";
+import { StatCard } from "@/components/ui/card";
+import Card from "@/components/ui/card";
+import Badge from "@/components/ui/badge";
+import { getDaysUntilDeadline } from "@/lib/pipelines";
+import { Users, Scale, Inbox, AlertTriangle, Phone, MessageSquare, Calendar, StickyNote, CalendarClock } from "lucide-react";
+import Link from "next/link";
+
+const TIPO_ICONS: Record<string, React.ReactNode> = {
+  llamada: <Phone className="w-4 h-4" />, whatsapp: <MessageSquare className="w-4 h-4" />,
+  reunion: <Calendar className="w-4 h-4" />, nota: <StickyNote className="w-4 h-4" />,
+};
+
+export default function DashboardPage() {
+  const { user, isAbogado, isAdmin } = useAuth();
+  const abogadoFilter = isAbogado ? user?.nombre : undefined;
+
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats", abogadoFilter],
+    queryFn: () => getDashboardStats(abogadoFilter ? { abogado: abogadoFilter } : undefined),
+  });
+  const { data: actividad } = useQuery({ queryKey: ["seguimientos-recientes"], queryFn: () => getSeguimientos() });
+
+  if (!stats) return <DashboardSkeleton />;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4`}>
+        {isAdmin && (
+          <StatCard title="Suscriptores" value={stats.totalSuscriptores} icon={<Users className="w-5 h-5" />}
+            trend={{ value: `${stats.suscriptoresAlDia} al dia`, positive: true }} />
+        )}
+        <StatCard title="Casos Abiertos" value={stats.casosAbiertos} icon={<Scale className="w-5 h-5" />} />
+        {isAdmin && (
+          <StatCard title="Leads Nuevos" value={stats.leadsNuevos} icon={<Inbox className="w-5 h-5" />} />
+        )}
+        <StatCard title={isAbogado ? "Estancados" : "Pagos Pendientes"} value={isAbogado ? stats.casosStale : stats.pagosPendientes}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          trend={isAbogado ? { value: `${stats.casosDeadlineCerca} con deadline`, positive: false } : { value: `${stats.pagosPendientes} por cobrar`, positive: false }} />
+      </div>
+
+      {/* Urgent cases */}
+      {stats.casosUrgentes.length > 0 && (
+        <Card className="border-red-500/20">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <h3 className="text-red-400 font-bold text-sm">Casos que necesitan atencion</h3>
+          </div>
+          <div className="space-y-2">
+            {stats.casosUrgentes.map((c) => {
+              const deadlineDays = getDaysUntilDeadline(c.fecha_limite);
+              return (
+                <Link key={c.id} href={`/admin/casos/${c.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 hover:bg-red-500/10 transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{c.titulo}</p>
+                    <p className="text-beige/40 text-xs">{c.suscriptor_nombre} — {c.area} — {c.etapa}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Badge>{c.prioridad}</Badge>
+                    {deadlineDays !== null && (
+                      <span className={`flex items-center gap-1 text-xs ${deadlineDays <= 3 ? "text-red-400" : "text-yellow-400"}`}>
+                        <CalendarClock className="w-3 h-3" />{deadlineDays}d
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Casos por Area */}
+        <Card>
+          <h3 className="text-white font-bold text-sm mb-4">{isAbogado ? "Mis casos por area" : "Casos por Area"}</h3>
+          {stats.casosPorArea.length === 0 ? (
+            <p className="text-beige/40 text-sm">Sin casos activos</p>
+          ) : (
+            <div className="space-y-3">
+              {stats.casosPorArea.map(([area, count]) => (
+                <div key={area} className="flex items-center justify-between">
+                  <span className="text-beige/70 text-sm">{area}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-32 bg-white/5 rounded-full h-2">
+                      <div className="bg-oro h-2 rounded-full" style={{ width: `${Math.min((count / Math.max(stats.casosAbiertos, 1)) * 100, 100)}%` }} />
+                    </div>
+                    <span className="text-white text-sm font-medium w-6 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Actividad Reciente */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold text-sm">Actividad Reciente</h3>
+            <Link href="/admin/seguimiento" className="text-oro text-xs hover:underline">Ver todo</Link>
+          </div>
+          <div className="space-y-3">
+            {actividad?.slice(0, 5).map((seg) => (
+              <div key={seg.id} className="flex items-start gap-3">
+                <div className="p-1.5 rounded-lg bg-white/5 text-beige/50 mt-0.5 flex-shrink-0">{TIPO_ICONS[seg.tipo]}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-beige/80 text-sm truncate">{seg.descripcion}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-beige/40 text-xs">{seg.suscriptor_nombre || seg.lead_nombre}</span>
+                    {seg.caso_area && <Badge size="xs">{seg.caso_area}</Badge>}
+                    <span className="text-beige/30 text-xs">
+                      {new Date(seg.fecha).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Links */}
+      <div className={`grid grid-cols-2 ${isAdmin ? "sm:grid-cols-4" : "sm:grid-cols-2"} gap-3`}>
+        {isAdmin && (
+          <Link href="/admin/suscriptores/nuevo" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-oro/30 hover:bg-white/10 transition-all text-sm text-beige/70 hover:text-white">
+            <Users className="w-4 h-4 text-oro" />Nuevo Suscriptor
+          </Link>
+        )}
+        <Link href="/admin/casos/nuevo" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-oro/30 hover:bg-white/10 transition-all text-sm text-beige/70 hover:text-white">
+          <Scale className="w-4 h-4 text-oro" />Nuevo Caso
+        </Link>
+        {isAdmin && (
+          <Link href="/admin/leads/nuevo" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-oro/30 hover:bg-white/10 transition-all text-sm text-beige/70 hover:text-white">
+            <Inbox className="w-4 h-4 text-oro" />Nuevo Lead
+          </Link>
+        )}
+        <Link href="/admin/seguimiento" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-oro/30 hover:bg-white/10 transition-all text-sm text-beige/70 hover:text-white">
+          <Phone className="w-4 h-4 text-oro" />Ver Seguimiento
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5 h-28 animate-pulse" />)}
+      </div>
+    </div>
+  );
+}
