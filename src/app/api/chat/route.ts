@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 - Estado de pago: ${clientContext.estado_pago}
 
 CASOS DEL CLIENTE:
-${clientContext.casos.map((c: { titulo: string; area: string; etapa: string; progreso: string; abogado: string; prioridad: string; descripcion: string; fecha_limite: string | null; cerrado: boolean }) =>
+${clientContext.casos.map((c: { id: string; titulo: string; area: string; etapa: string; progreso: string; abogado: string; prioridad: string; descripcion: string; fecha_limite: string | null; cerrado: boolean }) =>
   `• "${c.titulo}" (${c.area}) — Etapa: ${c.etapa} — Progreso: ${c.progreso} — Abogado: ${c.abogado} — Prioridad: ${c.prioridad}${c.fecha_limite ? ` — Fecha límite: ${c.fecha_limite}` : ""}${c.cerrado ? " — CERRADO" : ""} — Link: /mi-caso/${c.id}`
 ).join("\n")}`;
       systemPrompt += CLIENT_RULES;
