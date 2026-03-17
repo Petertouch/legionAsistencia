@@ -67,7 +67,7 @@ export interface Seguimiento {
 // ── Suscriptores ────────────────────────────────────────────────
 export const MOCK_SUSCRIPTORES: Suscriptor[] = [
   {
-    id: "s1", nombre: "Sgto. Carlos Mendoza", telefono: "3176689001", email: "cmendoza@mail.com", cedula: "123",
+    id: "s1", nombre: "Sgto. Juan Felipe Pulido", telefono: "3176689001", email: "jpulido@mail.com", cedula: "123",
     plan: "Plus", estado_pago: "Al dia", rama: "Ejercito", rango: "Sargento Segundo",
     fecha_inicio: "2025-08-15", notas: "Cliente desde 2025", created_at: "2025-08-15T10:00:00Z", updated_at: "2026-03-01T10:00:00Z",
   },
@@ -97,7 +97,7 @@ export const MOCK_SUSCRIPTORES: Suscriptor[] = [
 export const MOCK_CASOS: Caso[] = [
   // Disciplinario
   {
-    id: "c1", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Carlos Mendoza",
+    id: "c1", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
     area: "Disciplinario", titulo: "Descargos falta en servicio",
     etapa: "Descargos", etapa_index: 2, prioridad: "urgente", abogado: "Dr. Ramirez",
     descripcion: "Proceso disciplinario por presunta falta en servicio nocturno. Citacion a descargos recibida el 1 de marzo.",
@@ -131,7 +131,7 @@ export const MOCK_CASOS: Caso[] = [
   },
   // Penal Militar
   {
-    id: "c4", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Carlos Mendoza",
+    id: "c4", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
     area: "Penal Militar", titulo: "Investigacion lesiones en operacion",
     etapa: "Juicio", etapa_index: 4, prioridad: "urgente", abogado: "Dr. Ramirez",
     descripcion: "Investigacion penal militar por lesiones a civil durante operacion de control.",
@@ -212,7 +212,7 @@ export const MOCK_CASOS: Caso[] = [
   },
   // Documentos (fast-track)
   {
-    id: "c11", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Carlos Mendoza",
+    id: "c11", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
     area: "Documentos", titulo: "Derecho de peticion ascenso",
     etapa: "Radicacion", etapa_index: 3, prioridad: "normal", abogado: "Dra. Lopez",
     descripcion: "Derecho de peticion al Ministerio de Defensa por demora en proceso de ascenso.",
@@ -292,7 +292,7 @@ export const MOCK_SEGUIMIENTOS: Seguimiento[] = [
   {
     id: "seg1", suscriptor_id: "s1", caso_id: "c1", lead_id: null,
     tipo: "llamada", descripcion: "Llamada para revisar estado de descargos. Se presento memorial.",
-    fecha: "2026-03-14T15:00:00Z", suscriptor_nombre: "Sgto. Carlos Mendoza", caso_area: "Disciplinario",
+    fecha: "2026-03-14T15:00:00Z", suscriptor_nombre: "Sgto. Juan Felipe Pulido", caso_area: "Disciplinario",
     created_at: "2026-03-14T15:00:00Z",
   },
   {
@@ -316,7 +316,7 @@ export const MOCK_SEGUIMIENTOS: Seguimiento[] = [
   {
     id: "seg5", suscriptor_id: "s1", caso_id: "c4", lead_id: null,
     tipo: "nota", descripcion: "Audiencia reprogramada para el 25 de marzo. Notificar al cliente.",
-    fecha: "2026-03-11T11:00:00Z", suscriptor_nombre: "Sgto. Carlos Mendoza", caso_area: "Penal Militar",
+    fecha: "2026-03-11T11:00:00Z", suscriptor_nombre: "Sgto. Juan Felipe Pulido", caso_area: "Penal Militar",
     created_at: "2026-03-11T11:00:00Z",
   },
 ];

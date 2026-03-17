@@ -6,7 +6,7 @@ import { PIPELINES } from "@/lib/pipelines";
 
 // Mock passwords — in production this would be hashed in the database
 const MOCK_PASSWORDS: Record<string, string> = {
-  "123": "123", // Sgto. Carlos Mendoza
+  "123": "123", // Sgto. Juan Felipe Pulido
 };
 
 // Default password for suscriptors without a specific one
