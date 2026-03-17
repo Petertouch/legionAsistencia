@@ -24,11 +24,12 @@ CÓMO FUNCIONA:
 2. Se le asigna un abogado especialista
 3. Consulta cuando necesite por WhatsApp, llamada o app
 
-CONTACTO:
-- Teléfonos: 317 668 9580, 316 054 1006
-- Oficina: Cra 7 # 81-49, Oficina 301, Bogotá
-- Email: info@legionjuridica.com
-- WhatsApp: https://wa.me/573176689580`;
+CONTACTO (SIEMPRE usa estos formatos con links clickeables):
+- Teléfono 1: [317 668 9580](tel:+573176689580)
+- Teléfono 2: [316 054 1006](tel:+573160541006)
+- Oficina: [Cra 7 # 81-49, Oficina 301, Bogotá](https://maps.google.com/?q=Cra+7+81-49+Bogota)
+- Email: [info@legionjuridica.com](mailto:info@legionjuridica.com)
+- WhatsApp: [Escríbenos por WhatsApp](https://wa.me/573176689580)`;
 
 const FORMAT_RULES = `
 
@@ -40,6 +41,13 @@ REGLAS DE FORMATO (MUY IMPORTANTE — sigue estas reglas siempre):
 - Separa secciones con líneas en blanco para que sea visualmente limpio.
 - Si hay varios items (planes, áreas, pasos), presenta cada uno en su propia línea con emoji + negrita + descripción.
 - Termina siempre con una pregunta o llamado a la acción en negrita.
+
+REGLAS DE LINKS (MUY IMPORTANTE):
+- SIEMPRE que menciones un número de teléfono, hazlo clickeable con formato: [317 668 9580](tel:+573176689580)
+- SIEMPRE que menciones WhatsApp, hazlo clickeable: [Escríbenos por WhatsApp](https://wa.me/573176689580)
+- SIEMPRE que menciones el email, hazlo clickeable: [info@legionjuridica.com](mailto:info@legionjuridica.com)
+- NUNCA pongas URLs o números de teléfono como texto plano. TODO debe ser un link markdown clickeable.
+- Para la dirección usa: [Cra 7 # 81-49, Of. 301, Bogotá](https://maps.google.com/?q=Cra+7+81-49+Bogota)
 
 REGLAS DE CONTENIDO:
 - NO inventes información legal. Si no sabes algo específico, dirige al usuario a hablar con un abogado.
