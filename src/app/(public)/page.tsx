@@ -151,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* ============ PROBLEMA / SOLUCION ============ */}
-      <section id="problema" className="py-14 sm:py-24 overflow-hidden">
+      <section id="problema" className="py-14 sm:py-24 overflow-hidden bg-jungle-dark">
         {/* SIN LEGION - fondo oscuro */}
         <div className="bg-jungle-dark relative">
           <div className="absolute inset-0 opacity-5">
@@ -247,7 +247,7 @@ export default function Home() {
         </div>
 
         {/* CON LEGION - fondo blanco */}
-        <div className="bg-white">
+        <div className="bg-jungle">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 sm:py-20">
             <Reveal direction="right">
               <div className="flex items-center gap-3 mb-6 sm:mb-8">
@@ -272,7 +272,7 @@ export default function Home() {
                 { title: "Desde $50.000/mes", desc: "Menos de lo que cuesta una sola consulta particular" },
               ].map((benefit, i) => (
                 <StaggerItem key={i}>
-                  <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl bg-arena border border-arena-dark sm:hover:shadow-md sm:hover:border-oro/20 transition-all duration-300 h-full">
+                  <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl bg-white/10 border border-white/10 sm:hover:bg-white/15 sm:hover:border-oro/20 transition-all duration-300 h-full">
                     <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-jungle flex items-center justify-center flex-shrink-0 mt-0.5">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-oro" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -322,7 +322,7 @@ export default function Home() {
       </section>
 
       {/* ============ COMO FUNCIONA ============ */}
-      <section id="como-funciona" className="py-14 sm:py-24 bg-arena relative overflow-hidden">
+      <section id="como-funciona" className="py-14 sm:py-24 bg-jungle-dark relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "url('/images/BgCamuflado.webp')", backgroundSize: "cover" }}
         />
@@ -342,7 +342,7 @@ export default function Home() {
           </Reveal>
 
           <Stagger className="grid sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 relative" staggerDelay={0.15}>
-            <div className="hidden sm:block absolute top-24 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-oro/20 via-oro to-oro/20" />
+            <div className="hidden sm:block absolute top-24 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-oro/10 via-oro/40 to-oro/10" />
 
             {[
               {
@@ -374,7 +374,7 @@ export default function Home() {
               },
             ].map((item) => (
               <StaggerItem key={item.step}>
-                <div className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm sm:hover:shadow-xl transition-all duration-500 group sm:hover:-translate-y-2 flex sm:block items-start gap-4 sm:gap-0 h-full">
+                <div className="relative bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 sm:hover:bg-white/10 transition-all duration-500 group sm:hover:-translate-y-2 flex sm:block items-start gap-4 sm:gap-0 h-full">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-oro to-oro-light rounded-xl sm:rounded-2xl flex items-center justify-center text-jungle-dark flex-shrink-0 sm:mb-6 shadow-lg shadow-oro/20">
                     {item.icon}
                   </div>
@@ -395,7 +395,7 @@ export default function Home() {
       </section>
 
       {/* ============ COBERTURA ============ */}
-      <section id="cobertura" className="py-14 sm:py-24 bg-white">
+      <section id="cobertura" className="py-14 sm:py-24 bg-jungle">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <div>
@@ -422,7 +422,7 @@ export default function Home() {
                 ].map((area) => (
                   <StaggerItem key={area.title}>
                     <div
-                      className={`bg-gradient-to-br ${area.color} rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-gray-100 active:shadow-md sm:hover:shadow-md transition-all duration-300 h-full`}
+                      className={`bg-gradient-to-br ${area.color} rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-white/10 active:shadow-md sm:hover:shadow-md transition-all duration-300 h-full`}
                     >
                       <h3 className="font-bold text-jungle text-sm sm:text-base mb-0.5 sm:mb-1">{area.title}</h3>
                       <p className="text-gray-500 text-[11px] sm:text-sm leading-snug">{area.desc}</p>
@@ -558,7 +558,7 @@ export default function Home() {
       </section>
 
       {/* ============ TESTIMONIOS ============ */}
-      <section id="testimonios" className="py-14 sm:py-24 bg-arena">
+      <section id="testimonios" className="py-14 sm:py-24 bg-jungle-dark">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <Reveal direction="up">
             <div className="text-center mb-10 sm:mb-16">
@@ -578,7 +578,7 @@ export default function Home() {
               { quote: "Me suspendieron injustamente. Legion me ayudo a demostrar mi inocencia y me reintegraron.", name: "Patrullero activo", context: "Reintegro tras suspension", rating: 5 },
             ].map((t, i) => (
               <StaggerItem key={i}>
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm sm:hover:shadow-xl transition-all duration-500 sm:hover:-translate-y-1 h-full">
+                <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 sm:hover:bg-white/10 transition-all duration-500 sm:hover:-translate-y-1 h-full">
                   <div className="flex gap-0.5 sm:gap-1 mb-3 sm:mb-4">
                     {Array.from({ length: t.rating }).map((_, j) => (
                       <svg key={j} className="w-4 h-4 sm:w-5 sm:h-5 text-oro" fill="currentColor" viewBox="0 0 20 20">
