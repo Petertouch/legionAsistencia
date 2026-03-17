@@ -91,7 +91,9 @@ export default function ChatBot() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
-  const knowledgeItems = useKnowledgeStore((s) => s.items.filter((i) => i.activo));
+  const [mounted, setMounted] = useState(false);
+  const allKnowledgeItems = useKnowledgeStore((s) => s.items);
+  const knowledgeItems = mounted ? allKnowledgeItems.filter((i) => i.activo) : [];
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,6 +106,10 @@ export default function ChatBot() {
   useEffect(() => {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Lock body scroll on mobile when chat is open
   useEffect(() => {

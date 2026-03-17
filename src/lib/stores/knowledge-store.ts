@@ -680,6 +680,6 @@ export const useKnowledgeStore = create<KnowledgeStore>()(
         if (!cats.includes(name)) set({ categories: [...cats, name] });
       },
     }),
-    { name: "legion-knowledge" }
+    { name: "legion-knowledge", version: 2 }
   )
 );
