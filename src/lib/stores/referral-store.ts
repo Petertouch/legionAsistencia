@@ -98,6 +98,6 @@ export const useReferralStore = create<ReferralStore>()(
         }));
       },
     }),
-    { name: "legion-referrals", version: 1 }
+    { name: "legion-referrals", version: 2 }
   )
 );
