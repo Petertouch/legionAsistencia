@@ -48,7 +48,7 @@ const CLIENT_QUICK_REPLIES = [
   { label: "Mi plan", message: "¿Qué plan tengo y qué incluye?" },
 ];
 
-const INITIAL_MESSAGE = `¡Hola! 👋 Soy el asistente virtual de **Legión Jurídica**.
+const INITIAL_MESSAGE = `¡Hola! 👋 Soy **Gral. Pantoja**, tu asistente virtual de **Legión Jurídica**.
 
 Estoy aquí para ayudarte con información sobre nuestros servicios legales para militares y policías.
 
@@ -281,7 +281,7 @@ Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier du
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-jungle-dark" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-bold text-sm">Legión Jurídica</h3>
+            <h3 className="text-white font-bold text-sm">Gral. Pantoja</h3>
             {clientContext ? (
               <p className="text-oro text-xs truncate">🔓 {clientContext.nombre}</p>
             ) : (
