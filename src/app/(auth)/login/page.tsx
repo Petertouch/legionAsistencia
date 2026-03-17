@@ -63,7 +63,7 @@ export default function LoginPage() {
       </div>
 
       <Input label="Email" name="email" type="email" value={selectedUser.email} readOnly className="opacity-60" />
-      <Input label="Contraseña" name="password" type="password" placeholder="••••••••" required />
+      <Input label="Contrasena" name="password" type="password" placeholder="••••••••" required />
 
       <Button type="submit" disabled={loading} className="w-full" size="lg">
         {loading ? "Ingresando..." : `Ingresar como ${selectedUser.role === "admin" ? "Admin" : "Abogado"}`}

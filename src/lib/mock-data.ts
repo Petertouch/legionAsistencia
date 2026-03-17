@@ -5,6 +5,7 @@ export interface Suscriptor {
   nombre: string;
   telefono: string;
   email: string;
+  cedula: string;
   plan: "Base" | "Plus" | "Elite";
   estado_pago: "Al dia" | "Pendiente" | "Vencido";
   rama: string;
@@ -66,27 +67,27 @@ export interface Seguimiento {
 // ── Suscriptores ────────────────────────────────────────────────
 export const MOCK_SUSCRIPTORES: Suscriptor[] = [
   {
-    id: "s1", nombre: "Sgto. Carlos Mendoza", telefono: "3176689001", email: "cmendoza@mail.com",
+    id: "s1", nombre: "Sgto. Carlos Mendoza", telefono: "3176689001", email: "cmendoza@mail.com", cedula: "1098765432",
     plan: "Plus", estado_pago: "Al dia", rama: "Ejercito", rango: "Sargento Segundo",
     fecha_inicio: "2025-08-15", notas: "Cliente desde 2025", created_at: "2025-08-15T10:00:00Z", updated_at: "2026-03-01T10:00:00Z",
   },
   {
-    id: "s2", nombre: "SI. Maria Torres", telefono: "3176689002", email: "mtorres@mail.com",
+    id: "s2", nombre: "SI. Maria Torres", telefono: "3176689002", email: "mtorres@mail.com", cedula: "52876543",
     plan: "Elite", estado_pago: "Al dia", rama: "Policia", rango: "Subintendente",
     fecha_inicio: "2025-11-01", notas: "Referida por Mendoza", created_at: "2025-11-01T10:00:00Z", updated_at: "2026-02-15T10:00:00Z",
   },
   {
-    id: "s3", nombre: "My. Andres Ruiz", telefono: "3176689003", email: "aruiz@mail.com",
+    id: "s3", nombre: "My. Andres Ruiz", telefono: "3176689003", email: "aruiz@mail.com", cedula: "79654321",
     plan: "Base", estado_pago: "Pendiente", rama: "Ejercito", rango: "Mayor",
     fecha_inicio: "2026-01-10", notas: "", created_at: "2026-01-10T10:00:00Z", updated_at: "2026-03-10T10:00:00Z",
   },
   {
-    id: "s4", nombre: "SO2. Laura Gomez", telefono: "3176689004", email: "lgomez@mail.com",
+    id: "s4", nombre: "SO2. Laura Gomez", telefono: "3176689004", email: "lgomez@mail.com", cedula: "1019876543",
     plan: "Plus", estado_pago: "Vencido", rama: "Fuerza Aerea", rango: "Suboficial Segundo",
     fecha_inicio: "2025-06-20", notas: "Pago vencido hace 2 meses", created_at: "2025-06-20T10:00:00Z", updated_at: "2026-01-20T10:00:00Z",
   },
   {
-    id: "s5", nombre: "Ss. Pedro Vargas", telefono: "3176689005", email: "pvargas@mail.com",
+    id: "s5", nombre: "Ss. Pedro Vargas", telefono: "3176689005", email: "pvargas@mail.com", cedula: "80543219",
     plan: "Elite", estado_pago: "Al dia", rama: "Armada", rango: "Suboficial Segundo",
     fecha_inicio: "2025-09-05", notas: "Plan familiar activo", created_at: "2025-09-05T10:00:00Z", updated_at: "2026-03-05T10:00:00Z",
   },

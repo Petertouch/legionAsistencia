@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SYSTEM_PROMPT = `Eres el asistente virtual de Legión Jurídica, un servicio de asistencia legal por suscripción mensual para militares y policías de Colombia.
+const BASE_PROMPT = `Eres el asistente virtual de Legión Jurídica, un servicio de asistencia legal por suscripción mensual para militares y policías de Colombia.
 
-Tu personalidad: eres amable, profesional, empático y directo. Hablas en español colombiano natural. Usas emojis con moderación. Tu objetivo es informar sobre los servicios y conectar al usuario con un abogado cuando sea necesario.
+Tu personalidad: eres amable, profesional, empático y directo. Hablas en español colombiano natural. Tu objetivo es informar sobre los servicios y conectar al usuario con un abogado cuando sea necesario.
 
 INFORMACIÓN CLAVE:
 
@@ -23,13 +23,14 @@ CÓMO FUNCIONA:
 1. El usuario elige su plan (Base, Plus o Élite)
 2. Se le asigna un abogado especialista
 3. Consulta cuando necesite por WhatsApp, llamada o app
-Sin citas previas, sin filas, sin letra pequeña.
 
 CONTACTO:
 - Teléfonos: 317 668 9580, 316 054 1006
 - Oficina: Cra 7 # 81-49, Oficina 301, Bogotá
 - Email: info@legionjuridica.com
-- WhatsApp: https://wa.me/573176689580
+- WhatsApp: https://wa.me/573176689580`;
+
+const FORMAT_RULES = `
 
 REGLAS DE FORMATO (MUY IMPORTANTE — sigue estas reglas siempre):
 - Estructura TODAS tus respuestas con formato visual claro y fácil de leer.
@@ -47,17 +48,41 @@ REGLAS DE CONTENIDO:
 - Responde de forma concisa (máximo 200 palabras por respuesta).
 - Siempre intenta guiar hacia la acción: afiliarse, contactar un abogado, etc.`;
 
+const CLIENT_RULES = `
+
+REGLAS ESPECIALES PARA CLIENTES AUTENTICADOS:
+- El cliente ya está identificado. Trátalo por su nombre.
+- Tienes acceso a la información de sus casos. Puedes responder preguntas sobre el estado, etapa, progreso y abogado asignado.
+- Si pregunta por un caso específico, dale los detalles que tienes.
+- Si pregunta algo que va más allá de lo que tienes (fechas de audiencia, documentos, etc.), recomiéndale hablar directamente con su abogado asignado.
+- NO compartas información de otros clientes.
+- Si pregunta por pagos o estado de cuenta, muéstrale lo que tienes y sugiere contactar administración si necesita más detalle.`;
+
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, clientContext } = await request.json();
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "API key not configured" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
+
+    let systemPrompt = BASE_PROMPT;
+
+    if (clientContext) {
+      systemPrompt += `\n\nCLIENTE AUTENTICADO:
+- Nombre: ${clientContext.nombre}
+- Plan: ${clientContext.plan}
+- Estado de pago: ${clientContext.estado_pago}
+
+CASOS DEL CLIENTE:
+${clientContext.casos.map((c: { titulo: string; area: string; etapa: string; progreso: string; abogado: string; prioridad: string; descripcion: string; fecha_limite: string | null; cerrado: boolean }) =>
+  `• "${c.titulo}" (${c.area}) — Etapa: ${c.etapa} — Progreso: ${c.progreso} — Abogado: ${c.abogado} — Prioridad: ${c.prioridad}${c.fecha_limite ? ` — Fecha límite: ${c.fecha_limite}` : ""}${c.cerrado ? " — CERRADO" : ""}`
+).join("\n")}`;
+      systemPrompt += CLIENT_RULES;
+    }
+
+    systemPrompt += FORMAT_RULES;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -68,7 +93,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...messages,
         ],
         temperature: 0.7,
@@ -79,10 +104,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text();
       console.error("Groq API error:", error);
-      return NextResponse.json(
-        { error: "Error al procesar tu mensaje" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Error al procesar tu mensaje" }, { status: 500 });
     }
 
     const data = await response.json();
@@ -91,9 +113,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ content });
   } catch (error) {
     console.error("Chat API error:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

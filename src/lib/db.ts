@@ -28,7 +28,7 @@ export async function getSuscriptor(id: string): Promise<Suscriptor | null> {
 }
 
 export async function createSuscriptor(data: {
-  nombre: string; telefono: string; email: string;
+  nombre: string; telefono: string; email: string; cedula: string;
   plan: Suscriptor["plan"]; estado_pago: Suscriptor["estado_pago"];
   rama: string; rango: string; notas: string;
 }): Promise<Suscriptor> {
@@ -262,4 +262,10 @@ export async function getDashboardStats(params?: { abogado?: string }) {
     ),
     casosUrgentes: casosActivos.filter((c) => c.prioridad === "urgente" || (getDaysUntilDeadline(c.fecha_limite) !== null && getDaysUntilDeadline(c.fecha_limite)! <= 3)),
   };
+}
+
+
+// ── Auth: find suscriptor by cedula ─────────────────────────────
+export async function findSuscriptorByCedula(cedula: string): Promise<Suscriptor | null> {
+  return MOCK_SUSCRIPTORES.find((s) => s.cedula === cedula) || null;
 }

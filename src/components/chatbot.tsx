@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { KeyRound, LogOut } from "lucide-react";
 
 interface Message {
   role: "assistant" | "user";
@@ -14,6 +15,24 @@ interface DisplayMessage {
   timestamp: Date;
 }
 
+interface ClientContext {
+  nombre: string;
+  plan: string;
+  estado_pago: string;
+  casos: Array<{
+    id: string;
+    titulo: string;
+    area: string;
+    etapa: string;
+    progreso: string;
+    abogado: string;
+    prioridad: string;
+    descripcion: string;
+    fecha_limite: string | null;
+    cerrado: boolean;
+  }>;
+}
+
 const QUICK_REPLIES = [
   { label: "Planes y precios", message: "¿Cuáles son los planes y precios?" },
   { label: "Áreas de cobertura", message: "¿Qué áreas legales cubren?" },
@@ -21,9 +40,18 @@ const QUICK_REPLIES = [
   { label: "Contacto", message: "¿Cómo los contacto?" },
 ];
 
+const CLIENT_QUICK_REPLIES = [
+  { label: "Estado de mis casos", message: "¿Cuál es el estado de mis casos?" },
+  { label: "Próximos pasos", message: "¿Cuáles son los próximos pasos de mis casos?" },
+  { label: "Hablar con abogado", message: "Necesito hablar con mi abogado" },
+  { label: "Mi plan", message: "¿Qué plan tengo y qué incluye?" },
+];
+
 const INITIAL_MESSAGE = `¡Hola! 👋 Soy el asistente virtual de **Legión Jurídica**.
 
 Estoy aquí para ayudarte con información sobre nuestros servicios legales para militares y policías.
+
+🔐 Si eres **cliente**, puedes identificarte para consultar el estado de tus casos.
 
 ¿En qué te puedo ayudar?`;
 
@@ -55,21 +83,110 @@ export default function ChatBot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auth state
+  const [showAuthForm, setShowAuthForm] = useState(false);
+  const [cedula, setCedula] = useState("");
+  const [clave, setClave] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [clientContext, setClientContext] = useState<ClientContext | null>(null);
+
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [displayMessages, isTyping, scrollToBottom]);
+  }, [displayMessages, isTyping, showAuthForm, scrollToBottom]);
 
   useEffect(() => {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      const res = await fetch("/api/chat-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cedula: cedula.trim() }),
+      });
+
+      if (!res.ok) {
+        setAuthError("Cedula no encontrada. Verifica el numero.");
+        setAuthLoading(false);
+        return;
+      }
+
+      const data: ClientContext = await res.json();
+      setClientContext(data);
+      setShowAuthForm(false);
+      setCedula("");
+      setClave("");
+
+      const casosCount = data.casos.length;
+      const casosActivos = data.casos.filter((c) => !c.cerrado).length;
+
+      const welcomeMsg = `✅ **¡Bienvenido, ${data.nombre}!**
+
+Estás identificado como cliente del **Plan ${data.plan}**.
+
+📋 Tienes **${casosCount} caso${casosCount !== 1 ? "s" : ""}** registrado${casosCount !== 1 ? "s" : ""} (${casosActivos} activo${casosActivos !== 1 ? "s" : ""}).
+
+Puedes preguntarme sobre el estado de tus casos, próximos pasos, o cualquier duda sobre tu plan.
+
+**¿Qué te gustaría saber?**`;
+
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "bot", content: welcomeMsg, timestamp: new Date() },
+      ]);
+      setChatHistory([]);
+    } catch {
+      setAuthError("Error de conexion. Intenta de nuevo.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setClientContext(null);
+    setChatHistory([]);
+    setDisplayMessages((prev) => [
+      ...prev,
+      { role: "bot", content: "👋 Sesión cerrada. Puedes seguir consultando información general o identificarte de nuevo.", timestamp: new Date() },
+    ]);
+  };
+
   const handleSend = useCallback(async (text?: string) => {
     const msg = text || input.trim();
     if (!msg || isTyping) return;
+
+    // Detect login intent
+    if (!clientContext && (
+      msg.toLowerCase().includes("identificar") ||
+      msg.toLowerCase().includes("mi caso") ||
+      msg.toLowerCase().includes("mis caso") ||
+      msg.toLowerCase().includes("mi proceso") ||
+      msg.toLowerCase().includes("mis proceso") ||
+      msg.toLowerCase().includes("cedula") ||
+      msg.toLowerCase().includes("cédula") ||
+      msg.toLowerCase().includes("ingresar") ||
+      msg.toLowerCase().includes("login") ||
+      msg.toLowerCase().includes("acceder")
+    )) {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { role: "user", content: msg, timestamp: new Date() },
+        { role: "bot", content: "🔐 Para consultar tus casos, necesito verificar tu identidad. Ingresa tus datos abajo:", timestamp: new Date() },
+      ]);
+      setInput("");
+      setShowAuthForm(true);
+      return;
+    }
 
     setDisplayMessages((prev) => [
       ...prev,
@@ -84,7 +201,10 @@ export default function ChatBot() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newHistory }),
+        body: JSON.stringify({
+          messages: newHistory,
+          clientContext: clientContext || undefined,
+        }),
       });
 
       if (!res.ok) throw new Error("API error");
@@ -109,7 +229,7 @@ export default function ChatBot() {
     } finally {
       setIsTyping(false);
     }
-  }, [input, isTyping, chatHistory]);
+  }, [input, isTyping, chatHistory, clientContext]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -117,6 +237,9 @@ export default function ChatBot() {
       handleSend();
     }
   };
+
+  const quickReplies = clientContext ? CLIENT_QUICK_REPLIES : QUICK_REPLIES;
+  const showQuickReplies = displayMessages.length <= 2 && !isTyping && !showAuthForm;
 
   return (
     <>
@@ -132,29 +255,54 @@ export default function ChatBot() {
         <div className="bg-gradient-to-r from-jungle to-jungle-dark px-4 py-3 flex items-center gap-3 border-b border-oro/10">
           <div className="relative">
             <div className="w-10 h-10 bg-oro/20 rounded-full flex items-center justify-center">
-              <Image
-                src="/images/logo.svg"
-                alt="Legion"
-                width={24}
-                height={24}
-                className="w-6 h-6"
-              />
+              <Image src="/images/logo.svg" alt="Legion" width={24} height={24} className="w-6 h-6" />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-jungle-dark" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-white font-bold text-sm">Legión Jurídica</h3>
-            <p className="text-green-400 text-xs">En línea • Asistente IA</p>
+            {clientContext ? (
+              <p className="text-oro text-xs truncate">🔓 {clientContext.nombre}</p>
+            ) : (
+              <p className="text-green-400 text-xs">En línea • Asistente IA</p>
+            )}
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-beige/50 hover:text-white transition-colors p-1"
-            aria-label="Cerrar chat"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            {!clientContext ? (
+              <button
+                onClick={() => {
+                  setShowAuthForm(true);
+                  setDisplayMessages((prev) => [
+                    ...prev,
+                    { role: "bot", content: "🔐 Para consultar tus casos, ingresa tus datos abajo:", timestamp: new Date() },
+                  ]);
+                }}
+                className="text-beige/40 hover:text-oro transition-colors p-1.5"
+                aria-label="Identificarse"
+                title="Identificarse como cliente"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="text-beige/40 hover:text-red-400 transition-colors p-1.5"
+                aria-label="Cerrar sesion"
+                title="Cerrar sesion"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-beige/50 hover:text-white transition-colors p-1"
+              aria-label="Cerrar chat"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -185,9 +333,53 @@ export default function ChatBot() {
             </div>
           )}
 
-          {displayMessages.length === 1 && !isTyping && (
+          {/* Auth Form inline */}
+          {showAuthForm && !clientContext && (
+            <div className="flex justify-start">
+              <form onSubmit={handleAuth} className="bg-white/10 rounded-2xl rounded-bl-md p-3.5 space-y-2.5 w-[85%]">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Numero de cedula"
+                  value={cedula}
+                  onChange={(e) => { setCedula(e.target.value.replace(/\D/g, "")); setAuthError(""); }}
+                  className="w-full bg-white/10 text-white placeholder-beige/40 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  required
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  placeholder="Contrasena"
+                  value={clave}
+                  onChange={(e) => setClave(e.target.value)}
+                  className="w-full bg-white/10 text-white placeholder-beige/40 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  required
+                />
+                {authError && <p className="text-red-400 text-xs">{authError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={authLoading || !cedula.trim() || !clave}
+                    className="flex-1 bg-oro text-jungle-dark text-xs font-semibold py-2 rounded-lg disabled:opacity-40 hover:bg-oro-light transition-colors"
+                  >
+                    {authLoading ? "Verificando..." : "Ingresar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAuthForm(false); setCedula(""); setClave(""); setAuthError(""); }}
+                    className="px-3 text-beige/40 text-xs hover:text-beige/60 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Quick replies */}
+          {showQuickReplies && (
             <div className="flex flex-wrap gap-2 pt-1">
-              {QUICK_REPLIES.map((qr) => (
+              {quickReplies.map((qr) => (
                 <button
                   key={qr.label}
                   onClick={() => handleSend(qr.message)}
@@ -196,6 +388,20 @@ export default function ChatBot() {
                   {qr.label}
                 </button>
               ))}
+              {!clientContext && (
+                <button
+                  onClick={() => {
+                    setShowAuthForm(true);
+                    setDisplayMessages((prev) => [
+                      ...prev,
+                      { role: "bot", content: "🔐 Para consultar tus casos, ingresa tus datos abajo:", timestamp: new Date() },
+                    ]);
+                  }}
+                  className="text-xs bg-white/5 text-beige/60 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors"
+                >
+                  🔐 Soy cliente
+                </button>
+              )}
             </div>
           )}
 
@@ -210,7 +416,7 @@ export default function ChatBot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe tu pregunta..."
+            placeholder={clientContext ? "Pregunta sobre tus casos..." : "Escribe tu pregunta..."}
             className="flex-1 bg-white/10 text-white placeholder-beige/40 text-sm px-4 py-2.5 rounded-full border border-white/10 focus:border-oro/40 focus:outline-none transition-colors"
           />
           <button
@@ -227,7 +433,7 @@ export default function ChatBot() {
 
         {/* Footer */}
         <div className="text-center py-1.5 text-[10px] text-beige/30 bg-jungle-dark border-t border-white/5">
-          Potenciado por IA • Para casos específicos contacta un abogado
+          {clientContext ? `🔓 Sesion activa • ${clientContext.nombre}` : "Potenciado por IA • Para casos específicos contacta un abogado"}
         </div>
       </div>
 

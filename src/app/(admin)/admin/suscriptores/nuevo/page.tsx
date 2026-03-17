@@ -108,6 +108,7 @@ export default function NuevoSuscriptorPage() {
       nombre: form.get("nombre") as string,
       telefono: form.get("telefono") as string,
       email: form.get("email") as string,
+      cedula: form.get("cedula") as string,
       plan: form.get("plan") as "Base" | "Plus" | "Elite",
       estado_pago: form.get("estado_pago") as "Al dia" | "Pendiente" | "Vencido",
       rama: form.get("rama") as string,
@@ -136,6 +137,8 @@ export default function NuevoSuscriptorPage() {
           <Input label="Telefono" name="telefono" type="tel" placeholder="3176689580" />
           <Input label="Email" name="email" type="email" placeholder="correo@mail.com" />
         </div>
+
+        <Input label="Numero de cedula" name="cedula" type="text" inputMode="numeric" placeholder="1098765432" required />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select label="Plan" name="plan" options={[
