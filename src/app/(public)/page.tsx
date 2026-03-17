@@ -151,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* ============ PROBLEMA / SOLUCION ============ */}
-      <section id="problema" className="py-14 sm:py-24 overflow-hidden">
+      <section id="problema" className="py-8 sm:py-14 overflow-hidden">
         {/* SIN LEGION - fondo oscuro */}
         <div className="bg-jungle-dark relative">
           <div className="absolute inset-0 opacity-5">
@@ -322,7 +322,7 @@ export default function Home() {
       </section>
 
       {/* ============ COMO FUNCIONA ============ */}
-      <section id="como-funciona" className="py-14 sm:py-24 bg-arena relative overflow-hidden">
+      <section id="como-funciona" className="py-8 sm:py-14 bg-arena relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: "url('/images/BgCamuflado.webp')", backgroundSize: "cover" }}
         />
@@ -395,7 +395,7 @@ export default function Home() {
       </section>
 
       {/* ============ COBERTURA ============ */}
-      <section id="cobertura" className="py-14 sm:py-24 bg-white">
+      <section id="cobertura" className="py-8 sm:py-14 bg-white">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <div>
@@ -461,7 +461,7 @@ export default function Home() {
       </section>
 
       {/* ============ PLANES ============ */}
-      <section id="planes" className="py-14 sm:py-24 bg-jungle-dark relative overflow-hidden">
+      <section id="planes" className="py-8 sm:py-14 bg-jungle-dark relative overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/BgCamuflado.webp" alt="" fill sizes="100vw" className="object-cover opacity-10" />
         </div>
@@ -558,7 +558,7 @@ export default function Home() {
       </section>
 
       {/* ============ TESTIMONIOS ============ */}
-      <section id="testimonios" className="py-14 sm:py-24 bg-arena">
+      <section id="testimonios" className="py-8 sm:py-14 bg-arena">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <Reveal direction="up">
             <div className="text-center mb-10 sm:mb-16">
@@ -643,7 +643,7 @@ export default function Home() {
       </Reveal>
 
       {/* ============ CTA FINAL ============ */}
-      <section className="py-16 sm:py-24 bg-jungle-dark relative overflow-hidden">
+      <section className="py-8 sm:py-14 bg-jungle-dark relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-jungle-dark via-jungle to-jungle-dark" />
         <div className="absolute top-0 right-0 w-72 sm:w-[500px] h-72 sm:h-[500px] bg-oro/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-60 sm:w-[400px] h-60 sm:h-[400px] bg-oro/3 rounded-full blur-3xl" />
