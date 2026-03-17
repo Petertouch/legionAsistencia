@@ -42,7 +42,7 @@ export default function CasosPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -105,44 +105,63 @@ export default function CasosPage() {
 
 function TableView({ casos }: { casos: import("@/lib/mock-data").Caso[] }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10 text-beige/50 text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-3 font-medium">Caso</th>
-              <th className="text-left px-4 py-3 font-medium">Cliente</th>
-              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Etapa</th>
-              <th className="text-left px-4 py-3 font-medium">Prioridad</th>
-              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Abogado</th>
-              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Deadline</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {casos.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-beige/40">No se encontraron casos</td></tr>
-            ) : (
-              casos.map((c) => (
+    <>
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-2">
+        {casos.length === 0 ? (
+          <p className="text-center text-beige/40 text-sm py-8">No se encontraron casos</p>
+        ) : (
+          casos.map((c) => (
+            <Link key={c.id} href={`/admin/casos/${c.id}`}
+              className="block bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/[0.07] transition-colors active:bg-white/10">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-white text-sm font-medium truncate flex-1 mr-2">{c.titulo}</p>
+                <Badge size="xs">{c.prioridad}</Badge>
+              </div>
+              <div className="flex items-center gap-2 text-beige/50 text-xs">
+                <span className="truncate">{c.suscriptor_nombre}</span>
+                <span>•</span>
+                <span>{c.etapa}</span>
+                {c.fecha_limite && <span className="ml-auto text-beige/30">{new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>}
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-beige/50 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 font-medium">Caso</th>
+                <th className="text-left px-4 py-3 font-medium">Cliente</th>
+                <th className="text-left px-4 py-3 font-medium">Etapa</th>
+                <th className="text-left px-4 py-3 font-medium">Prioridad</th>
+                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Abogado</th>
+                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Deadline</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {casos.map((c) => (
                 <tr key={c.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/casos/${c.id}`} className="text-white hover:text-oro transition-colors font-medium">
-                      {c.titulo}
-                    </Link>
+                    <Link href={`/admin/casos/${c.id}`} className="text-white hover:text-oro transition-colors font-medium">{c.titulo}</Link>
                     <p className="text-beige/40 text-xs mt-0.5">{c.area}</p>
                   </td>
                   <td className="px-4 py-3 text-beige/60">{c.suscriptor_nombre}</td>
-                  <td className="px-4 py-3 hidden md:table-cell"><Badge variant="neutral">{c.etapa}</Badge></td>
+                  <td className="px-4 py-3"><Badge variant="neutral">{c.etapa}</Badge></td>
                   <td className="px-4 py-3"><Badge>{c.prioridad}</Badge></td>
-                  <td className="px-4 py-3 text-beige/60 hidden md:table-cell">{c.abogado}</td>
+                  <td className="px-4 py-3 text-beige/60 hidden lg:table-cell">{c.abogado}</td>
                   <td className="px-4 py-3 text-beige/40 hidden lg:table-cell">
-                    {c.fecha_limite ? new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" }) : "—"}
+                    {c.fecha_limite ? new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" }) : "\u2014"}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

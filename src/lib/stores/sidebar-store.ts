@@ -3,17 +3,19 @@ import { persist } from "zustand/middleware";
 
 interface SidebarStore {
   collapsed: boolean;
+  mobileOpen: boolean;
   toggle: () => void;
-  setCollapsed: (collapsed: boolean) => void;
+  setMobileOpen: (open: boolean) => void;
 }
 
 export const useSidebarStore = create<SidebarStore>()(
   persist(
     (set) => ({
       collapsed: false,
-      toggle: () => set((state) => ({ collapsed: !state.collapsed })),
-      setCollapsed: (collapsed) => set({ collapsed }),
+      mobileOpen: false,
+      toggle: () => set((s) => ({ collapsed: !s.collapsed })),
+      setMobileOpen: (open) => set({ mobileOpen: open }),
     }),
-    { name: "legion-sidebar" }
+    { name: "legion-sidebar", partialize: (s) => ({ collapsed: s.collapsed }) }
   )
 );

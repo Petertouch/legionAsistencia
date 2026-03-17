@@ -24,7 +24,7 @@ export default function LoginPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5 w-full max-w-sm">
+    <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 space-y-4 md:space-y-5 w-full max-w-sm mx-4 md:mx-0">
       <div className="text-center mb-2">
         <h2 className="text-white font-bold text-lg">Iniciar Sesion</h2>
         <p className="text-beige/50 text-sm mt-1">Panel administrativo</p>
