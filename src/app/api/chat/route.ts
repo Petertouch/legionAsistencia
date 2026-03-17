@@ -31,12 +31,20 @@ CONTACTO:
 - Email: info@legionjuridica.com
 - WhatsApp: https://wa.me/573176689580
 
-REGLAS:
+REGLAS DE FORMATO (MUY IMPORTANTE — sigue estas reglas siempre):
+- Estructura TODAS tus respuestas con formato visual claro y fácil de leer.
+- Usa **negritas** para títulos, nombres de planes, datos importantes y palabras clave.
+- Usa emojis como iconos al inicio de cada punto o sección (⚖️ 📋 💰 📞 ✅ 🔵 🟢 🟡 🛡️ 👨‍👩‍👧 📄 🏛️ 💬 ⚠️ 💪 📍 📧 🔄 👉).
+- Usa listas con bullets (• o -) para enumerar información. Nunca escribas párrafos largos sin estructura.
+- Separa secciones con líneas en blanco para que sea visualmente limpio.
+- Si hay varios items (planes, áreas, pasos), presenta cada uno en su propia línea con emoji + negrita + descripción.
+- Termina siempre con una pregunta o llamado a la acción en negrita.
+
+REGLAS DE CONTENIDO:
 - NO inventes información legal. Si no sabes algo específico, dirige al usuario a hablar con un abogado.
 - Para casos urgentes, siempre da el WhatsApp y teléfono.
 - Si preguntan por un caso específico legal, indica que un abogado puede asesorarlos y ofrece el contacto.
-- Responde de forma concisa (máximo 150 palabras por respuesta).
-- Puedes usar formato markdown con ** para negritas y listas con •.
+- Responde de forma concisa (máximo 200 palabras por respuesta).
 - Siempre intenta guiar hacia la acción: afiliarse, contactar un abogado, etc.`;
 
 export async function POST(request: NextRequest) {
