@@ -35,7 +35,7 @@ export default function Home() {
 
               <Reveal delay={0.4} direction="up">
                 <h1 className="text-[2rem] leading-[1.15] sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white sm:leading-[1.1] mb-4 sm:mb-6">
-                  Tu mision es{" "}
+                  Tu misión es{" "}
                   <span className="text-gradient">servir a la patria.</span>
                   <br />
                   <span className="text-white/90 text-xl sm:text-4xl lg:text-5xl">
@@ -46,7 +46,7 @@ export default function Home() {
 
               <Reveal delay={0.6} direction="up">
                 <p className="text-[15px] sm:text-lg lg:text-xl text-beige/70 max-w-xl mb-7 sm:mb-10 leading-relaxed">
-                  Asesoria juridica ilimitada para militares y policias.
+                  Asesoría jurídica ilimitada para militares y policías.
                   Un abogado siempre disponible para ti y tu familia,
                   desde <span className="text-oro font-bold">$50.000/mes</span>.
                 </p>
@@ -62,7 +62,7 @@ export default function Home() {
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
-                    Afiliate por WhatsApp
+                    Afíliate por WhatsApp
                   </a>
                   <a
                     href="#planes"
@@ -79,7 +79,7 @@ export default function Home() {
               <div className="glass rounded-3xl p-8 animate-float">
                 <Image
                   src="/images/logo.svg"
-                  alt="Escudo Legion Juridica"
+                  alt="Escudo Legión Jurídica"
                   width={120}
                   height={120}
                   className="mx-auto mb-6 drop-shadow-[0_0_30px_rgba(194,150,19,0.3)]"
@@ -130,7 +130,7 @@ export default function Home() {
       <section className="bg-jungle py-4 sm:py-6 border-y border-oro/10 overflow-hidden">
         <div className="relative">
           <div className="hidden sm:flex max-w-7xl mx-auto px-4 flex-wrap items-center justify-center gap-6 md:gap-12 lg:gap-16">
-            {["Fuerzas Militares", "Policia Nacional", "Ejercito Nacional", "Armada Nacional", "Fuerza Aerea"].map((org) => (
+            {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
               <span key={org} className="text-beige/25 text-xs sm:text-sm font-medium tracking-wider uppercase whitespace-nowrap">
                 {org}
               </span>
@@ -139,7 +139,7 @@ export default function Home() {
           <div className="sm:hidden flex animate-marquee">
             {[...Array(2)].map((_, repeat) => (
               <div key={repeat} className="flex gap-8 px-4">
-                {["Fuerzas Militares", "Policia Nacional", "Ejercito Nacional", "Armada Nacional", "Fuerza Aerea"].map((org) => (
+                {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
                   <span key={`${repeat}-${org}`} className="text-beige/25 text-xs font-medium tracking-wider uppercase whitespace-nowrap">
                     {org}
                   </span>
@@ -150,7 +150,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ PROBLEMA / SOLUCION ============ */}
+      {/* ============ PROBLEMA / SOLUCIÓN ============ */}
       <section id="problema" className="py-8 sm:py-14 overflow-hidden">
         {/* SIN LEGION - fondo oscuro */}
         <div className="bg-jungle-dark relative">
@@ -166,7 +166,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-white">
-                  Sin Legion, enfrentas esto solo
+                  Sin Legión, enfrentas esto solo
                 </h2>
               </div>
             </Reveal>
@@ -193,7 +193,7 @@ export default function Home() {
                 },
                 {
                   title: "Abogado por caso = caro",
-                  desc: "Cada consulta te cuesta $200.000 o mas. Y cuando mas lo necesitas, no tienes.",
+                  desc: "Cada consulta te cuesta $200.000 o más. Y cuando más lo necesitas, no tienes.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
@@ -257,7 +257,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-jungle">
-                  Con Legion, todo cambia
+                  Con Legión, todo cambia
                 </h2>
               </div>
             </Reveal>
@@ -267,7 +267,7 @@ export default function Home() {
                 { title: "Abogado asignado", desc: "Uno que conoce tu caso, tu contexto militar y tu historial" },
                 { title: "Consultas ilimitadas", desc: "Pregunta lo que necesites por WhatsApp, llamada o en persona" },
                 { title: "Siempre disponible", desc: "No importa si estas en operaciones, base o licencia" },
-                { title: "Tu familia cubierta", desc: "Tu plan protege tambien a tu esposa e hijos" },
+                { title: "Tu familia cubierta", desc: "Tu plan protege también a tu esposa e hijos" },
                 { title: "Respuesta inmediata", desc: "No esperas semanas. Te responden cuando lo necesitas" },
                 { title: "Desde $50.000/mes", desc: "Menos de lo que cuesta una sola consulta particular" },
               ].map((benefit, i) => (
@@ -293,7 +293,7 @@ export default function Home() {
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-oro/30 ring-offset-2 ring-offset-jungle">
                   <Image
                     src="/images/abogado.webp"
-                    alt="Abogado Legion Juridica"
+                    alt="Abogado Legión Jurídica"
                     fill
                     sizes="80px"
                     className="object-cover object-top"
@@ -301,9 +301,9 @@ export default function Home() {
                 </div>
                 <div className="flex-1 text-center sm:text-left">
                   <p className="text-white font-bold text-sm sm:text-lg leading-snug">
-                    &ldquo;Tu mision es servir a la patria. Dejanos a nosotros lo legal.&rdquo;
+                    &ldquo;Tu misión es servir a la patria. Déjanos a nosotros lo legal.&rdquo;
                   </p>
-                  <p className="text-oro text-xs sm:text-sm mt-1">Equipo Legion Juridica</p>
+                  <p className="text-oro text-xs sm:text-sm mt-1">Equipo Legión Jurídica</p>
                 </div>
                 <a
                   href="https://wa.me/573176689580"
@@ -333,7 +333,7 @@ export default function Home() {
                 Simple y directo
               </span>
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-jungle mt-2 sm:mt-3 mb-3 sm:mb-5">
-                Asi de facil funciona
+                Así de fácil funciona
               </h2>
               <p className="text-sm sm:text-lg text-gray-500">
                 En 3 pasos ya tienes tu escudo legal activo
@@ -356,7 +356,7 @@ export default function Home() {
               },
               {
                 step: "02", title: "Te asignamos abogado",
-                desc: "Un abogado especializado que conoce tu situacion y el contexto militar.",
+                desc: "Un abogado especializado que conoce tu situación y el contexto militar.",
                 icon: (
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -436,7 +436,7 @@ export default function Home() {
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-[16/10] sm:aspect-[4/3] lg:aspect-[4/5] max-h-[220px] sm:max-h-[350px] lg:max-h-[520px]">
                 <Image
                   src="/images/familia.webp"
-                  alt="Legion Juridica protege a tu familia"
+                  alt="Legión Jurídica protege a tu familia"
                   fill
                   sizes="(max-width: 1024px) 100vw, 45vw"
                   className="object-cover object-[center_20%]"
@@ -489,17 +489,17 @@ export default function Home() {
             {[
               {
                 name: "Base", price: "50.000", monthly: "$1.700/dia",
-                features: ["Asesoria juridica ilimitada", "2 representaciones / ano", "4 opiniones / mes", "Revision de documentos", "Atencion por WhatsApp"],
+                features: ["Asesoría jurídica ilimitada", "2 representaciones / año", "4 opiniones / mes", "Revisión de documentos", "Atención por WhatsApp"],
                 popular: false, cta: "Empezar con Base",
               },
               {
                 name: "Plus", price: "66.000", monthly: "$2.200/dia",
-                features: ["Todo lo del Base, mas:", "3 representaciones / ano", "8 opiniones / mes", "Prioridad en asignacion", "WhatsApp y llamada"],
+                features: ["Todo lo del Base, más:", "3 representaciones / año", "8 opiniones / mes", "Prioridad en asignación", "WhatsApp y llamada"],
                 popular: true, cta: "Elegir Plus",
               },
               {
                 name: "Elite", price: "80.000", monthly: "$2.700/dia",
-                features: ["Todo lo del Plus, mas:", "5 representaciones / ano", "Opiniones ILIMITADAS", "Abogado dedicado", "Atencion prioritaria 24/7"],
+                features: ["Todo lo del Plus, mas:", "5 representaciones / año", "Opiniones ILIMITADAS", "Abogado dedicado", "Atención prioritaria 24/7"],
                 popular: false, cta: "Ir por Elite",
               },
             ].map((plan) => (
@@ -513,7 +513,7 @@ export default function Home() {
                 >
                   {plan.popular && (
                     <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 bg-jungle-dark text-oro text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 sm:px-4 py-1 sm:py-1.5 rounded-full whitespace-nowrap">
-                      Mas popular
+                      Más popular
                     </div>
                   )}
                   <h3 className="text-xl sm:text-2xl font-black mb-0.5">{plan.name}</h3>
@@ -566,16 +566,16 @@ export default function Home() {
                 Casos reales
               </span>
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-jungle mt-2 sm:mt-3 mb-3 sm:mb-5">
-                Ellos ya confian en nosotros
+                Ellos ya confían en nosotros
               </h2>
             </div>
           </Reveal>
 
           <Stagger className="grid sm:grid-cols-3 gap-4 sm:gap-8" staggerDelay={0.15}>
             {[
-              { quote: "Con LEGION, incluso a la distancia, estuve protegido. Me asesoran rapido y claro.", name: "Suboficial activo", context: "Proceso disciplinario", rating: 5 },
-              { quote: "Gracias a LEGION, recupere mi tranquilidad y mi honor. Ganamos el caso.", name: "Sargento retirado", context: "Defensa penal militar", rating: 5 },
-              { quote: "Me suspendieron injustamente. Legion me ayudo a demostrar mi inocencia y me reintegraron.", name: "Patrullero activo", context: "Reintegro tras suspension", rating: 5 },
+              { quote: "Con LEGION, incluso a la distancia, estuve protegido. Me asesoran rápido y claro.", name: "Suboficial activo", context: "Proceso disciplinario", rating: 5 },
+              { quote: "Gracias a LEGION, recuperé mi tranquilidad y mi honor. Ganamos el caso.", name: "Sargento retirado", context: "Defensa penal militar", rating: 5 },
+              { quote: "Me suspendieron injustamente. Legion me ayudó a demostrar mi inocencia y me reintegraron.", name: "Patrullero activo", context: "Reintegro tras suspensión", rating: 5 },
             ].map((t, i) => (
               <StaggerItem key={i}>
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm sm:hover:shadow-xl transition-all duration-500 sm:hover:-translate-y-1 h-full">
@@ -608,7 +608,7 @@ export default function Home() {
         <div className="aspect-[16/10] sm:aspect-[21/8] max-h-[500px] relative">
           <Image
             src="/images/policia-nacional.webp"
-            alt="Policia Nacional de Colombia"
+            alt="Policía Nacional de Colombia"
             fill
             sizes="100vw"
             className="object-cover object-[center_30%]"
@@ -622,7 +622,7 @@ export default function Home() {
                     Tu servicio merece respaldo
                   </h2>
                   <p className="text-beige/70 text-xs sm:text-lg leading-relaxed mb-4 sm:mb-8">
-                    Cada dia arriesgas tu vida por Colombia. Lo minimo que mereces
+                    Cada dia arriesgas tu vida por Colombia. Lo mínimo que mereces
                     es tener un equipo legal a tu lado.
                   </p>
                   <a
@@ -652,7 +652,7 @@ export default function Home() {
           <ScaleReveal>
             <Image
               src="/images/logo.svg"
-              alt="Legion Juridica"
+              alt="Legión Jurídica"
               width={60}
               height={60}
               className="mx-auto mb-6 sm:mb-8 w-[50px] h-[50px] sm:w-[80px] sm:h-[80px] animate-float"
@@ -680,7 +680,7 @@ export default function Home() {
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                 </svg>
-                Escribenos por WhatsApp
+                Escríbenos por WhatsApp
               </a>
               <a
                 href="tel:+573176689580"
@@ -689,7 +689,7 @@ export default function Home() {
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                Llamanos ahora
+                Llámanos ahora
               </a>
             </div>
           </Reveal>

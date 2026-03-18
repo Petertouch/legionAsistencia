@@ -108,7 +108,7 @@ function Footer() {
               </span>
             </div>
             <p className="text-xs sm:text-sm leading-relaxed max-w-xs">
-              Asesoria juridica ilimitada para quienes protegen a Colombia.
+              Asesoría jurídica ilimitada para quienes protegen a Colombia.
               Defensa real. Tranquilidad garantizada.
             </p>
           </div>
