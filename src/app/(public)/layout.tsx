@@ -9,7 +9,7 @@ function Navbar() {
           <a href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Image
               src="/images/logo.svg"
-              alt="Legion Juridica"
+              alt="Legión Jurídica"
               width={36}
               height={36}
               className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
@@ -19,14 +19,14 @@ function Navbar() {
                 LEGION
               </span>
               <span className="text-oro font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">
-                JURIDICA
+                JURÍDICA
               </span>
             </div>
           </a>
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {[
-              ["#como-funciona", "Como Funciona"],
+              ["#como-funciona", "Cómo Funciona"],
               ["#cobertura", "Cobertura"],
               ["#planes", "Planes"],
               ["#testimonios", "Testimonios"],
@@ -65,7 +65,7 @@ function Navbar() {
               target="_blank"
               className="bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm transition-all duration-300 active:scale-95 sm:hover:scale-105 shadow-lg shadow-oro/20"
             >
-              Afiliate Ya
+              Afíliate Ya
             </a>
           </div>
         </div>
@@ -98,7 +98,7 @@ function Footer() {
             <div className="flex items-center gap-2.5 mb-4">
               <Image
                 src="/images/logo.svg"
-                alt="Legion Juridica"
+                alt="Legión Jurídica"
                 width={32}
                 height={32}
                 className="w-7 h-7 sm:w-8 sm:h-8"
@@ -113,9 +113,9 @@ function Footer() {
             </p>
           </div>
           <div>
-            <h4 className="text-oro font-bold mb-3 sm:mb-4 text-xs sm:text-sm tracking-wider uppercase">Navegacion</h4>
+            <h4 className="text-oro font-bold mb-3 sm:mb-4 text-xs sm:text-sm tracking-wider uppercase">Navegación</h4>
             <div className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm">
-              {["Como Funciona", "Cobertura", "Planes", "Testimonios"].map((item) => (
+              {["Cómo Funciona", "Cobertura", "Planes", "Testimonios"].map((item) => (
                 <a key={item} href={`#${item.toLowerCase().replace(/ /g, "-")}`} className="block hover:text-oro transition-colors py-0.5">{item}</a>
               ))}
             </div>
@@ -126,12 +126,12 @@ function Footer() {
               <a href="tel:+573176689580" className="block hover:text-oro transition-colors">+(57) 317 668 9580</a>
               <a href="tel:+573160541006" className="block hover:text-oro transition-colors">+(57) 316 054 1006</a>
               <a href="mailto:info@legionjuridica.com" className="block hover:text-oro transition-colors break-all">info@legionjuridica.com</a>
-              <p>Cra 7 # 81-49 Of. 301, Bogota</p>
+              <p>Cra 7 # 81-49 Of. 301, Bogotá</p>
             </div>
           </div>
         </div>
         <div className="border-t border-white/10 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-          <p>&copy; 2026 Legion Juridica. Todos los derechos reservados.</p>
+          <p>&copy; 2026 Legión Jurídica. Todos los derechos reservados.</p>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
             <span className="text-green-400 text-[11px] sm:text-xs">Asistente legal activo 24/7</span>
