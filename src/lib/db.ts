@@ -164,6 +164,62 @@ export async function getCasosBySuscriptor(suscriptorId: string): Promise<Caso[]
   return MOCK_CASOS.filter((c) => c.suscriptor_id === suscriptorId);
 }
 
+export async function respondConsulta(id: string, respuesta: string, abogado: string): Promise<Caso | null> {
+  const caso = MOCK_CASOS.find((c) => c.id === id);
+  if (!caso) return null;
+  caso.respuesta = respuesta;
+  caso.respondido_por = abogado;
+  caso.respondido_at = now();
+  // Advance to "Respondida" stage
+  const pipeline = PIPELINES[caso.area];
+  const respondidaIndex = pipeline.stages.findIndex((s) => s.name === "Respondida");
+  if (respondidaIndex >= 0) {
+    caso.etapa = "Respondida";
+    caso.etapa_index = respondidaIndex;
+    caso.fecha_ingreso_etapa = now();
+  }
+  caso.updated_at = now();
+  // Persist updated consulta to localStorage
+  if (typeof window !== "undefined") {
+    try {
+      const key = "legion-consultas";
+      const raw = localStorage.getItem(key);
+      const saved: Caso[] = raw ? JSON.parse(raw) : [];
+      const idx = saved.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        saved[idx] = { ...caso };
+        localStorage.setItem(key, JSON.stringify(saved));
+      }
+    } catch {}
+  }
+  return { ...caso };
+}
+
+export async function deleteConsultaRespuesta(id: string): Promise<Caso | null> {
+  const caso = MOCK_CASOS.find((c) => c.id === id);
+  if (!caso) return null;
+  caso.respuesta = undefined;
+  caso.respondido_por = undefined;
+  caso.respondido_at = undefined;
+  caso.etapa = "Pendiente";
+  caso.etapa_index = 0;
+  caso.fecha_ingreso_etapa = now();
+  caso.updated_at = now();
+  if (typeof window !== "undefined") {
+    try {
+      const key = "legion-consultas";
+      const raw = localStorage.getItem(key);
+      const saved: Caso[] = raw ? JSON.parse(raw) : [];
+      const idx = saved.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        saved[idx] = { ...caso };
+        localStorage.setItem(key, JSON.stringify(saved));
+      }
+    } catch {}
+  }
+  return { ...caso };
+}
+
 // ── Leads ───────────────────────────────────────────────────────
 export async function getLeads(params?: {
   search?: string; fuente?: string; estado?: string;

@@ -11,7 +11,11 @@ import {
   setBlogPassword,
   verifyBlogPassword,
   getAnsweredConsultas,
+  syncPersistedData,
 } from "@/lib/stores/questions-store";
+
+// Sync persisted consultas on load
+syncPersistedData();
 import {
   Search, Scale, ChevronRight, BookOpen, Send, CheckCircle2,
   Clock, MessageCircle, LogIn, UserPlus, EyeOff, Eye, LogOut,

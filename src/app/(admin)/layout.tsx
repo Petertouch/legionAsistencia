@@ -4,6 +4,10 @@ import Sidebar from "@/components/admin/sidebar";
 import Topbar from "@/components/admin/topbar";
 import MobileBottomNav from "@/components/admin/mobile-bottom-nav";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
+import { syncPersistedData } from "@/lib/stores/questions-store";
+
+// Sync blog consultas/suscriptores from localStorage into mock arrays
+syncPersistedData();
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebarStore();

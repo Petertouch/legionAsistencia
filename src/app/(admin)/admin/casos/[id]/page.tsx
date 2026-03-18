@@ -2,14 +2,15 @@
 
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCasoChecklist, createSeguimiento } from "@/lib/db";
+import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCasoChecklist, createSeguimiento, respondConsulta, deleteConsultaRespuesta } from "@/lib/db";
 import { PIPELINES, getDaysUntilDeadline, getDaysInStage } from "@/lib/pipelines";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import StageChecklist from "@/components/admin/stage-checklist";
-import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -33,6 +34,10 @@ export default function CasoDetailPage() {
   const [segTipo, setSegTipo] = useState<"nota" | "llamada" | "whatsapp" | "reunion">("nota");
   const [segDescripcion, setSegDescripcion] = useState("");
   const [segLoading, setSegLoading] = useState(false);
+  const [respuesta, setRespuesta] = useState("");
+  const [respLoading, setRespLoading] = useState(false);
+  const [editingResp, setEditingResp] = useState(false);
+  const { user } = useAuth();
 
   const { data: caso, refetch } = useQuery({ queryKey: ["caso", id], queryFn: () => getCaso(id) });
   const { data: seguimientos, refetch: refetchSeg } = useQuery({ queryKey: ["seguimientos", { caso_id: id }], queryFn: () => getSeguimientos({ caso_id: id }) });
@@ -83,6 +88,33 @@ export default function CasoDetailPage() {
     window.open(`https://wa.me/573176689580?text=${msg}`, "_blank");
     setShowShareModal(false);
   };
+
+  const handleRespond = async () => {
+    if (!respuesta.trim()) return;
+    setRespLoading(true);
+    await respondConsulta(caso.id, respuesta.trim(), user?.nombre || caso.abogado);
+    setRespuesta("");
+    setRespLoading(false);
+    setEditingResp(false);
+    invalidateAll();
+    toast.success(editingResp ? "Respuesta actualizada" : "Consulta respondida");
+  };
+
+  const handleDeleteResp = async () => {
+    await deleteConsultaRespuesta(caso.id);
+    setRespuesta("");
+    setEditingResp(false);
+    invalidateAll();
+    toast.success("Respuesta eliminada");
+  };
+
+  const handleEditResp = () => {
+    setRespuesta(caso.respuesta || "");
+    setEditingResp(true);
+  };
+
+  const isConsulta = caso.area === "Consulta";
+  const yaRespondida = !!caso.respuesta && !editingResp;
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -241,11 +273,101 @@ export default function CasoDetailPage() {
         </Card>
       </div>
 
+      {/* Consulta: real identity (always visible to admin even if anonymous) */}
+      {caso.area === "Consulta" && (caso.suscriptor_nombre_real || caso.suscriptor_cedula || caso.suscriptor_email) && (
+        <Card>
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-oro" />
+            <h4 className="text-white text-xs md:text-sm font-bold">Datos del consultante</h4>
+            {caso.suscriptor_nombre === "Anónimo" && <Badge variant="neutral" size="xs">Anónimo en blog</Badge>}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs md:text-sm">
+            {caso.suscriptor_nombre_real && <div><p className="text-beige/40 text-[10px]">Nombre real</p><p className="text-white">{caso.suscriptor_nombre_real}</p></div>}
+            {caso.suscriptor_cedula && <div><p className="text-beige/40 text-[10px]">Cédula</p><p className="text-white">{caso.suscriptor_cedula}</p></div>}
+            {caso.suscriptor_email && <div><p className="text-beige/40 text-[10px]">Email</p><p className="text-white">{caso.suscriptor_email}</p></div>}
+          </div>
+        </Card>
+      )}
+
       {/* Description */}
       <Card>
-        <h4 className="text-white text-xs md:text-sm font-bold mb-2">Descripcion del caso</h4>
-        <p className="text-beige/70 text-xs md:text-sm leading-relaxed">{caso.descripcion}</p>
+        <h4 className="text-white text-xs md:text-sm font-bold mb-2">{isConsulta ? "Pregunta del consultante" : "Descripción del caso"}</h4>
+        <p className="text-beige/70 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{caso.descripcion}</p>
       </Card>
+
+      {/* Consulta: Response section */}
+      {isConsulta && (
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="w-4 h-4 text-oro" />
+            <h4 className="text-white text-xs md:text-sm font-bold">Respuesta al consultante</h4>
+            {yaRespondida && (
+              <span className="flex items-center gap-1 text-green-400 text-[10px] ml-auto">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Respondida
+              </span>
+            )}
+          </div>
+
+          {yaRespondida ? (
+            <div className="space-y-3">
+              <div className="bg-green-500/5 border border-green-500/15 rounded-xl p-4">
+                <p className="text-beige/80 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{caso.respuesta}</p>
+              </div>
+              <div className="flex items-center justify-between text-[10px] md:text-xs text-beige/40">
+                <span>Respondida por: <strong className="text-beige/60">{caso.respondido_por}</strong></span>
+                <div className="flex items-center gap-3">
+                  {caso.respondido_at && (
+                    <span>{new Date(caso.respondido_at).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                  )}
+                  <button onClick={handleEditResp} className="flex items-center gap-1 text-oro hover:text-oro/80 transition-colors" title="Editar respuesta">
+                    <Pencil className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Editar</span>
+                  </button>
+                  <button onClick={handleDeleteResp} className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors" title="Eliminar respuesta">
+                    <Trash2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Eliminar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-beige/40 text-xs">
+                {editingResp
+                  ? "Editando la respuesta. Al guardar se actualizará en el blog."
+                  : "Escribe la respuesta orientativa para esta consulta. Al enviar, el caso avanzará a etapa \"Respondida\" y se publicará en el blog."}
+              </p>
+              <textarea
+                value={respuesta}
+                onChange={(e) => setRespuesta(e.target.value)}
+                placeholder="Escribe tu respuesta legal orientativa aquí..."
+                rows={6}
+                className="w-full bg-white/5 border border-white/10 text-white text-xs md:text-sm px-4 py-3 rounded-xl placeholder-beige/30 focus:outline-none focus:border-oro/40 resize-none leading-relaxed"
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-beige/30 text-[10px]">
+                  {respuesta.trim().length > 0 ? `${respuesta.trim().length} caracteres` : "Mínimo 20 caracteres"}
+                </p>
+                <div className="flex items-center gap-2">
+                  {editingResp && (
+                    <button
+                      onClick={() => { setEditingResp(false); setRespuesta(""); }}
+                      className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-2"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                  <button
+                    onClick={handleRespond}
+                    disabled={respuesta.trim().length < 20 || respLoading}
+                    className="flex items-center gap-2 bg-gradient-to-r from-oro to-oro-light text-jungle-dark text-xs md:text-sm font-bold px-5 py-2.5 rounded-xl hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98] shadow-lg shadow-oro/20"
+                  >
+                    <Send className="w-4 h-4" /> {respLoading ? "Enviando..." : editingResp ? "Guardar cambios" : "Enviar respuesta"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

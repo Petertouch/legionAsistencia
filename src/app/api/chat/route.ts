@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Rate limiting: 10 requests per minute per IP
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT = 10;
+const WINDOW_MS = 60 * 1000; // 1 minute
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(ip) || [];
+  const recent = timestamps.filter((t) => now - t < WINDOW_MS);
+  rateLimitMap.set(ip, recent);
+  if (recent.length >= RATE_LIMIT) return true;
+  recent.push(now);
+  rateLimitMap.set(ip, recent);
+  return false;
+}
+
+// Clean up old entries every 5 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, timestamps] of rateLimitMap.entries()) {
+    const recent = timestamps.filter((t) => now - t < WINDOW_MS);
+    if (recent.length === 0) rateLimitMap.delete(ip);
+    else rateLimitMap.set(ip, recent);
+  }
+}, 5 * 60 * 1000);
+
 const BASE_PROMPT = `Eres el Gral. Pantoja, asistente virtual de Legión Jurídica, un servicio de asistencia legal por suscripción mensual para militares y policías de Colombia.
 
 Tu personalidad: eres amable, profesional, empático y directo. Hablas en español colombiano natural. Tu objetivo es informar sobre los servicios y conectar al usuario con un abogado cuando sea necesario.
@@ -68,6 +94,14 @@ REGLAS ESPECIALES PARA CLIENTES AUTENTICADOS:
 - Si pregunta por pagos o estado de cuenta, muéstrale lo que tienes y sugiere contactar administración si necesita más detalle.`;
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Has enviado muchos mensajes. Espera un momento antes de intentar de nuevo." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { messages, clientContext, knowledge } = await request.json();
 

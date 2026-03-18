@@ -20,6 +20,9 @@ export interface Caso {
   id: string;
   suscriptor_id: string;
   suscriptor_nombre?: string;
+  suscriptor_nombre_real?: string;
+  suscriptor_cedula?: string;
+  suscriptor_email?: string;
   area: CaseArea;
   titulo: string;
   etapa: string;
@@ -33,6 +36,9 @@ export interface Caso {
   fecha_cierre: string | null;
   checklist: Record<string, boolean>;
   notas_etapa: string;
+  respuesta?: string;
+  respondido_por?: string;
+  respondido_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -3,6 +3,56 @@ import { persist } from "zustand/middleware";
 import { MOCK_CASOS, MOCK_SUSCRIPTORES, type Caso, type Suscriptor } from "@/lib/mock-data";
 import type { CaseArea } from "@/lib/pipelines";
 
+// ── LocalStorage persistence keys ──────────────────────────────
+const LS_CONSULTAS = "legion-consultas";
+const LS_FREE_SUSCRIPTORES = "legion-free-suscriptores";
+const LS_PASSWORDS = "legion-blog-passwords";
+
+function isBrowser() {
+  return typeof window !== "undefined";
+}
+
+function loadFromLS<T>(key: string): T[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveToLS<T>(key: string, data: T[]) {
+  if (!isBrowser()) return;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// ── Sync persisted data into MOCK arrays on load ────────────────
+let synced = false;
+
+export function syncPersistedData() {
+  if (!isBrowser() || synced) return;
+  synced = true;
+
+  // Sync free suscriptores
+  const savedSus = loadFromLS<Suscriptor>(LS_FREE_SUSCRIPTORES);
+  for (const s of savedSus) {
+    if (!MOCK_SUSCRIPTORES.find((x) => x.id === s.id)) {
+      MOCK_SUSCRIPTORES.push(s);
+    }
+  }
+
+  // Sync consultas
+  const savedCasos = loadFromLS<Caso>(LS_CONSULTAS);
+  for (const c of savedCasos) {
+    if (!MOCK_CASOS.find((x) => x.id === c.id)) {
+      MOCK_CASOS.push(c);
+    }
+  }
+
+  // Sync passwords
+  const savedPw = loadPasswordsFromLS();
+  Object.assign(BLOG_PASSWORDS, savedPw);
+}
+
 // ── Suscriptor registration for free users ──────────────────────
 let regCounter = 500;
 
@@ -31,6 +81,12 @@ export function registerFreeSuscriptor(data: {
     updated_at: now,
   };
   MOCK_SUSCRIPTORES.push(s);
+
+  // Persist to localStorage
+  const saved = loadFromLS<Suscriptor>(LS_FREE_SUSCRIPTORES);
+  saved.push(s);
+  saveToLS(LS_FREE_SUSCRIPTORES, saved);
+
   return s;
 }
 
@@ -53,6 +109,9 @@ export function createConsultaCaso(data: {
     id: `cq${++consultaCounter}`,
     suscriptor_id: data.suscriptor.id,
     suscriptor_nombre: data.anonimo ? "Anónimo" : data.suscriptor.nombre,
+    suscriptor_nombre_real: data.suscriptor.nombre,
+    suscriptor_cedula: data.suscriptor.cedula,
+    suscriptor_email: data.email,
     area: "Consulta" as CaseArea,
     titulo: data.pregunta.length > 80 ? data.pregunta.slice(0, 77) + "..." : data.pregunta,
     etapa: "Pendiente",
@@ -65,12 +124,18 @@ export function createConsultaCaso(data: {
     fecha_audiencia: null,
     fecha_cierre: null,
     checklist: {},
-    notas_etapa: `Área de interés: ${data.area}\nEmail: ${data.email}\nAnónimo: ${data.anonimo ? "Sí" : "No"}`,
+    notas_etapa: `Área de interés: ${data.area}\nEmail: ${data.email}\nAnónimo: ${data.anonimo ? "Sí" : "No"}\nNombre real: ${data.suscriptor.nombre}\nCédula: ${data.suscriptor.cedula}`,
     created_at: now,
     updated_at: now,
   };
 
   MOCK_CASOS.push(caso);
+
+  // Persist to localStorage
+  const saved = loadFromLS<Caso>(LS_CONSULTAS);
+  saved.push(caso);
+  saveToLS(LS_CONSULTAS, saved);
+
   return caso;
 }
 
@@ -104,8 +169,22 @@ const BLOG_PASSWORDS: Record<string, string> = {
   "123": "123", // test user
 };
 
+function loadPasswordsFromLS(): Record<string, string> {
+  if (!isBrowser()) return {};
+  try {
+    const raw = localStorage.getItem(LS_PASSWORDS);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function savePasswordsToLS() {
+  if (!isBrowser()) return;
+  localStorage.setItem(LS_PASSWORDS, JSON.stringify(BLOG_PASSWORDS));
+}
+
 export function setBlogPassword(cedula: string, password: string) {
   BLOG_PASSWORDS[cedula] = password;
+  savePasswordsToLS();
 }
 
 export function verifyBlogPassword(cedula: string, password: string): boolean {
