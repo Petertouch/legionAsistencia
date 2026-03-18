@@ -3,9 +3,165 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BLOG_ARTICLES, BLOG_CATEGORIES, CATEGORY_COLORS } from "@/lib/blog-data";
-import { Search, Scale, ChevronRight, BookOpen } from "lucide-react";
+import { useQuestionsStore } from "@/lib/stores/questions-store";
+import { Search, Scale, ChevronRight, BookOpen, Send, CheckCircle2, Clock, MessageCircle } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
+
+const RAMAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea"];
+const AREAS_CONSULTA = ["Disciplinarios", "Penal Militar", "Derechos Laborales", "Ascensos y Carrera", "Salud y Pensión", "Familia", "Documentos Legales", "Retiro y Pensión", "Otro"];
+
+function QuestionForm() {
+  const { addPregunta, preguntas } = useQuestionsStore();
+  const [form, setForm] = useState({ nombre: "", telefono: "", rama: "", area: "", pregunta: "" });
+  const [sent, setSent] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Hydration safe
+  useState(() => { setMounted(true); });
+
+  const canSend = form.nombre.trim() && form.telefono.trim() && form.pregunta.trim().length >= 10;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSend) return;
+    addPregunta({
+      nombre: form.nombre.trim(),
+      telefono: form.telefono.trim(),
+      rama: form.rama || "No especificada",
+      area: form.area || "General",
+      pregunta: form.pregunta.trim(),
+    });
+    setForm({ nombre: "", telefono: "", rama: "", area: "", pregunta: "" });
+    setSent(true);
+    setTimeout(() => setSent(false), 5000);
+  };
+
+  // Show recent answered questions
+  const respondidas = mounted ? preguntas.filter((p) => p.estado === "respondida").slice(0, 3) : [];
+
+  return (
+    <section className="bg-jungle-dark rounded-2xl overflow-hidden">
+      <div className="grid lg:grid-cols-2">
+        {/* Form */}
+        <div className="p-5 sm:p-8">
+          <div className="flex items-center gap-2 mb-1">
+            <MessageCircle className="w-5 h-5 text-oro" />
+            <h2 className="text-white text-lg sm:text-xl font-bold">Haz tu consulta legal gratis</h2>
+          </div>
+          <p className="text-beige/50 text-xs sm:text-sm mb-5">
+            Escribe tu pregunta y nuestro equipo de abogados te responde en un promedio de <strong className="text-oro">8 horas</strong>. 
+            Cualquier tema, cualquier área. Sin compromiso.
+          </p>
+
+          {sent ? (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5 text-center">
+              <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto mb-2" />
+              <h3 className="text-white font-bold text-sm mb-1">¡Pregunta enviada!</h3>
+              <p className="text-beige/50 text-xs">
+                Nuestro equipo la revisará y te responderemos por WhatsApp en promedio 8 horas.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                  placeholder="Tu nombre y rango *"
+                  className="bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40"
+                />
+                <input
+                  type="tel" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                  placeholder="WhatsApp / Celular *"
+                  className="bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <select value={form.rama} onChange={(e) => setForm({ ...form, rama: e.target.value })}
+                  className="bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+                  <option value="" className="bg-jungle-dark">Rama (opcional)</option>
+                  {RAMAS.map((r) => <option key={r} value={r} className="bg-jungle-dark">{r}</option>)}
+                </select>
+                <select value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })}
+                  className="bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+                  <option value="" className="bg-jungle-dark">Área (opcional)</option>
+                  {AREAS_CONSULTA.map((a) => <option key={a} value={a} className="bg-jungle-dark">{a}</option>)}
+                </select>
+              </div>
+              <textarea
+                value={form.pregunta} onChange={(e) => setForm({ ...form, pregunta: e.target.value })}
+                placeholder="Describe tu situación o pregunta legal... (mínimo 10 caracteres) *"
+                rows={3}
+                className="w-full bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40 resize-none"
+              />
+              <button
+                type="submit" disabled={!canSend}
+                className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-oro/20 flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" /> Enviar mi consulta
+              </button>
+              <p className="text-beige/30 text-[10px] text-center">
+                Tu información es confidencial. Solo la usamos para responderte.
+              </p>
+            </form>
+          )}
+        </div>
+
+        {/* Recent answered */}
+        <div className="bg-white/5 p-5 sm:p-8 border-t lg:border-t-0 lg:border-l border-white/10">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-4 h-4 text-oro" />
+            <h3 className="text-white font-bold text-sm">Consultas respondidas recientemente</h3>
+          </div>
+          {respondidas.length > 0 ? (
+            <div className="space-y-3">
+              {respondidas.map((p) => (
+                <div key={p.id} className="bg-white/5 rounded-xl p-3 border border-white/5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-beige/40 text-[10px]">{p.rama}</span>
+                    <span className="text-beige/20 text-[10px]">•</span>
+                    <span className="text-beige/40 text-[10px]">{p.area}</span>
+                  </div>
+                  <p className="text-white text-xs font-medium mb-1.5 leading-snug">{p.pregunta}</p>
+                  <p className="text-beige/50 text-[11px] leading-relaxed line-clamp-3">{p.respuesta}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <CheckCircle2 className="w-3 h-3 text-green-400" />
+                    <span className="text-green-400 text-[9px] font-medium">
+                      Respondida {p.responded_at ? `el ${new Date(p.responded_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}` : ""}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                <p className="text-white text-xs font-medium mb-1.5">¿Qué tan grave es llegar tarde a formación?</p>
+                <p className="text-beige/50 text-[11px] leading-relaxed line-clamp-3">Depende del reglamento interno y las circunstancias. Puede ser falta leve o grave...</p>
+                <div className="flex items-center gap-1 mt-2">
+                  <CheckCircle2 className="w-3 h-3 text-green-400" />
+                  <span className="text-green-400 text-[9px] font-medium">Respondida en 6 horas</span>
+                </div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                <p className="text-white text-xs font-medium mb-1.5">¿Pueden descontarme sin autorización de mi sueldo?</p>
+                <p className="text-beige/50 text-[11px] leading-relaxed line-clamp-3">No. Todo descuento debe estar autorizado por ley o por usted. Si le están descontando sin su consentimiento...</p>
+                <div className="flex items-center gap-1 mt-2">
+                  <CheckCircle2 className="w-3 h-3 text-green-400" />
+                  <span className="text-green-400 text-[9px] font-medium">Respondida en 4 horas</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="mt-4 pt-3 border-t border-white/5 text-center">
+            <p className="text-beige/30 text-[10px]">Tiempo promedio de respuesta</p>
+            <p className="text-oro font-bold text-lg">~8 horas</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function BlogPage() {
   const [search, setSearch] = useState("");
@@ -26,7 +182,6 @@ export default function BlogPage() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Category counts
   const catCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     BLOG_ARTICLES.forEach((a) => { counts[a.categoria] = (counts[a.categoria] || 0) + 1; });
@@ -72,6 +227,11 @@ export default function BlogPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 sm:py-10">
+        {/* Ask your question */}
+        <div className="mb-8 sm:mb-10">
+          <QuestionForm />
+        </div>
+
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
           <button
@@ -164,29 +324,6 @@ export default function BlogPage() {
             ))}
           </div>
         )}
-
-        {/* CTA */}
-        <div className="mt-10 sm:mt-14 bg-jungle-dark rounded-2xl p-6 sm:p-8 text-center">
-          <h3 className="text-white text-lg sm:text-xl font-bold mb-2">
-            ¿Necesitas un abogado que te defienda?
-          </h3>
-          <p className="text-beige/50 text-xs sm:text-sm mb-5 max-w-md mx-auto">
-            Nuestro equipo de abogados especialistas en derecho militar está listo para ayudarte. 
-            Planes desde $50.000/mes.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="https://wa.me/573176689580?text=Hola%2C%20vengo%20de%20la%20gu%C3%ADa%20legal.%20Necesito%20asesor%C3%ADa."
-              target="_blank"
-              className="bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold px-6 py-3 rounded-full text-sm transition-all active:scale-95 shadow-lg shadow-oro/20"
-            >
-              Hablar con un abogado
-            </a>
-            <a href="/#planes" className="text-beige/50 hover:text-white text-sm transition-colors">
-              Ver planes →
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   );
