@@ -23,7 +23,7 @@ export default function PublicNavbar() {
             <Image src="/images/logo.svg" alt="Legión Jurídica" width={36} height={36}
               className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-white font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">LEGION</span>
+              <span className="text-white font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">LEGIÓN</span>
               <span className="text-oro font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">JURÍDICA</span>
             </div>
           </a>

@@ -32,7 +32,7 @@ function Footer() {
                 className="w-7 h-7 sm:w-8 sm:h-8"
               />
               <span className="text-white font-black tracking-[0.12em] text-base sm:text-lg">
-                LEGION
+                LEGIÓN
               </span>
             </div>
             <p className="text-xs sm:text-sm leading-relaxed max-w-xs">
