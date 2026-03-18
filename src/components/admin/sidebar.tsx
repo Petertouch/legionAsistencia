@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useLanzaStore } from "@/lib/stores/lanza-store";
 import {
   LayoutDashboard,
   Users,
@@ -28,7 +29,7 @@ const NAV_ITEMS = [
   { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
   { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["admin"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
-  { href: "/admin/recomendaciones", label: "Recomendaciones", icon: Gift, roles: ["admin"] },
+  { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
 ];
 
 export { NAV_ITEMS };
@@ -38,6 +39,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebarStore();
   const { user, role, logout } = useAuth();
+  const pendingLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
 
   const visibleItems = NAV_ITEMS.filter((item) => !role || item.roles.includes(role));
 
@@ -105,8 +107,24 @@ export default function Sidebar() {
                     : "text-beige/50 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>{label}</span>}
+                <span className="relative flex-shrink-0">
+                  <Icon className="w-5 h-5" />
+                  {href === "/admin/recomendaciones" && pendingLeads > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {pendingLeads}
+                    </span>
+                  )}
+                </span>
+                {!collapsed && (
+                  <span className="flex items-center gap-2">
+                    {label}
+                    {href === "/admin/recomendaciones" && pendingLeads > 0 && (
+                      <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        {pendingLeads}
+                      </span>
+                    )}
+                  </span>
+                )}
               </Link>
             );
           })}

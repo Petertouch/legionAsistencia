@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
-import { User, Scale, LogOut, MessageCircle } from "lucide-react";
+import { User, Scale, Gift, LogOut, MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   useEffect(() => { setMounted(true); }, []);
 
   const isLoginPage = pathname === "/mi-caso";
-  const isPublicCasePage = pathname.startsWith("/mi-caso/") && !pathname.startsWith("/mi-caso/perfil") && !pathname.startsWith("/mi-caso/casos");
+  const isPublicCasePage = pathname.startsWith("/mi-caso/") && !pathname.startsWith("/mi-caso/perfil") && !pathname.startsWith("/mi-caso/casos") && !pathname.startsWith("/mi-caso/referidos");
   const showNav = mounted && session && !isLoginPage;
 
   const handleLogout = () => {
@@ -54,6 +54,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {[
               { href: "/mi-caso/perfil", label: "Mi Perfil", icon: User },
               { href: "/mi-caso/casos", label: "Mis Casos", icon: Scale },
+              { href: "/mi-caso/referidos", label: "Referidos", icon: Gift },
             ].map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href === "/mi-caso/casos" && pathname.startsWith("/mi-caso/casos/"));
               return (

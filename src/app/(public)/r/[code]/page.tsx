@@ -2,8 +2,9 @@
 
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
-import { useReferralStore } from "@/lib/stores/referral-store";
-import { Shield, Check, MessageCircle, Phone, Star, ArrowRight } from "lucide-react";
+import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { Shield, Check, MessageCircle, Phone, Star } from "lucide-react";
+import { toast } from "sonner";
 
 const PLANES = [
   {
@@ -45,28 +46,58 @@ const PLANES = [
   },
 ];
 
+const AREAS = ["Penal Militar", "Disciplinario", "Familia", "Documentos", "Consumidor", "Civil", "Otro"];
+
 interface Props {
   params: Promise<{ code: string }>;
 }
 
 export default function ReferralPage({ params }: Props) {
   const { code } = use(params);
-  const referrals = useReferralStore((s) => s.referrals);
+  const { getLanzaByCode, addLead } = useLanzaStore();
   const [mounted, setMounted] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
   const [plan, setPlan] = useState("Base");
   const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({
+    nombre: "",
+    telefono: "",
+    email: "",
+    cedula: "",
+    area_interes: "Penal Militar",
+    mensaje: "",
+  });
 
   useEffect(() => { setMounted(true); }, []);
 
-  const referral = mounted ? referrals.find((r) => r.code === code) : null;
+  const lanza = mounted ? getLanzaByCode(code) : null;
+
+  const update = (field: string, value: string) =>
+    setForm((f) => ({ ...f, [field]: value }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const msg = `Hola, quiero afiliarme al Plan ${plan}. Mi nombre es ${nombre}, tel: ${telefono}. Código de referido: ${code}`;
+
+    // Register lead in the store
+    if (lanza) {
+      addLead({
+        lanza_id: lanza.id,
+        lanza_code: lanza.code,
+        nombre: form.nombre.trim(),
+        telefono: form.telefono.trim(),
+        email: form.email.trim(),
+        cedula: form.cedula.trim(),
+        area_interes: form.area_interes,
+        plan_interes: plan,
+        mensaje: form.mensaje.trim(),
+      });
+    }
+
+    // Also open WhatsApp
+    const msg = `Hola, quiero afiliarme al Plan ${plan}. Mi nombre es ${form.nombre}, tel: ${form.telefono}. Código: ${code}`;
     window.open(`https://wa.me/573176689580?text=${encodeURIComponent(msg)}`, "_blank");
+
     setSent(true);
+    toast.success("¡Registro enviado!");
   };
 
   return (
@@ -83,11 +114,11 @@ export default function ReferralPage({ params }: Props) {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6 md:space-y-8">
-        {/* Referral banner */}
-        {referral && (
+        {/* Lanza banner */}
+        {lanza && (
           <div className="bg-oro/10 border border-oro/20 rounded-xl p-4 text-center">
             <p className="text-oro text-sm font-medium">
-              🎁 <strong>{referral.referrer_name}</strong> te invitó a Legión Jurídica
+              <strong>{lanza.nombre}</strong> te invitó a Legión Jurídica
             </p>
           </div>
         )}
@@ -164,57 +195,92 @@ export default function ReferralPage({ params }: Props) {
         {!sent ? (
           <div className="bg-white/5 border border-white/10 rounded-xl p-5">
             <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-oro" /> Afíliate ahora
+              <Shield className="w-5 h-5 text-oro" /> Regístrate ahora
             </h3>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Nombre completo</label>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Nombre completo *</label>
                 <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  type="text" required value={form.nombre}
+                  onChange={(e) => update("nombre", e.target.value)}
                   placeholder="Tu nombre y apellido"
-                  required
+                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono *</label>
+                  <input
+                    type="tel" required value={form.telefono}
+                    onChange={(e) => update("telefono", e.target.value.replace(/\D/g, ""))}
+                    placeholder="3176689580" inputMode="numeric"
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Cédula</label>
+                  <input
+                    type="text" value={form.cedula}
+                    onChange={(e) => update("cedula", e.target.value.replace(/\D/g, ""))}
+                    placeholder="12345678" inputMode="numeric"
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Email</label>
+                <input
+                  type="email" value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  placeholder="correo@ejemplo.com"
                   className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono (celular)</label>
-                <input
-                  type="tel"
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
-                  placeholder="3176689580"
-                  required
-                  inputMode="numeric"
-                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                <label className="text-beige/60 text-xs font-medium mb-1 block">¿En qué área necesitas ayuda?</label>
+                <select
+                  value={form.area_interes}
+                  onChange={(e) => update("area_interes", e.target.value)}
+                  className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                >
+                  {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Cuéntanos tu situación (opcional)</label>
+                <textarea
+                  value={form.mensaje}
+                  onChange={(e) => update("mensaje", e.target.value)}
+                  placeholder="Describe brevemente tu caso..."
+                  rows={3}
+                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none resize-none"
                 />
               </div>
               <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
                 <span className="text-beige/50 text-xs">Plan seleccionado</span>
                 <span className="text-oro font-bold text-sm">{plan} — ${PLANES.find((p) => p.name === plan)?.price}/mes</span>
               </div>
-              {referral && (
+              {lanza && (
                 <div className="bg-oro/5 rounded-lg px-3 py-2 flex items-center justify-between">
                   <span className="text-beige/50 text-xs">Referido por</span>
-                  <span className="text-oro text-xs font-medium">{referral.referrer_name}</span>
+                  <span className="text-oro text-xs font-medium">{lanza.nombre}</span>
                 </div>
               )}
               <button
                 type="submit"
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
               >
-                <MessageCircle className="w-5 h-5" /> Afiliarme por WhatsApp
+                <MessageCircle className="w-5 h-5" /> Registrarme y contactar por WhatsApp
               </button>
               <p className="text-beige/30 text-[10px] text-center">
-                Al hacer clic, se abrirá WhatsApp con tu información para completar la afiliación
+                Tus datos quedan registrados y también se abrirá WhatsApp para contacto directo
               </p>
             </form>
           </div>
         ) : (
           <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center space-y-3">
             <Check className="w-10 h-10 text-green-400 mx-auto" />
-            <h3 className="text-white font-bold text-lg">¡Solicitud enviada!</h3>
+            <h3 className="text-white font-bold text-lg">¡Registro exitoso!</h3>
             <p className="text-beige/60 text-sm">
               Un abogado te contactará por WhatsApp para completar tu afiliación al <strong className="text-white">Plan {plan}</strong>.
             </p>

@@ -7,8 +7,9 @@ import { StatCard } from "@/components/ui/card";
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
 import { getDaysUntilDeadline } from "@/lib/pipelines";
-import { Users, Scale, Inbox, AlertTriangle, Phone, MessageSquare, Calendar, StickyNote, CalendarClock } from "lucide-react";
+import { Users, Scale, Inbox, AlertTriangle, Phone, MessageSquare, Calendar, StickyNote, CalendarClock, Gift } from "lucide-react";
 import Link from "next/link";
+import { useLanzaStore } from "@/lib/stores/lanza-store";
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
   llamada: <Phone className="w-4 h-4" />, whatsapp: <MessageSquare className="w-4 h-4" />,
@@ -18,6 +19,7 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
 export default function DashboardPage() {
   const { user, isAbogado, isAdmin } = useAuth();
   const abogadoFilter = isAbogado ? user?.nombre : undefined;
+  const lanzaData = useLanzaStore((s) => ({ lanzas: s.lanzas.length, leads: s.leads.length, convertidos: s.leads.filter((l) => l.status === "convertido").length, nuevos: s.leads.filter((l) => l.status === "nuevo").length }));
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats", abogadoFilter],
@@ -30,7 +32,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Stats */}
-      <div className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-3"} gap-2 md:gap-4`}>
+      <div className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-5" : "md:grid-cols-3"} gap-2 md:gap-4`}>
         {isAdmin && (
           <StatCard title="Suscriptores" value={stats.totalSuscriptores} icon={<Users className="w-5 h-5" />}
             trend={{ value: `${stats.suscriptoresAlDia} al dia`, positive: true }} />
@@ -42,6 +44,10 @@ export default function DashboardPage() {
         <StatCard title={isAbogado ? "Estancados" : "Pagos Pend."} value={isAbogado ? stats.casosStale : stats.pagosPendientes}
           icon={<AlertTriangle className="w-5 h-5" />}
           trend={isAbogado ? { value: `${stats.casosDeadlineCerca} deadline`, positive: false } : { value: `${stats.pagosPendientes} por cobrar`, positive: false }} />
+        {isAdmin && (
+          <StatCard title="Lanzas" value={lanzaData.lanzas} icon={<Gift className="w-5 h-5" />}
+            trend={{ value: lanzaData.nuevos > 0 ? `${lanzaData.nuevos} leads nuevos` : `${lanzaData.convertidos} convertidos`, positive: lanzaData.convertidos > 0 }} />
+        )}
       </div>
 
       {/* Urgent cases */}

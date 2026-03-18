@@ -9,6 +9,8 @@ const NAV_LINKS = [
   ["/#cobertura", "Cobertura"],
   ["/#planes", "Planes"],
   ["/blog", "Guía Legal"],
+  ["/noticias", "Noticias"],
+  ["/lanzas", "Lanzas"],
 ];
 
 export default function PublicNavbar() {

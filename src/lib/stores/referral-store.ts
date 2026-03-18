@@ -41,20 +41,7 @@ interface ReferralStore {
   closeReferral: (id: string) => void;
 }
 
-const INITIAL_REFERRALS: Referral[] = [
-  {
-    id: "ref0", code: "ABC123",
-    referrer_name: "Sgto. Juan Felipe Pulido", referrer_cedula: "123", referrer_suscriptor_id: "s1",
-    referred_name: "Cabo Martinez", referred_phone: "3201234567", referred_email: "cmartinez@mail.com",
-    status: "cerrado", deuda: 50000, created_at: "2026-03-10T10:00:00Z", closed_at: "2026-03-15T10:00:00Z", notes: "Se afilió al plan Base",
-  },
-  {
-    id: "ref1", code: "XYZ789",
-    referrer_name: "SI. Maria Torres", referrer_cedula: "52876543", referrer_suscriptor_id: "s2",
-    referred_name: "Pt. Rodriguez", referred_phone: "3109876543", referred_email: "prodriguez@mail.com",
-    status: "contactado", deuda: 0, created_at: "2026-03-14T10:00:00Z", closed_at: null, notes: "Interesado en plan Plus",
-  },
-];
+const INITIAL_REFERRALS: Referral[] = [];
 
 export const useReferralStore = create<ReferralStore>()(
   persist(

@@ -77,33 +77,7 @@ export const MOCK_SUSCRIPTORES: Suscriptor[] = [];
 export const MOCK_CASOS: Caso[] = [];
 
 // ── Leads ───────────────────────────────────────────────────────
-export const MOCK_LEADS: Lead[] = [
-  {
-    id: "l1", nombre: "Juan Perez", telefono: "3181234567", email: "jperez@mail.com",
-    area_interes: "Penal Militar", fuente: "whatsapp", estado: "Nuevo",
-    notas: "Pregunto por proceso disciplinario", created_at: "2026-03-15T14:00:00Z", updated_at: "2026-03-15T14:00:00Z",
-  },
-  {
-    id: "l2", nombre: "Ana Castillo", telefono: "3187654321", email: "acastillo@mail.com",
-    area_interes: "Familia", fuente: "chatbot", estado: "Contactado",
-    notas: "Interesada en plan Plus para tema de custodia", created_at: "2026-03-14T09:00:00Z", updated_at: "2026-03-15T10:00:00Z",
-  },
-  {
-    id: "l3", nombre: "Roberto Diaz", telefono: "3209876543", email: "rdiaz@mail.com",
-    area_interes: "Disciplinario", fuente: "referido", estado: "Interesado",
-    notas: "Referido por Sgto Mendoza. Tiene citación a descargos", created_at: "2026-03-12T11:00:00Z", updated_at: "2026-03-14T15:00:00Z",
-  },
-  {
-    id: "l4", nombre: "Sofia Herrera", telefono: "3001112233", email: "sherrera@mail.com",
-    area_interes: "Consumidor", fuente: "web", estado: "Convertido",
-    notas: "Afiliada al plan Base", created_at: "2026-03-01T08:00:00Z", updated_at: "2026-03-10T10:00:00Z",
-  },
-  {
-    id: "l5", nombre: "Diego Morales", telefono: "3114455667", email: "dmorales@mail.com",
-    area_interes: "Documentos", fuente: "whatsapp", estado: "Perdido",
-    notas: "No respondio despues del segundo contacto", created_at: "2026-02-20T10:00:00Z", updated_at: "2026-03-05T10:00:00Z",
-  },
-];
+export const MOCK_LEADS: Lead[] = [];
 
 // ── Seguimientos ────────────────────────────────────────────────
 export const MOCK_SEGUIMIENTOS: Seguimiento[] = [];
