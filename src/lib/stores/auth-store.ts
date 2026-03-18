@@ -12,12 +12,23 @@ export interface AuthUser {
   cedula?: string;
 }
 
-// Mock users — abogado names must match mock-data abogado field
-export const MOCK_USERS: AuthUser[] = [
-  { id: "u1", nombre: "Carlos Admin", email: "admin@legionjuridica.com", role: "admin" },
-  { id: "u2", nombre: "Dr. Ramirez", email: "ramirez@legionjuridica.com", role: "abogado" },
-  { id: "u3", nombre: "Dra. Lopez", email: "lopez@legionjuridica.com", role: "abogado" },
-];
+// Credentials: email → { password, user }
+export const MOCK_CREDENTIALS: Record<string, { password: string; user: AuthUser }> = {
+  "a@a.com": {
+    password: "123",
+    user: { id: "u1", nombre: "Admin", email: "a@a.com", role: "admin" },
+  },
+};
+
+// Helper for login page
+export const MOCK_USERS: AuthUser[] = Object.values(MOCK_CREDENTIALS).map((c) => c.user);
+
+export function authenticate(email: string, password: string): AuthUser | null {
+  const entry = MOCK_CREDENTIALS[email.toLowerCase().trim()];
+  if (!entry) return null;
+  if (entry.password !== password) return null;
+  return entry.user;
+}
 
 interface AuthStore {
   user: AuthUser | null;

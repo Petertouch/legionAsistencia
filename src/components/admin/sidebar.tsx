@@ -22,11 +22,11 @@ import {
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado"] },
-  { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
-  { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
-  { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["admin"] },
   { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
+  { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
+  { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
   { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
+  { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["admin"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
   { href: "/admin/recomendaciones", label: "Recomendaciones", icon: Gift, roles: ["admin"] },
 ];
@@ -71,15 +71,15 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-4 h-14 md:h-16 border-b border-white/10 flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <Image src="/images/logo.svg" alt="Legion" width={28} height={28} className="flex-shrink-0" />
+          <a href="/" className="flex items-center gap-2.5">
+            <Image src="/images/logo.svg" alt="Legión" width={28} height={28} className="flex-shrink-0" />
             {!collapsed && (
               <div className="flex items-center gap-1 overflow-hidden">
-                <span className="text-white font-black text-sm tracking-[0.12em]">LEGION</span>
+                <span className="text-white font-black text-sm tracking-[0.12em]">LEGIÓN</span>
                 <span className="text-oro font-black text-sm tracking-[0.12em]">CRM</span>
               </div>
             )}
-          </div>
+          </a>
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
