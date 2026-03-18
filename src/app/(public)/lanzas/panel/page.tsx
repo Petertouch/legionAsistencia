@@ -2,9 +2,24 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Copy, Users, Phone, DollarSign, Share2, LogOut } from "lucide-react";
+
+interface Lanza {
+  id: string;
+  code: string;
+  nombre: string;
+}
+
+interface Lead {
+  id: string;
+  nombre: string;
+  telefono: string;
+  area_interes: string;
+  status: "nuevo" | "contactado" | "convertido" | "perdido";
+  created_at: string;
+}
 
 const LEAD_STATUS_CONFIG = {
   nuevo: { label: "Nuevo", color: "bg-yellow-500/10 text-yellow-400" },
@@ -19,7 +34,7 @@ function formatMoney(n: number) {
 
 export default function LanzaPanelPage() {
   return (
-    <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-jungle-dark flex items-center justify-center"><div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" /></div>}>
       <LanzaPanelContent />
     </Suspense>
   );
@@ -29,17 +44,44 @@ function LanzaPanelContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code") || "";
-  const { getLanzaByCode, leads } = useLanzaStore();
-  const [mounted, setMounted] = useState(false);
+  const [lanza, setLanza] = useState<Lanza | null>(null);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (!code) { setLoading(false); return; }
+    const supabase = createClient();
+    (async () => {
+      const { data: lanzaData } = await supabase
+        .from("lanzas")
+        .select("id, code, nombre")
+        .eq("code", code)
+        .single();
 
-  if (!mounted) return null;
+      if (lanzaData) {
+        setLanza(lanzaData as Lanza);
+        const { data: leadsData } = await supabase
+          .from("lanza_leads")
+          .select("id, nombre, telefono, area_interes, status, created_at")
+          .eq("lanza_id", lanzaData.id)
+          .order("created_at", { ascending: false });
+        setLeads((leadsData || []) as Lead[]);
+      }
+      setLoading(false);
+    })();
+  }, [code]);
 
-  const lanza = getLanzaByCode(code);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-jungle-dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!lanza) {
     return (
-      <div className="min-h-screen bg-jungle-dark min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-jungle-dark flex items-center justify-center px-4">
         <div className="text-center space-y-3">
           <p className="text-beige/50 text-sm">Código de Lanza no válido</p>
           <button onClick={() => router.push("/lanzas")} className="text-oro text-sm hover:underline">
@@ -50,8 +92,7 @@ function LanzaPanelContent() {
     );
   }
 
-  const misLeads = leads.filter((l) => l.lanza_id === lanza.id);
-  const convertidos = misLeads.filter((l) => l.status === "convertido").length;
+  const convertidos = leads.filter((l) => l.status === "convertido").length;
   const saldo = convertidos * 50000;
   const shareLink = `${window.location.origin}/r/${lanza.code}`;
 
@@ -110,7 +151,7 @@ function LanzaPanelContent() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-white">{misLeads.length}</p>
+          <p className="text-2xl font-bold text-white">{leads.length}</p>
           <p className="text-beige/40 text-[10px]">Registrados</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
@@ -146,9 +187,9 @@ function LanzaPanelContent() {
       {/* Leads list */}
       <div>
         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4 text-beige/40" /> Mis registrados ({misLeads.length})
+          <Users className="w-4 h-4 text-beige/40" /> Mis registrados ({leads.length})
         </h3>
-        {misLeads.length === 0 ? (
+        {leads.length === 0 ? (
           <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
             <Users className="w-8 h-8 text-beige/20 mx-auto mb-2" />
             <p className="text-beige/40 text-sm">Aún no tienes registrados</p>
@@ -156,7 +197,7 @@ function LanzaPanelContent() {
           </div>
         ) : (
           <div className="space-y-2">
-            {misLeads.map((lead) => {
+            {leads.map((lead) => {
               const config = LEAD_STATUS_CONFIG[lead.status];
               return (
                 <div key={lead.id} className="bg-white/5 border border-white/10 rounded-xl p-3.5">

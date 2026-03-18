@@ -70,8 +70,68 @@ export interface Seguimiento {
   created_at: string;
 }
 
+// ── Documentos de contrato ────────────────────────────────────────
+export interface DocumentoContrato {
+  id: string;
+  suscriptor_id: string;
+  nombre: string;
+  tipo: "contrato" | "anexo" | "identificacion" | "otro";
+  archivo_url: string;      // in production: Supabase Storage URL
+  tamano: string;            // display size e.g. "1.2 MB"
+  subido_por: string;
+  created_at: string;
+}
+
+export const MOCK_DOCUMENTOS: DocumentoContrato[] = [];
+
 // ── Suscriptores ────────────────────────────────────────────────
-export const MOCK_SUSCRIPTORES: Suscriptor[] = [];
+export const MOCK_SUSCRIPTORES: Suscriptor[] = [
+  {
+    id: "s1",
+    nombre: "Carlos Andrés Gómez",
+    telefono: "3101234567",
+    email: "carlos.gomez@mail.com",
+    cedula: "80123456",
+    plan: "Base",
+    estado_pago: "Al dia",
+    rama: "Ejército Nacional",
+    rango: "Sargento Primero",
+    fecha_inicio: "2025-11-15",
+    notas: "",
+    created_at: "2025-11-15T10:00:00Z",
+    updated_at: "2025-11-15T10:00:00Z",
+  },
+  {
+    id: "s2",
+    nombre: "María Fernanda Rodríguez",
+    telefono: "3209876543",
+    email: "maria.rodriguez@mail.com",
+    cedula: "52987654",
+    plan: "Plus",
+    estado_pago: "Al dia",
+    rama: "Policía Nacional",
+    rango: "Intendente",
+    fecha_inicio: "2025-12-01",
+    notas: "",
+    created_at: "2025-12-01T10:00:00Z",
+    updated_at: "2025-12-01T10:00:00Z",
+  },
+  {
+    id: "s3",
+    nombre: "Jorge Luis Martínez",
+    telefono: "3155551234",
+    email: "jorge.martinez@mail.com",
+    cedula: "19876543",
+    plan: "Elite",
+    estado_pago: "Pendiente",
+    rama: "Armada Nacional",
+    rango: "Suboficial Primero",
+    fecha_inicio: "2026-01-10",
+    notas: "",
+    created_at: "2026-01-10T10:00:00Z",
+    updated_at: "2026-01-10T10:00:00Z",
+  },
+];
 
 // ── Casos (Pipeline-based) ──────────────────────────────────────
 export const MOCK_CASOS: Caso[] = [];

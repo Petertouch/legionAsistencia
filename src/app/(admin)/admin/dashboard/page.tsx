@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats, getSeguimientos } from "@/lib/db";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -19,7 +20,10 @@ const TIPO_ICONS: Record<string, React.ReactNode> = {
 export default function DashboardPage() {
   const { user, isAbogado, isAdmin } = useAuth();
   const abogadoFilter = isAbogado ? user?.nombre : undefined;
+  const fetchAll = useLanzaStore((s) => s.fetchAll);
   const lanzaData = useLanzaStore((s) => ({ lanzas: s.lanzas.length, leads: s.leads.length, convertidos: s.leads.filter((l) => l.status === "convertido").length, nuevos: s.leads.filter((l) => l.status === "nuevo").length }));
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats", abogadoFilter],

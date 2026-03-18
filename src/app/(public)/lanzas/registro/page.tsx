@@ -1,17 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { UserPlus, Check } from "lucide-react";
 
 const RAMAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea", "Civil", "Otro"];
 
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 export default function LanzaRegistroPage() {
   const router = useRouter();
-  const { registerLanza, getLanzaByCedula } = useLanzaStore();
-  const [mounted, setMounted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [code, setCode] = useState("");
   const [form, setForm] = useState({
@@ -24,21 +30,30 @@ export default function LanzaRegistroPage() {
     rango: "",
   });
 
-  useEffect(() => { setMounted(true); }, []);
-
   const update = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    const supabase = createClient();
 
-    const existing = getLanzaByCedula(form.cedula.trim());
+    // Check duplicate cedula
+    const { data: existing } = await supabase
+      .from("lanzas")
+      .select("id")
+      .eq("cedula", form.cedula.trim())
+      .single();
+
     if (existing) {
       toast.error("Ya existe un Lanza con esa cédula. Ingresa desde el portal.");
+      setSubmitting(false);
       return;
     }
 
-    const lanza = registerLanza({
+    const newCode = generateCode();
+    const { error } = await supabase.from("lanzas").insert({
+      code: newCode,
       nombre: form.nombre.trim(),
       cedula: form.cedula.trim(),
       telefono: form.telefono.trim(),
@@ -47,18 +62,24 @@ export default function LanzaRegistroPage() {
       rama: form.rama,
       rango: form.rango.trim(),
       suscriptor_id: null,
+      status: "activo",
     });
 
-    setCode(lanza.code);
+    if (error) {
+      toast.error("Error al registrar. Intenta de nuevo.");
+      setSubmitting(false);
+      return;
+    }
+
+    setCode(newCode);
     setSuccess(true);
+    setSubmitting(false);
     toast.success("¡Registro exitoso!");
   };
 
-  if (!mounted) return null;
-
   if (success) {
     return (
-      <div className="min-h-screen bg-jungle-dark min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-jungle-dark flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-6 text-center space-y-4">
           <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
             <Check className="w-8 h-8 text-green-400" />
@@ -180,9 +201,10 @@ export default function LanzaRegistroPage() {
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] mt-2"
+          disabled={submitting}
+          className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] mt-2 disabled:opacity-50"
         >
-          Registrarme como Lanza
+          {submitting ? "Registrando..." : "Registrarme como Lanza"}
         </button>
 
         <p className="text-beige/30 text-[10px] text-center">

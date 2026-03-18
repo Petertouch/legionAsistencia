@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { createClient } from "@/lib/supabase/client";
 import { Shield, Check, MessageCircle, Phone, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -48,16 +48,23 @@ const PLANES = [
 
 const AREAS = ["Penal Militar", "Disciplinario", "Familia", "Documentos", "Consumidor", "Civil", "Otro"];
 
+interface Lanza {
+  id: string;
+  code: string;
+  nombre: string;
+}
+
 interface Props {
   params: Promise<{ code: string }>;
 }
 
 export default function ReferralPage({ params }: Props) {
   const { code } = use(params);
-  const { getLanzaByCode, addLead } = useLanzaStore();
-  const [mounted, setMounted] = useState(false);
+  const [lanza, setLanza] = useState<Lanza | null>(null);
+  const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState("Base");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     nombre: "",
     telefono: "",
@@ -67,19 +74,30 @@ export default function ReferralPage({ params }: Props) {
     mensaje: "",
   });
 
-  useEffect(() => { setMounted(true); }, []);
-
-  const lanza = mounted ? getLanzaByCode(code) : null;
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("lanzas")
+      .select("id, code, nombre")
+      .eq("code", code)
+      .eq("status", "activo")
+      .single()
+      .then((res: { data: Lanza | null }) => {
+        setLanza(res.data);
+        setLoading(false);
+      });
+  }, [code]);
 
   const update = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    // Register lead in the store
     if (lanza) {
-      addLead({
+      const supabase = createClient();
+      await supabase.from("lanza_leads").insert({
         lanza_id: lanza.id,
         lanza_code: lanza.code,
         nombre: form.nombre.trim(),
@@ -89,16 +107,25 @@ export default function ReferralPage({ params }: Props) {
         area_interes: form.area_interes,
         plan_interes: plan,
         mensaje: form.mensaje.trim(),
+        status: "nuevo",
       });
     }
 
-    // Also open WhatsApp
     const msg = `Hola, quiero afiliarme al Plan ${plan}. Mi nombre es ${form.nombre}, tel: ${form.telefono}. Código: ${code}`;
     window.open(`https://wa.me/573176689580?text=${encodeURIComponent(msg)}`, "_blank");
 
     setSent(true);
+    setSubmitting(false);
     toast.success("¡Registro enviado!");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-jungle-dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-jungle-dark">
@@ -268,9 +295,10 @@ export default function ReferralPage({ params }: Props) {
               )}
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
+                disabled={submitting}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98] disabled:opacity-50"
               >
-                <MessageCircle className="w-5 h-5" /> Registrarme y contactar por WhatsApp
+                <MessageCircle className="w-5 h-5" /> {submitting ? "Enviando..." : "Registrarme y contactar por WhatsApp"}
               </button>
               <p className="text-beige/30 text-[10px] text-center">
                 Tus datos quedan registrados y también se abrirá WhatsApp para contacto directo

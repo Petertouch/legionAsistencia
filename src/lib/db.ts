@@ -1,6 +1,6 @@
 import {
-  MOCK_SUSCRIPTORES, MOCK_CASOS, MOCK_LEADS, MOCK_SEGUIMIENTOS,
-  type Suscriptor, type Caso, type Lead, type Seguimiento,
+  MOCK_SUSCRIPTORES, MOCK_CASOS, MOCK_LEADS, MOCK_SEGUIMIENTOS, MOCK_DOCUMENTOS,
+  type Suscriptor, type Caso, type Lead, type Seguimiento, type DocumentoContrato,
 } from "./mock-data";
 import { PIPELINES, getDaysInStage, getDaysUntilDeadline, type CaseArea } from "./pipelines";
 
@@ -320,6 +320,36 @@ export async function getDashboardStats(params?: { abogado?: string }) {
   };
 }
 
+
+// ── Documentos de contrato ───────────────────────────────────────
+export async function getDocumentosBySuscriptor(suscriptorId: string): Promise<DocumentoContrato[]> {
+  return MOCK_DOCUMENTOS.filter((d) => d.suscriptor_id === suscriptorId)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
+export async function createDocumento(data: {
+  suscriptor_id: string;
+  nombre: string;
+  tipo: DocumentoContrato["tipo"];
+  archivo_url: string;
+  tamano: string;
+  subido_por: string;
+}): Promise<DocumentoContrato> {
+  const doc: DocumentoContrato = {
+    id: nextId("doc"),
+    created_at: now(),
+    ...data,
+  };
+  MOCK_DOCUMENTOS.push(doc);
+  return doc;
+}
+
+export async function deleteDocumento(id: string): Promise<boolean> {
+  const idx = MOCK_DOCUMENTOS.findIndex((d) => d.id === id);
+  if (idx < 0) return false;
+  MOCK_DOCUMENTOS.splice(idx, 1);
+  return true;
+}
 
 // ── Auth: find suscriptor by cedula ─────────────────────────────
 export async function findSuscriptorByCedula(cedula: string): Promise<Suscriptor | null> {

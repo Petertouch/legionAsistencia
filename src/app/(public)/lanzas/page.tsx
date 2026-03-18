@@ -1,25 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Shield, ArrowRight } from "lucide-react";
 
 export default function LanzaLoginPage() {
   const router = useRouter();
-  const getLanzaByCedula = useLanzaStore((s) => s.getLanzaByCedula);
-  const [mounted, setMounted] = useState(false);
   const [cedula, setCedula] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const lanza = getLanzaByCedula(cedula.trim());
+    const supabase = createClient();
+    const { data: lanza } = await supabase
+      .from("lanzas")
+      .select("code, status")
+      .eq("cedula", cedula.trim())
+      .single();
+
     if (!lanza) {
       toast.error("No encontramos un Lanza con esa cédula");
       setLoading(false);
@@ -33,10 +35,8 @@ export default function LanzaLoginPage() {
     router.push(`/lanzas/panel?code=${lanza.code}`);
   };
 
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen bg-jungle-dark min-h-[70vh] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-jungle-dark flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <div className="w-16 h-16 bg-oro/20 rounded-full flex items-center justify-center mx-auto">

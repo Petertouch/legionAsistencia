@@ -22,17 +22,16 @@ function formatDate(d: string) {
 }
 
 export default function RecomendacionesPage() {
-  const { lanzas, leads, toggleLanzaStatus, updateLeadStatus, registerLanza } = useLanzaStore();
-  const [mounted, setMounted] = useState(false);
+  const { lanzas, leads, toggleLanzaStatus, updateLeadStatus, registerLanza, fetchAll, loaded } = useLanzaStore();
   const [tab, setTab] = useState<"lanzas" | "leads">("lanzas");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ nombre: "", cedula: "", telefono: "", email: "", ciudad: "", rama: "Ejército", rango: "" });
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  if (!mounted) return null;
+  if (!loaded) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-xl" />)}</div>;
 
   const totalLeads = leads.length;
   const convertidos = leads.filter((l) => l.status === "convertido").length;
@@ -43,7 +42,7 @@ export default function RecomendacionesPage() {
   const updateForm = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const handleCreateLanza = (e: React.FormEvent) => {
+  const handleCreateLanza = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nombre.trim() || !form.cedula.trim() || !form.telefono.trim()) {
       toast.error("Nombre, cédula y teléfono son obligatorios");
@@ -54,7 +53,7 @@ export default function RecomendacionesPage() {
       toast.error("Ya existe un Lanza con esa cédula");
       return;
     }
-    const lanza = registerLanza({
+    const lanza = await registerLanza({
       nombre: form.nombre.trim(),
       cedula: form.cedula.trim(),
       telefono: form.telefono.trim(),
@@ -64,9 +63,13 @@ export default function RecomendacionesPage() {
       rango: form.rango.trim(),
       suscriptor_id: null,
     });
-    toast.success(`Lanza creado — código: ${lanza.code}`);
-    setForm({ nombre: "", cedula: "", telefono: "", email: "", ciudad: "", rama: "Ejército", rango: "" });
-    setShowForm(false);
+    if (lanza) {
+      toast.success(`Lanza creado — código: ${lanza.code}`);
+      setForm({ nombre: "", cedula: "", telefono: "", email: "", ciudad: "", rama: "Ejército", rango: "" });
+      setShowForm(false);
+    } else {
+      toast.error("Error al crear el Lanza");
+    }
   };
 
   const handleCopyLink = (code: string) => {
@@ -297,8 +300,8 @@ export default function RecomendacionesPage() {
                       <MessageCircle className="w-3 h-3" /> WhatsApp
                     </a>
                     <button
-                      onClick={() => {
-                        toggleLanzaStatus(l.id);
+                      onClick={async () => {
+                        await toggleLanzaStatus(l.id);
                         toast.success(l.status === "activo" ? "Lanza desactivado" : "Lanza activado");
                       }}
                       className="flex items-center gap-1.5 text-xs text-beige/50 hover:text-white bg-white/5 px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
@@ -374,18 +377,18 @@ export default function RecomendacionesPage() {
                       <MessageCircle className="w-3 h-3" /> WhatsApp
                     </a>
                     {l.status === "nuevo" && (
-                      <Button size="sm" variant="ghost" onClick={() => { updateLeadStatus(l.id, "contactado"); toast.success("Marcado como contactado"); }}>
+                      <Button size="sm" variant="ghost" onClick={async () => { await updateLeadStatus(l.id, "contactado"); toast.success("Marcado como contactado"); }}>
                         Marcar contactado
                       </Button>
                     )}
                     {l.status !== "convertido" && l.status !== "perdido" && (
-                      <Button size="sm" onClick={() => { updateLeadStatus(l.id, "convertido"); toast.success("Lead convertido — $50.000 para el Lanza"); }}>
+                      <Button size="sm" onClick={async () => { await updateLeadStatus(l.id, "convertido"); toast.success("Lead convertido — $50.000 para el Lanza"); }}>
                         <Check className="w-3 h-3 mr-1" /> Convertir — {formatMoney(50000)}
                       </Button>
                     )}
                     {l.status !== "perdido" && l.status !== "convertido" && (
                       <button
-                        onClick={() => { updateLeadStatus(l.id, "perdido"); toast("Lead marcado como perdido"); }}
+                        onClick={async () => { await updateLeadStatus(l.id, "perdido"); toast("Lead marcado como perdido"); }}
                         className="text-xs text-beige/30 hover:text-red-400 transition-colors"
                       >
                         Marcar perdido
