@@ -30,6 +30,7 @@ function Navbar() {
               ["#cobertura", "Cobertura"],
               ["#planes", "Planes"],
               ["#testimonios", "Testimonios"],
+              ["/blog", "Guía Legal"],
             ].map(([href, label]) => (
               <a
                 key={href}
