@@ -1,5 +1,5 @@
 // ── Types ───────────────────────────────────────────────────────
-export type CaseArea = "Penal Militar" | "Disciplinario" | "Familia" | "Civil" | "Consumidor" | "Documentos";
+export type CaseArea = "Penal Militar" | "Disciplinario" | "Familia" | "Civil" | "Consumidor" | "Documentos" | "Consulta";
 export type Prioridad = "urgente" | "alta" | "normal" | "baja";
 
 export interface ChecklistItem {
@@ -54,6 +54,7 @@ export const AREAS: CaseArea[] = [
   "Civil",
   "Consumidor",
   "Documentos",
+  "Consulta",
 ];
 
 // ── Pipeline Definitions ────────────────────────────────────────
@@ -528,6 +529,39 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         color: "bg-gray-500",
         checklist: [
           { key: "doc-cer-1", label: "Archivar documento y respuesta", required: false },
+        ],
+      },
+    ],
+  },
+
+  Consulta: {
+    area: "Consulta",
+    icon: "HelpCircle",
+    stages: [
+      {
+        name: "Pendiente",
+        expectedDays: 1,
+        color: "bg-amber-500",
+        checklist: [
+          { key: "cq-pen-1", label: "Revisar pregunta del consultante", required: true },
+          { key: "cq-pen-2", label: "Verificar que no sea inapropiada", required: true },
+        ],
+      },
+      {
+        name: "Respondida",
+        expectedDays: 0,
+        color: "bg-green-500",
+        checklist: [
+          { key: "cq-res-1", label: "Redactar respuesta orientativa", required: true },
+          { key: "cq-res-2", label: "Publicar en blog", required: false },
+        ],
+      },
+      {
+        name: "Cerrado",
+        expectedDays: 0,
+        color: "bg-gray-500",
+        checklist: [
+          { key: "cq-cer-1", label: "Archivar consulta", required: false },
         ],
       },
     ],

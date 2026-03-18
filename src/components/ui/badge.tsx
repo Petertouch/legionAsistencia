@@ -21,7 +21,7 @@ const STATUS_MAP: Record<string, Variant> = {
   "Nuevo": "info", "Contactado": "info", "Interesado": "warning",
   "Convertido": "success", "Perdido": "danger",
   // Plans
-  "Base": "neutral", "Plus": "info", "Elite": "success",
+  "Gratuito": "neutral", "Base": "neutral", "Plus": "info", "Elite": "success",
   // Prioridad
   "urgente": "danger", "alta": "warning", "normal": "info", "baja": "neutral",
   // Pipeline stages

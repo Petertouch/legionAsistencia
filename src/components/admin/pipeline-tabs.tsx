@@ -1,7 +1,7 @@
 "use client";
 
 import { AREAS, PIPELINES, type CaseArea } from "@/lib/pipelines";
-import { Shield, Swords, Heart, Building2, ShoppingCart, FileText } from "lucide-react";
+import { Shield, Swords, Heart, Building2, ShoppingCart, FileText, HelpCircle } from "lucide-react";
 
 const AREA_ICONS: Record<CaseArea, React.ReactNode> = {
   "Disciplinario": <Shield className="w-4 h-4" />,
@@ -10,6 +10,7 @@ const AREA_ICONS: Record<CaseArea, React.ReactNode> = {
   "Civil": <Building2 className="w-4 h-4" />,
   "Consumidor": <ShoppingCart className="w-4 h-4" />,
   "Documentos": <FileText className="w-4 h-4" />,
+  "Consulta": <HelpCircle className="w-4 h-4" />,
 };
 
 export default function PipelineTabs({

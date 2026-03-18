@@ -6,7 +6,7 @@ export interface Suscriptor {
   telefono: string;
   email: string;
   cedula: string;
-  plan: "Base" | "Plus" | "Elite";
+  plan: "Gratuito" | "Base" | "Plus" | "Elite";
   estado_pago: "Al dia" | "Pendiente" | "Vencido";
   rama: string;
   rango: string;

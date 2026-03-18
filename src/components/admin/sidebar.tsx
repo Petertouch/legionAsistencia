@@ -18,7 +18,6 @@ import {
   BookOpen,
   Gift,
   UsersRound,
-  HelpCircle,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -29,7 +28,6 @@ const NAV_ITEMS = [
   { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
   { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
-  { href: "/admin/consultas", label: "Consultas", icon: HelpCircle, roles: ["admin"] },
   { href: "/admin/recomendaciones", label: "Recomendaciones", icon: Gift, roles: ["admin"] },
 ];
 
