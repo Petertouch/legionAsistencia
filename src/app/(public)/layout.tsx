@@ -29,7 +29,6 @@ function Navbar() {
               ["#como-funciona", "Cómo Funciona"],
               ["#cobertura", "Cobertura"],
               ["#planes", "Planes"],
-              ["#testimonios", "Testimonios"],
               ["/blog", "Guía Legal"],
             ].map(([href, label]) => (
               <a
