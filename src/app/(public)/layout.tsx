@@ -1,78 +1,6 @@
 import Image from "next/image";
 import ChatBot from "@/components/chatbot";
-
-function Navbar() {
-  return (
-    <nav className="fixed top-0 w-full z-50 bg-jungle-dark/90 backdrop-blur-md border-b border-oro/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
-          <a href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Image
-              src="/images/logo.svg"
-              alt="Legión Jurídica"
-              width={36}
-              height={36}
-              className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
-            />
-            <div className="flex items-center gap-1 min-w-0">
-              <span className="text-white font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">
-                LEGION
-              </span>
-              <span className="text-oro font-black text-sm sm:text-lg lg:text-xl tracking-[0.15em] sm:tracking-[0.2em]">
-                JURÍDICA
-              </span>
-            </div>
-          </a>
-
-          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-            {[
-              ["#como-funciona", "Cómo Funciona"],
-              ["#cobertura", "Cobertura"],
-              ["#planes", "Planes"],
-              ["/blog", "Guía Legal"],
-            ].map(([href, label]) => (
-              <a
-                key={href}
-                href={href}
-                className="text-beige/70 hover:text-oro text-sm font-medium transition-colors duration-300"
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="/admin/dashboard"
-              className="text-beige/30 hover:text-oro transition-colors p-1.5"
-              title="Panel Admin"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-            </a>
-            <a
-              href="tel:+573176689580"
-              className="hidden sm:flex items-center gap-1.5 text-beige/60 hover:text-white text-xs sm:text-sm transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              <span className="hidden md:inline">317 668 9580</span>
-            </a>
-            <a
-              href="https://wa.me/573176689580"
-              target="_blank"
-              className="bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm transition-all duration-300 active:scale-95 sm:hover:scale-105 shadow-lg shadow-oro/20"
-            >
-              Afíliate Ya
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
+import PublicNavbar from "@/components/public-navbar";
 
 function WhatsAppFloat() {
   return (
@@ -145,7 +73,7 @@ function Footer() {
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Navbar />
+      <PublicNavbar />
       <main>{children}</main>
       <Footer />
       <ChatBot />
