@@ -92,7 +92,7 @@ export default async function ClientCasoPage({ params }: Props) {
           <div className="bg-gray-50 rounded-lg md:rounded-xl p-2.5 md:p-3">
             <div className="flex items-center gap-1.5 md:gap-2 text-gray-500 mb-0.5 md:mb-1">
               <Clock className="w-3.5 md:w-4 h-3.5 md:h-4" />
-              <span className="text-[10px] md:text-xs">Dias en etapa</span>
+              <span className="text-[10px] md:text-xs">Días en etapa</span>
             </div>
             <p className="text-base md:text-lg font-bold text-gray-900">{daysInStage}</p>
           </div>
@@ -116,7 +116,7 @@ export default async function ClientCasoPage({ params }: Props) {
 
       {/* Caso info */}
       <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
-        <h3 className="font-bold text-gray-900 text-sm md:text-base mb-2.5 md:mb-3">Informacion del caso</h3>
+        <h3 className="font-bold text-gray-900 text-sm md:text-base mb-2.5 md:mb-3">Información del caso</h3>
         <div className="space-y-2.5 md:space-y-3">
           <div className="flex items-center gap-2.5 md:gap-3">
             <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -129,7 +129,7 @@ export default async function ClientCasoPage({ params }: Props) {
             <div className="flex items-center gap-2.5 md:gap-3">
               <CalendarClock className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div>
-                <p className="text-[10px] md:text-xs text-gray-500">Fecha limite</p>
+                <p className="text-[10px] md:text-xs text-gray-500">Fecha límite</p>
                 <p className="text-xs md:text-sm font-medium text-gray-800">
                   {new Date(caso.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
@@ -137,7 +137,7 @@ export default async function ClientCasoPage({ params }: Props) {
             </div>
           )}
           <div>
-            <p className="text-[10px] md:text-xs text-gray-500 mb-1">Descripcion</p>
+            <p className="text-[10px] md:text-xs text-gray-500 mb-1">Descripción</p>
             <p className="text-xs md:text-sm text-gray-700 leading-relaxed">{caso.descripcion}</p>
           </div>
         </div>

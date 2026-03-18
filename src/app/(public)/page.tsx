@@ -174,7 +174,7 @@ export default function Home() {
             <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" staggerDelay={0.08}>
               {[
                 {
-                  title: "Citacion a descargos",
+                  title: "Citación a descargos",
                   desc: "Te llega un documento y no sabes si responder, ir o callar. El reloj corre.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -184,7 +184,7 @@ export default function Home() {
                 },
                 {
                   title: "Proceso disciplinario",
-                  desc: "Tu carrera de anos puede terminar por un proceso mal manejado.",
+                  desc: "Tu carrera de años puede terminar por un proceso mal manejado.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
@@ -219,7 +219,7 @@ export default function Home() {
                   ),
                 },
                 {
-                  title: "Sin prevencion",
+                  title: "Sin prevención",
                   desc: "Cuando el problema llega, ya es tarde para buscar ayuda. Y los terminos no esperan.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

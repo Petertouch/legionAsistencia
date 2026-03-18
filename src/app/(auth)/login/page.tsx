@@ -26,7 +26,7 @@ export default function LoginPage() {
   return (
     <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 space-y-4 md:space-y-5 w-full max-w-sm mx-4 md:mx-0">
       <div className="text-center mb-2">
-        <h2 className="text-white font-bold text-lg">Iniciar Sesion</h2>
+        <h2 className="text-white font-bold text-lg">Iniciar Sesión</h2>
         <p className="text-beige/50 text-sm mt-1">Panel administrativo</p>
       </div>
 
@@ -63,14 +63,14 @@ export default function LoginPage() {
       </div>
 
       <Input label="Email" name="email" type="email" value={selectedUser.email} readOnly className="opacity-60" />
-      <Input label="Contrasena" name="password" type="password" placeholder="••••••••" required />
+      <Input label="Contraseña" name="password" type="password" placeholder="••••••••" required />
 
       <Button type="submit" disabled={loading} className="w-full" size="lg">
         {loading ? "Ingresando..." : `Ingresar como ${selectedUser.role === "admin" ? "Admin" : "Abogado"}`}
       </Button>
 
       <p className="text-center text-beige/30 text-xs">
-        Acceso exclusivo para el equipo de Legion Juridica
+        Acceso exclusivo para el equipo de Legión Jurídica
       </p>
     </form>
   );

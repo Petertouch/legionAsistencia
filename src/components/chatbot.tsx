@@ -145,12 +145,12 @@ export default function ChatBot() {
       });
 
       if (res.status === 401) {
-        setAuthError("Contrasena incorrecta.");
+        setAuthError("Contraseña incorrecta.");
         setAuthLoading(false);
         return;
       }
       if (!res.ok) {
-        setAuthError("Cedula no encontrada. Verifica el numero.");
+        setAuthError("Cédula no encontrada. Verifica el número.");
         setAuthLoading(false);
         return;
       }
@@ -195,7 +195,7 @@ export default function ChatBot() {
       }
       setChatHistory([]);
     } catch {
-      setAuthError("Error de conexion. Intenta de nuevo.");
+      setAuthError("Error de conexión. Intenta de nuevo.");
     } finally {
       setAuthLoading(false);
     }
@@ -484,8 +484,8 @@ export default function ChatBot() {
               <button
                 onClick={handleLogout}
                 className="text-beige/40 hover:text-red-400 transition-colors p-1.5"
-                aria-label="Cerrar sesion"
-                title="Cerrar sesion"
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -537,7 +537,7 @@ export default function ChatBot() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Numero de cedula"
+                  placeholder="Número de cédula"
                   value={cedula}
                   onChange={(e) => { setCedula(e.target.value.replace(/\D/g, "")); setAuthError(""); }}
                   className="w-full bg-white/10 text-white placeholder-beige/40 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
@@ -546,7 +546,7 @@ export default function ChatBot() {
                 />
                 <input
                   type="password"
-                  placeholder="Contrasena"
+                  placeholder="Contraseña"
                   value={clave}
                   onChange={(e) => setClave(e.target.value)}
                   className="w-full bg-white/10 text-white placeholder-beige/40 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"

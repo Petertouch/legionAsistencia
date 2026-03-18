@@ -44,7 +44,7 @@ export default function LeadDetailPage() {
         <Card className="flex items-center gap-3">
           <Phone className="w-4 h-4 text-oro" />
           <div>
-            <p className="text-beige/40 text-xs">Telefono</p>
+            <p className="text-beige/40 text-xs">Teléfono</p>
             <p className="text-white text-sm">{lead.telefono}</p>
           </div>
         </Card>
@@ -58,7 +58,7 @@ export default function LeadDetailPage() {
         <Card className="flex items-center gap-3">
           <MessageSquare className="w-4 h-4 text-oro" />
           <div>
-            <p className="text-beige/40 text-xs">Area de interes</p>
+            <p className="text-beige/40 text-xs">Área de interés</p>
             <p className="text-white text-sm">{lead.area_interes}</p>
           </div>
         </Card>

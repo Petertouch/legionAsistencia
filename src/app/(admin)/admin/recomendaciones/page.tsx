@@ -91,7 +91,7 @@ export default function RecomendacionesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
           <input
             type="text"
-            placeholder="Buscar por nombre o telefono..."
+            placeholder="Buscar por nombre o teléfono..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white/5 text-white placeholder-beige/30 text-sm pl-9 pr-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
@@ -116,7 +116,7 @@ export default function RecomendacionesPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-12">
           <Gift className="w-10 h-10 text-beige/20 mx-auto mb-3" />
-          <p className="text-beige/40 text-sm">No hay recomendaciones{search || statusFilter ? " con ese filtro" : " todavia"}</p>
+          <p className="text-beige/40 text-sm">No hay recomendaciones{search || statusFilter ? " con ese filtro" : " todavía"}</p>
         </div>
       ) : (
         <div className="space-y-3">

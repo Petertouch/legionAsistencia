@@ -50,7 +50,7 @@ export default function NuevoCasoPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
-        <Input label="Titulo del caso" name="titulo" placeholder="Descargos falta en servicio..." required />
+        <Input label="Título del caso" name="titulo" placeholder="Descargos falta en servicio..." required />
 
         <Select
           label="Suscriptor (cliente)"
@@ -61,7 +61,7 @@ export default function NuevoCasoPage() {
         />
 
         <Select
-          label="Area legal"
+          label="Área legal"
           name="area"
           value={selectedArea}
           onChange={(e) => setSelectedArea(e.target.value as CaseArea)}
@@ -99,7 +99,7 @@ export default function NuevoCasoPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-beige/80">Descripcion</label>
+          <label className="block text-sm font-medium text-beige/80">Descripción</label>
           <textarea name="descripcion" rows={4} placeholder="Describa el caso..." required
             className="w-full bg-white/5 border border-white/10 text-white placeholder-beige/30 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-oro/50 focus:ring-1 focus:ring-oro/20 transition-colors resize-none" />
         </div>

@@ -106,7 +106,7 @@ export const MOCK_CASOS: Caso[] = [
     id: "c1", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
     area: "Disciplinario", titulo: "Descargos falta en servicio",
     etapa: "Descargos", etapa_index: 2, prioridad: "urgente", abogado: "Dr. Ramirez",
-    descripcion: "Proceso disciplinario por presunta falta en servicio nocturno. Citacion a descargos recibida el 1 de marzo.",
+    descripcion: "Proceso disciplinario por presunta falta en servicio nocturno. Citación a descargos recibida el 1 de marzo.",
     fecha_limite: "2026-03-20", fecha_ingreso_etapa: "2026-03-10T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "d-des-1": true, "d-des-2": false, "d-des-3": false, "d-des-4": false },
@@ -115,9 +115,9 @@ export const MOCK_CASOS: Caso[] = [
   },
   {
     id: "c2", suscriptor_id: "s3", suscriptor_nombre: "My. Andres Ruiz",
-    area: "Disciplinario", titulo: "Investigacion por uso indebido de vehiculo",
+    area: "Disciplinario", titulo: "Investigación por uso indebido de vehículo",
     etapa: "Analisis", etapa_index: 1, prioridad: "alta", abogado: "Dr. Ramirez",
-    descripcion: "Investigacion por presunto uso indebido de vehiculo oficial fuera de horario.",
+    descripcion: "Investigación por presunto uso indebido de vehículo oficial fuera de horario.",
     fecha_limite: "2026-03-25", fecha_ingreso_etapa: "2026-03-14T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "d-ana-1": true, "d-ana-2": false, "d-ana-3": false, "d-ana-4": false },
@@ -126,9 +126,9 @@ export const MOCK_CASOS: Caso[] = [
   },
   {
     id: "c3", suscriptor_id: "s4", suscriptor_nombre: "SO2. Laura Gomez",
-    area: "Disciplinario", titulo: "Proceso por inasistencia a formacion",
+    area: "Disciplinario", titulo: "Proceso por inasistencia a formación",
     etapa: "Recepcion", etapa_index: 0, prioridad: "normal", abogado: "Dra. Lopez",
-    descripcion: "Proceso disciplinario por inasistencia a formacion matutina en dos ocasiones.",
+    descripcion: "Proceso disciplinario por inasistencia a formación matutina en dos ocasiones.",
     fecha_limite: null, fecha_ingreso_etapa: "2026-03-15T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "d-rec-1": true, "d-rec-2": false, "d-rec-3": false },
@@ -138,9 +138,9 @@ export const MOCK_CASOS: Caso[] = [
   // Penal Militar
   {
     id: "c4", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
-    area: "Penal Militar", titulo: "Investigacion lesiones en operacion",
+    area: "Penal Militar", titulo: "Investigación lesiones en operación",
     etapa: "Juicio", etapa_index: 4, prioridad: "urgente", abogado: "Dr. Ramirez",
-    descripcion: "Investigacion penal militar por lesiones a civil durante operacion de control.",
+    descripcion: "Investigación penal militar por lesiones a civil durante operación de control.",
     fecha_limite: "2026-03-25", fecha_ingreso_etapa: "2026-03-05T10:00:00Z",
     fecha_audiencia: "2026-03-25", fecha_cierre: null,
     checklist: { "pm-jui-1": false, "pm-jui-2": false, "pm-jui-3": false, "pm-jui-4": false },
@@ -149,9 +149,9 @@ export const MOCK_CASOS: Caso[] = [
   },
   {
     id: "c5", suscriptor_id: "s5", suscriptor_nombre: "Ss. Pedro Vargas",
-    area: "Penal Militar", titulo: "Investigacion perdida de material",
+    area: "Penal Militar", titulo: "Investigación pérdida de material",
     etapa: "Indagacion", etapa_index: 1, prioridad: "normal", abogado: "Dr. Martinez",
-    descripcion: "Investigacion por perdida de material de intendencia durante traslado.",
+    descripcion: "Investigación por pérdida de material de intendencia durante traslado.",
     fecha_limite: "2026-04-10", fecha_ingreso_etapa: "2026-03-08T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "pm-ind-1": true, "pm-ind-2": true, "pm-ind-3": false },
@@ -163,7 +163,7 @@ export const MOCK_CASOS: Caso[] = [
     id: "c6", suscriptor_id: "s2", suscriptor_nombre: "SI. Maria Torres",
     area: "Familia", titulo: "Custodia compartida menor",
     etapa: "Demanda", etapa_index: 1, prioridad: "alta", abogado: "Dra. Lopez",
-    descripcion: "Proceso de custodia compartida de menor de 5 anos. Padre solicita custodia completa.",
+    descripcion: "Proceso de custodia compartida de menor de 5 años. Padre solicita custodia completa.",
     fecha_limite: "2026-03-22", fecha_ingreso_etapa: "2026-03-12T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "f-dem-1": true, "f-dem-2": true, "f-dem-3": false },
@@ -195,9 +195,9 @@ export const MOCK_CASOS: Caso[] = [
   },
   {
     id: "c9", suscriptor_id: "s3", suscriptor_nombre: "My. Andres Ruiz",
-    area: "Civil", titulo: "Cobro ejecutivo pagare",
+    area: "Civil", titulo: "Cobro ejecutivo pagaré",
     etapa: "Admision", etapa_index: 2, prioridad: "normal", abogado: "Dr. Martinez",
-    descripcion: "Cobro ejecutivo de pagare por $15.000.000 contra persona natural.",
+    descripcion: "Cobro ejecutivo de pagaré por $15.000.000 contra persona natural.",
     fecha_limite: "2026-04-05", fecha_ingreso_etapa: "2026-03-13T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "ci-adm-1": false, "ci-adm-2": false },
@@ -207,7 +207,7 @@ export const MOCK_CASOS: Caso[] = [
   // Consumidor
   {
     id: "c10", suscriptor_id: "s2", suscriptor_nombre: "SI. Maria Torres",
-    area: "Consumidor", titulo: "Garantia electrodomestico defectuoso",
+    area: "Consumidor", titulo: "Garantía electrodoméstico defectuoso",
     etapa: "Reclamacion", etapa_index: 1, prioridad: "normal", abogado: "Dr. Ramirez",
     descripcion: "Electrodomestico defectuoso comprado hace 2 meses. Almacen se niega a cambiar.",
     fecha_limite: null, fecha_ingreso_etapa: "2026-03-14T10:00:00Z",
@@ -219,13 +219,13 @@ export const MOCK_CASOS: Caso[] = [
   // Documentos (fast-track)
   {
     id: "c11", suscriptor_id: "s1", suscriptor_nombre: "Sgto. Juan Felipe Pulido",
-    area: "Documentos", titulo: "Derecho de peticion ascenso",
+    area: "Documentos", titulo: "Derecho de petición ascenso",
     etapa: "Radicacion", etapa_index: 3, prioridad: "normal", abogado: "Dra. Lopez",
-    descripcion: "Derecho de peticion al Ministerio de Defensa por demora en proceso de ascenso.",
+    descripcion: "Derecho de petición al Ministerio de Defensa por demora en proceso de ascenso.",
     fecha_limite: null, fecha_ingreso_etapa: "2026-03-15T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: null,
     checklist: { "doc-rad-1": false, "doc-rad-2": false },
-    notas_etapa: "Listo para radicar manana",
+    notas_etapa: "Listo para radicar mañana",
     created_at: "2026-03-12T10:00:00Z", updated_at: "2026-03-15T10:00:00Z",
   },
   {
@@ -253,9 +253,9 @@ export const MOCK_CASOS: Caso[] = [
   // Cerrado
   {
     id: "c14", suscriptor_id: "s4", suscriptor_nombre: "SO2. Laura Gomez",
-    area: "Documentos", titulo: "Derecho de peticion traslado",
+    area: "Documentos", titulo: "Derecho de petición traslado",
     etapa: "Cerrado", etapa_index: 6, prioridad: "normal", abogado: "Dr. Ramirez",
-    descripcion: "Derecho de peticion solicitando traslado a ciudad de origen.",
+    descripcion: "Derecho de petición solicitando traslado a ciudad de origen.",
     fecha_limite: null, fecha_ingreso_etapa: "2026-03-10T10:00:00Z",
     fecha_audiencia: null, fecha_cierre: "2026-03-10",
     checklist: { "doc-cer-1": true },
@@ -279,7 +279,7 @@ export const MOCK_LEADS: Lead[] = [
   {
     id: "l3", nombre: "Roberto Diaz", telefono: "3209876543", email: "rdiaz@mail.com",
     area_interes: "Disciplinario", fuente: "referido", estado: "Interesado",
-    notas: "Referido por Sgto Mendoza. Tiene citacion a descargos", created_at: "2026-03-12T11:00:00Z", updated_at: "2026-03-14T15:00:00Z",
+    notas: "Referido por Sgto Mendoza. Tiene citación a descargos", created_at: "2026-03-12T11:00:00Z", updated_at: "2026-03-14T15:00:00Z",
   },
   {
     id: "l4", nombre: "Sofia Herrera", telefono: "3001112233", email: "sherrera@mail.com",
@@ -315,7 +315,7 @@ export const MOCK_SEGUIMIENTOS: Seguimiento[] = [
   },
   {
     id: "seg4", suscriptor_id: null, caso_id: null, lead_id: "l3",
-    tipo: "llamada", descripcion: "Primera llamada. Tiene citacion para el 20 de marzo. Muy interesado.",
+    tipo: "llamada", descripcion: "Primera llamada. Tiene citación para el 20 de marzo. Muy interesado.",
     fecha: "2026-03-12T14:00:00Z", lead_nombre: "Roberto Diaz",
     created_at: "2026-03-12T14:00:00Z",
   },

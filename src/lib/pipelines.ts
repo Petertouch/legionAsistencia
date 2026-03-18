@@ -69,7 +69,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         color: "bg-blue-500",
         checklist: [
           { key: "d-rec-1", label: "Recibir documentacion del cliente", required: true },
-          { key: "d-rec-2", label: "Verificar terminos legales", required: true },
+          { key: "d-rec-2", label: "Verificar términos legales", required: true },
           { key: "d-rec-3", label: "Asignar abogado responsable", required: true },
         ],
       },
@@ -92,7 +92,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
           { key: "d-des-1", label: "Redactar memorial de descargos", required: true },
           { key: "d-des-2", label: "Revision interna del memorial", required: true },
           { key: "d-des-3", label: "Firma del disciplinado", required: true },
-          { key: "d-des-4", label: "Radicar descargos en termino", required: true },
+          { key: "d-des-4", label: "Radicar descargos en término", required: true },
         ],
       },
       {
@@ -111,7 +111,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         color: "bg-purple-500",
         checklist: [
           { key: "d-ale-1", label: "Redactar alegatos de conclusion", required: true },
-          { key: "d-ale-2", label: "Radicar alegatos en termino", required: true },
+          { key: "d-ale-2", label: "Radicar alegatos en término", required: true },
         ],
       },
       {
@@ -129,7 +129,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         expectedDays: 5,
         color: "bg-pink-500",
         checklist: [
-          { key: "d-rec2-1", label: "Redactar recurso de apelacion", required: true },
+          { key: "d-rec2-1", label: "Redactar recurso de apelación", required: true },
           { key: "d-rec2-2", label: "Radicar recurso en termino", required: true },
           { key: "d-rec2-3", label: "Hacer seguimiento a segunda instancia", required: false },
         ],
@@ -279,7 +279,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         expectedDays: 5,
         color: "bg-green-500",
         checklist: [
-          { key: "f-con-1", label: "Preparar propuesta de conciliacion", required: true },
+          { key: "f-con-1", label: "Preparar propuesta de conciliación", required: true },
           { key: "f-con-2", label: "Asistir a audiencia de conciliacion", required: true },
         ],
       },
@@ -324,7 +324,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         color: "bg-blue-500",
         checklist: [
           { key: "ci-rec-1", label: "Revisar documentacion del caso", required: true },
-          { key: "ci-rec-2", label: "Evaluar pretensiones y cuantia", required: true },
+          { key: "ci-rec-2", label: "Evaluar pretensiones y cuantía", required: true },
         ],
       },
       {
@@ -350,7 +350,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         expectedDays: 10,
         color: "bg-yellow-500",
         checklist: [
-          { key: "ci-con-1", label: "Revisar contestacion de la contraparte", required: true },
+          { key: "ci-con-1", label: "Revisar contestación de la contraparte", required: true },
           { key: "ci-con-2", label: "Preparar replica si aplica", required: false },
         ],
       },
@@ -412,7 +412,7 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
         expectedDays: 3,
         color: "bg-indigo-500",
         checklist: [
-          { key: "co-rcl-1", label: "Redactar reclamacion ante empresa", required: true },
+          { key: "co-rcl-1", label: "Redactar reclamación ante empresa", required: true },
           { key: "co-rcl-2", label: "Radicar reclamacion", required: true },
         ],
       },

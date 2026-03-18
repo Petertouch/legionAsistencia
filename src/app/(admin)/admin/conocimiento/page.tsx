@@ -76,7 +76,7 @@ export default function ConocimientoPage() {
       addCategory(newCat.trim());
       setCategoria(newCat.trim());
       setNewCat("");
-      toast.success("Categoria creada");
+      toast.success("Categoría creada");
     }
   };
 
@@ -116,7 +116,7 @@ export default function ConocimientoPage() {
             onChange={(e) => setCatFilter(e.target.value)}
             className="bg-white/5 text-beige/70 text-sm pl-9 pr-8 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
           >
-            <option value="">Todas las categorias</option>
+            <option value="">Todas las categorías</option>
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}

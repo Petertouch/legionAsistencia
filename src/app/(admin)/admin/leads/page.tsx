@@ -80,8 +80,8 @@ export default function LeadsPage() {
             <thead>
               <tr className="border-b border-white/10 text-beige/50 text-xs uppercase tracking-wider">
                 <th className="text-left px-4 py-3 font-medium">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium">Telefono</th>
-                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Area</th>
+                <th className="text-left px-4 py-3 font-medium">Teléfono</th>
+                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Área</th>
                 <th className="text-left px-4 py-3 font-medium">Fuente</th>
                 <th className="text-left px-4 py-3 font-medium">Estado</th>
               </tr>

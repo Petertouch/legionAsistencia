@@ -24,7 +24,7 @@ export default function StatsBar({
       {deadlines > 0 && (
         <div className="flex items-center gap-1.5 text-yellow-400">
           <CalendarClock className="w-3.5 h-3.5" />
-          <span className="font-medium">{deadlines}</span> con deadline proximo
+          <span className="font-medium">{deadlines}</span> con deadline próximo
         </div>
       )}
     </div>

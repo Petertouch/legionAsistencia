@@ -35,7 +35,7 @@ export default function SuscriptorDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Telefono</p><p className="text-white text-sm">{suscriptor.telefono}</p></div></Card>
+        <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Teléfono</p><p className="text-white text-sm">{suscriptor.telefono}</p></div></Card>
         <Card className="flex items-center gap-3"><Mail className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Email</p><p className="text-white text-sm">{suscriptor.email}</p></div></Card>
         <Card className="flex items-center gap-3"><MapPin className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Rama / Rango</p><p className="text-white text-sm">{suscriptor.rama} — {suscriptor.rango}</p></div></Card>
         <Card className="flex items-center gap-3"><Calendar className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Suscrito desde</p><p className="text-white text-sm">{new Date(suscriptor.fecha_inicio).toLocaleDateString("es-CO")}</p></div></Card>
