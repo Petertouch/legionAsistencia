@@ -131,9 +131,15 @@ export default function Home() {
         <div className="relative flex animate-marquee">
           {[...Array(2)].map((_, repeat) => (
             <div key={repeat} className="flex gap-8 sm:gap-16 px-4">
-              {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
-                <span key={`${repeat}-${org}`} className="text-beige/25 text-xs sm:text-sm font-medium tracking-wider uppercase whitespace-nowrap">
-                  {org}
+              {[
+                { name: "Policía Nacional", logo: "/images/policia.jpg" },
+                { name: "Ejército Nacional", logo: "/images/ejercito.svg" },
+                { name: "Armada Nacional", logo: "/images/armada.png" },
+                { name: "Fuerza Aérea", logo: "/images/fuerza-aerea.png" },
+              ].map((org) => (
+                <span key={`${repeat}-${org.name}`} className="flex items-center gap-2 sm:gap-3 text-beige/25 text-xs sm:text-sm font-medium tracking-wider uppercase whitespace-nowrap">
+                  <Image src={org.logo} alt={org.name} width={24} height={24} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-contain opacity-40" />
+                  {org.name}
                 </span>
               ))}
             </div>
