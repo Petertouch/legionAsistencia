@@ -192,7 +192,7 @@ export default function Home() {
                   ),
                 },
                 {
-                  title: "Abogado por caso = caro",
+                  title: "Abogado por caso = costoso",
                   desc: "Cada consulta te cuesta $200.000 o más. Y cuando más lo necesitas, no tienes.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
