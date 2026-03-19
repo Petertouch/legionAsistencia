@@ -233,7 +233,8 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
             </div>
           </div>
           <h2 className="text-white font-bold text-sm">AUTORIZACIÓN DE DESCUENTO POR LIBRANZA</h2>
-          <p className="text-beige/50 text-xs mt-1">Ley 1527 de 2012</p>
+          <p className="text-beige/50 text-xs mt-1">{empresa} — NIT {nit}</p>
+          <p className="text-beige/50 text-xs mt-0.5">Ley 1527 de 2012</p>
         </div>
 
         <div className="text-beige/70 text-xs leading-relaxed space-y-3">
