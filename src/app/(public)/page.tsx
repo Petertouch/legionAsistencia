@@ -301,7 +301,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 text-center sm:text-left">
                   <p className="text-white font-bold text-sm sm:text-lg leading-snug">
-                    &ldquo;Tu misión es servir a la patria. Déjanos a nosotros lo legal.&rdquo;
+                    &ldquo;Tu misión es servir a la patria. La nuestra, protegerte.&rdquo;
                   </p>
                   <p className="text-oro text-xs sm:text-sm mt-1">Equipo Legión Jurídica</p>
                 </div>
