@@ -128,25 +128,16 @@ export default function Home() {
 
       {/* ============ SOCIAL PROOF BAR ============ */}
       <section className="bg-jungle py-4 sm:py-6 border-y border-oro/10 overflow-hidden">
-        <div className="relative">
-          <div className="hidden sm:flex max-w-7xl mx-auto px-4 flex-wrap items-center justify-center gap-6 md:gap-12 lg:gap-16">
-            {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
-              <span key={org} className="text-beige/25 text-xs sm:text-sm font-medium tracking-wider uppercase whitespace-nowrap">
-                {org}
-              </span>
-            ))}
-          </div>
-          <div className="sm:hidden flex animate-marquee">
-            {[...Array(2)].map((_, repeat) => (
-              <div key={repeat} className="flex gap-8 px-4">
-                {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
-                  <span key={`${repeat}-${org}`} className="text-beige/25 text-xs font-medium tracking-wider uppercase whitespace-nowrap">
-                    {org}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
+        <div className="relative flex animate-marquee">
+          {[...Array(2)].map((_, repeat) => (
+            <div key={repeat} className="flex gap-8 sm:gap-16 px-4">
+              {["Fuerzas Militares", "Policía Nacional", "Ejército Nacional", "Armada Nacional", "Fuerza Aérea"].map((org) => (
+                <span key={`${repeat}-${org}`} className="text-beige/25 text-xs sm:text-sm font-medium tracking-wider uppercase whitespace-nowrap">
+                  {org}
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
       </section>
 
