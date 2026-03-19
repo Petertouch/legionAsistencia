@@ -5,6 +5,7 @@ import { Plus, Trash2, X } from "lucide-react";
 export interface PlanConfig {
   nombre: string;
   precio: string;
+  precio_alianza?: string;
   caracteristicas: string[];
 }
 
@@ -47,7 +48,7 @@ export default function PlanEditor({ planes, onChange }: PlanEditorProps) {
   };
 
   const addPlan = () => {
-    onChange([...planes, { nombre: "Nuevo Plan", precio: "0", caracteristicas: [] }]);
+    onChange([...planes, { nombre: "Nuevo Plan", precio: "0", precio_alianza: "", caracteristicas: [] }]);
   };
 
   const removePlan = (index: number) => {
@@ -89,6 +90,18 @@ export default function PlanEditor({ planes, onChange }: PlanEditorProps) {
                 className="bg-white/5 text-oro font-bold text-lg px-2 py-1 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none w-full"
               />
               <span className="text-beige/40 text-xs">/mes</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-beige/40 text-[10px]">Alianza $</span>
+              <input
+                type="text"
+                value={plan.precio_alianza || ""}
+                onChange={(e) => updatePlan(pi, "precio_alianza", e.target.value)}
+                placeholder="Vacío = sin descuento"
+                className="bg-white/5 text-green-400 font-bold text-sm px-2 py-1 rounded-lg border border-white/10 focus:border-green-500/40 focus:outline-none w-full"
+              />
+              <span className="text-beige/40 text-[10px]">/mes</span>
             </div>
 
             <div className="space-y-1.5">

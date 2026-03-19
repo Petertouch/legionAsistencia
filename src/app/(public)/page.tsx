@@ -1,9 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Reveal, Stagger, StaggerItem, CountUp, ScaleReveal } from "@/components/motion";
+import { createClient } from "@/lib/supabase/client";
+
+interface PlanData {
+  nombre: string;
+  precio: string;
+  precio_alianza?: string;
+  caracteristicas: string[];
+}
+
+const DEFAULT_PLANS: PlanData[] = [
+  { nombre: "Base", precio: "50.000", caracteristicas: ["Asesoría jurídica ilimitada", "2 representaciones / año", "4 opiniones / mes", "Revisión de documentos", "Atención por WhatsApp"] },
+  { nombre: "Plus", precio: "66.000", caracteristicas: ["Todo lo del Base, más:", "3 representaciones / año", "8 opiniones / mes", "Prioridad en asignación", "WhatsApp y llamada"] },
+  { nombre: "Elite", precio: "80.000", caracteristicas: ["Todo lo del Plus, mas:", "5 representaciones / año", "Opiniones ILIMITADAS", "Abogado dedicado", "Atención prioritaria 24/7"] },
+];
 
 export default function Home() {
+  const [planes, setPlanes] = useState<PlanData[]>(DEFAULT_PLANS);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.from("contrato_plantilla").select("planes").eq("activo", true).single()
+      .then(({ data }: { data: { planes: PlanData[] } | null }) => {
+        if (data?.planes && Array.isArray(data.planes) && data.planes.length > 0) {
+          setPlanes(data.planes as PlanData[]);
+        }
+      });
+  }, []);
   return (
     <>
       {/* ============ HERO ============ */}
@@ -483,48 +509,53 @@ export default function Home() {
             className="flex sm:grid sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-4 sm:pb-0 -mx-5 px-5 sm:mx-0 sm:px-0"
             staggerDelay={0.15}
           >
-            {[
-              {
-                name: "Base", price: "50.000", monthly: "$1.700/dia",
-                features: ["Asesoría jurídica ilimitada", "2 representaciones / año", "4 opiniones / mes", "Revisión de documentos", "Atención por WhatsApp"],
-                popular: false, cta: "Empezar con Base",
-              },
-              {
-                name: "Plus", price: "66.000", monthly: "$2.200/dia",
-                features: ["Todo lo del Base, más:", "3 representaciones / año", "8 opiniones / mes", "Prioridad en asignación", "WhatsApp y llamada"],
-                popular: true, cta: "Elegir Plus",
-              },
-              {
-                name: "Elite", price: "80.000", monthly: "$2.700/dia",
-                features: ["Todo lo del Plus, mas:", "5 representaciones / año", "Opiniones ILIMITADAS", "Abogado dedicado", "Atención prioritaria 24/7"],
-                popular: false, cta: "Ir por Elite",
-              },
-            ].map((plan) => (
-              <StaggerItem key={plan.name} direction="up">
+            {planes.map((plan, idx) => {
+              const popular = idx === 1;
+              const hasAlianza = !!plan.precio_alianza;
+              const ctas = ["Empezar con Base", "Elegir Plus", "Ir por Elite"];
+              return (
+              <StaggerItem key={plan.nombre} direction="up">
                 <div
                   className={`relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 transition-all duration-500 sm:hover:-translate-y-2 snap-center flex-shrink-0 w-[280px] sm:w-auto ${
-                    plan.popular
+                    popular
                       ? "bg-gradient-to-b from-oro to-oro-light text-jungle-dark shadow-2xl shadow-oro/20 ring-2 ring-oro/50 sm:scale-105 z-10"
                       : "bg-white/5 text-white border border-white/10 sm:hover:border-oro/30"
                   }`}
                 >
-                  {plan.popular && (
+                  {popular && (
                     <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 bg-jungle-dark text-oro text-[10px] sm:text-xs font-bold uppercase tracking-widest px-3 sm:px-4 py-1 sm:py-1.5 rounded-full whitespace-nowrap">
                       Más popular
                     </div>
                   )}
-                  <h3 className="text-xl sm:text-2xl font-black mb-0.5">{plan.name}</h3>
-                  <p className={`text-[10px] sm:text-xs mb-3 sm:mb-4 ${plan.popular ? "text-jungle/60" : "text-beige/40"}`}>
-                    Menos de {plan.monthly}
-                  </p>
-                  <div className="flex items-baseline gap-1 mb-6 sm:mb-8">
-                    <span className="text-3xl sm:text-5xl font-black">${plan.price}</span>
-                    <span className={`text-xs sm:text-sm ${plan.popular ? "text-jungle/50" : "text-beige/40"}`}>/mes</span>
+                  <h3 className="text-xl sm:text-2xl font-black mb-2">{plan.nombre}</h3>
+                  <div className="mb-6 sm:mb-8">
+                    {hasAlianza ? (
+                      <>
+                        <div className="flex items-baseline gap-1">
+                          <span className={`text-xl sm:text-2xl font-bold line-through decoration-red-500 decoration-2 ${popular ? "text-jungle/40" : "text-beige/30"}`}>
+                            ${plan.precio}
+                          </span>
+                          <span className={`text-xs ${popular ? "text-jungle/40" : "text-beige/30"}`}>/mes</span>
+                        </div>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-3xl sm:text-5xl font-black">${plan.precio_alianza}</span>
+                          <span className={`text-xs sm:text-sm ${popular ? "text-jungle/50" : "text-beige/40"}`}>/mes</span>
+                        </div>
+                        <p className={`text-[10px] sm:text-xs mt-1 font-semibold ${popular ? "text-jungle/70" : "text-green-400"}`}>
+                          Precio por alianza
+                        </p>
+                      </>
+                    ) : (
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl sm:text-5xl font-black">${plan.precio}</span>
+                        <span className={`text-xs sm:text-sm ${popular ? "text-jungle/50" : "text-beige/40"}`}>/mes</span>
+                      </div>
+                    )}
                   </div>
                   <ul className="space-y-2.5 sm:space-y-3.5 mb-6 sm:mb-8">
-                    {plan.features.map((f, i) => (
+                    {plan.caracteristicas.map((f, i) => (
                       <li key={i} className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
-                        <svg className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${plan.popular ? "text-jungle" : "text-oro"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <svg className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${popular ? "text-jungle" : "text-oro"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                         <span className={f.includes("ILIMITADAS") ? "font-bold" : ""}>{f}</span>
@@ -535,16 +566,17 @@ export default function Home() {
                     href="https://wa.me/573176689580"
                     target="_blank"
                     className={`block text-center font-bold py-3 sm:py-4 rounded-full text-sm sm:text-lg transition-all duration-300 active:scale-95 sm:hover:scale-105 ${
-                      plan.popular
+                      popular
                         ? "bg-jungle-dark text-white sm:hover:bg-jungle shadow-lg"
                         : "bg-gradient-to-r from-oro to-oro-light text-jungle-dark shadow-lg shadow-oro/20"
                     }`}
                   >
-                    {plan.cta}
+                    {ctas[idx] || `Elegir ${plan.nombre}`}
                   </a>
                 </div>
               </StaggerItem>
-            ))}
+              );
+            })}
           </Stagger>
           <div className="sm:hidden flex justify-center gap-1.5 mt-4">
             {[0, 1, 2].map((i) => (
