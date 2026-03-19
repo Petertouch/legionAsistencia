@@ -343,9 +343,15 @@ export default function BlogPage() {
       {/* Hero */}
       <div className="bg-jungle-dark py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-3">
-            <Scale className="w-6 h-6 sm:w-8 sm:h-8 text-oro" />
-            <h1 className="text-white text-2xl sm:text-4xl font-black">Guía Legal Militar</h1>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Scale className="w-6 h-6 sm:w-8 sm:h-8 text-oro" />
+              <h1 className="text-white text-2xl sm:text-4xl font-black">Guía Legal Militar</h1>
+            </div>
+            <Link href="/noticias"
+              className="flex items-center gap-1.5 bg-white/10 border border-white/10 text-beige/70 hover:text-oro hover:border-oro/30 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all">
+              <BookOpen className="w-4 h-4" /> Noticias
+            </Link>
           </div>
           <p className="text-beige/60 text-sm sm:text-base max-w-2xl mb-6 sm:mb-8">
             Respuestas claras a las preguntas legales más comunes de militares y policías en Colombia. 

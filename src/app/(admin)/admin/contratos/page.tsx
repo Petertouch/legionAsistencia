@@ -11,13 +11,30 @@ import PlanEditor, { type PlanConfig } from "@/components/contract/plan-editor";
 interface Contrato {
   id: string;
   lead_id: string | null;
+  nombre: string;
+  cedula: string;
+  telefono: string;
+  telefono2: string | null;
+  email: string | null;
+  estado_civil: string | null;
+  grado: string | null;
+  fuerza: string | null;
+  unidad: string | null;
+  direccion: string | null;
+  ciudad: string | null;
+  plan: string;
+  precio: string;
   nombre_cliente: string;
   cedula_cliente: string;
-  plan: string;
   firma_data: string | null;
   foto_data: string | null;
   hash: string | null;
-  datos_completos: Record<string, unknown>;
+  datos_completos: {
+    departamento?: string;
+    cedula_frente?: string;
+    cedula_reverso?: string;
+    lanza_code?: string;
+  } | null;
   created_at: string;
 }
 
@@ -362,14 +379,28 @@ export default function ContratosAdminPage() {
                 <div className="max-h-[70vh] overflow-y-auto pr-1">
                   <ContractView
                     data={{
-                      nombre: selectedContrato.nombre_cliente,
-                      cedula: selectedContrato.cedula_cliente,
-                      telefono: "", email: "", estado_civil: "", grado: "", fuerza: "", unidad: "", direccion: "", ciudad: "",
-                      plan: selectedContrato.plan, plan_precio: "",
+                      nombre: selectedContrato.nombre || selectedContrato.nombre_cliente,
+                      cedula: selectedContrato.cedula || selectedContrato.cedula_cliente,
+                      telefono: selectedContrato.telefono || "",
+                      telefono2: selectedContrato.telefono2 || "",
+                      email: selectedContrato.email || "",
+                      estado_civil: selectedContrato.estado_civil || "",
+                      grado: selectedContrato.grado || "",
+                      fuerza: selectedContrato.fuerza || "",
+                      unidad: selectedContrato.unidad || "",
+                      direccion: selectedContrato.direccion || "",
+                      ciudad: selectedContrato.ciudad || "",
+                      departamento: selectedContrato.datos_completos?.departamento || "",
+                      plan: selectedContrato.plan,
+                      plan_precio: selectedContrato.precio || "",
                       firma_data: selectedContrato.firma_data || undefined,
                       foto_data: selectedContrato.foto_data || undefined,
+                      cedula_frente: selectedContrato.datos_completos?.cedula_frente || undefined,
+                      cedula_reverso: selectedContrato.datos_completos?.cedula_reverso || undefined,
                       hash: selectedContrato.hash || undefined,
-                      ...(selectedContrato.datos_completos as Record<string, string>),
+                      fecha: new Date(selectedContrato.created_at).toLocaleDateString("es-CO", {
+                        day: "numeric", month: "long", year: "numeric",
+                      }),
                     }}
                     readOnly
                   />
