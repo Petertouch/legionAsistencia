@@ -407,7 +407,7 @@ export default function Home() {
                   Todo lo que necesitas, en un solo plan
                 </h2>
                 <p className="text-sm sm:text-lg text-gray-500 mb-6 sm:mb-10">
-                  No importa si es penal, disciplinario o familiar. Tu plan lo cubre.
+                  No importa si es penal, disciplinario o familiar: Tu plan lo cubre.
                 </p>
               </Reveal>
 
