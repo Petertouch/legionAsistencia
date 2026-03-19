@@ -46,7 +46,7 @@ export default function Home() {
 
               <Reveal delay={0.6} direction="up">
                 <p className="text-[15px] sm:text-lg lg:text-xl text-beige/70 max-w-xl mb-7 sm:mb-10 leading-relaxed">
-                  Asesoría jurídica ilimitada para militares y policías.
+                  Asesoría jurídica ilimitada para Fuerzas Militares y Policía.
                   Un abogado siempre disponible para ti y tu familia,
                   desde <span className="text-oro font-bold">$50.000/mes</span>.
                 </p>
