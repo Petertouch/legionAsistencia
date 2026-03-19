@@ -151,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* ============ PROBLEMA / SOLUCIÓN ============ */}
-      <section id="problema" className="py-8 sm:py-14 overflow-hidden">
+      <section id="problema" className="overflow-hidden">
         {/* SIN LEGION - fondo oscuro */}
         <div className="bg-jungle-dark relative">
           <div className="absolute inset-0 opacity-5">
