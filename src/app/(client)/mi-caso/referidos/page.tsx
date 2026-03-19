@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
 import { useReferralStore } from "@/lib/stores/referral-store";
+import { getComisionLanza } from "@/lib/config";
 import { Gift, Copy, Check, Clock, Phone, User, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,8 +23,9 @@ export default function ClientReferidosPage() {
   const session = useClientStore((s) => s.session);
   const referrals = useReferralStore((s) => s.referrals);
   const [mounted, setMounted] = useState(false);
+  const [comision, setComision] = useState(50000);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setMounted(true); getComisionLanza().then(setComision); }, []);
   useEffect(() => {
     if (mounted && !session) router.replace("/mi-caso");
   }, [mounted, session, router]);
@@ -59,7 +61,7 @@ export default function ClientReferidosPage() {
         <div>
           <h1 className="text-white font-bold text-lg">Programa de Referidos</h1>
           <p className="text-beige/50 text-sm mt-1">
-            Gana <span className="text-oro font-bold">$50.000</span> por cada amigo que se afilie
+            Gana <span className="text-oro font-bold">{formatMoney(comision)}</span> por cada amigo que se afilie
           </p>
         </div>
 
@@ -112,7 +114,7 @@ export default function ClientReferidosPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
             <Gift className="w-8 h-8 text-gray-300 mx-auto mb-2" />
             <p className="text-gray-500 text-sm">Aún no has referido a nadie</p>
-            <p className="text-gray-400 text-xs mt-1">Comparte tu link y gana $50.000 por cada amigo que se afilie</p>
+            <p className="text-gray-400 text-xs mt-1">Comparte tu link y gana {formatMoney(comision)} por cada amigo que se afilie</p>
           </div>
         ) : (
           <div className="space-y-2">

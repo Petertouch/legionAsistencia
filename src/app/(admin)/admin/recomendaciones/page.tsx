@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { getComisionLanza, setComisionLanza, invalidateComisionCache } from "@/lib/config";
 import Button from "@/components/ui/button";
-import { Gift, Check, Clock, Phone, Mail, DollarSign, Copy, MessageCircle, Search, Filter, Users, UserPlus, ToggleLeft, ToggleRight, Plus, X } from "lucide-react";
+import { Gift, Check, Clock, Phone, Mail, DollarSign, Copy, MessageCircle, Search, Filter, Users, UserPlus, ToggleLeft, ToggleRight, Plus, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 const LEAD_STATUS_CONFIG = {
@@ -34,14 +35,17 @@ export default function RecomendacionesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ nombre: "", cedula: "", telefono: "", email: "", ciudad: "", rama: "Ejército", rango: "" });
+  const [comision, setComision] = useState(50000);
+  const [editingComision, setEditingComision] = useState(false);
+  const [comisionInput, setComisionInput] = useState("");
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchAll(); getComisionLanza().then(setComision); }, [fetchAll]);
 
   if (!loaded) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-xl" />)}</div>;
 
   const totalLeads = leads.length;
   const convertidos = leads.filter((l) => l.status === "convertido").length;
-  const deudaTotal = convertidos * 50000;
+  const deudaTotal = convertidos * comision;
 
   const RAMAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea", "Civil", "Otro"];
 
@@ -105,9 +109,32 @@ export default function RecomendacionesPage() {
           <h2 className="text-white text-lg md:text-xl font-bold flex items-center gap-2">
             <Gift className="w-5 h-5 text-oro" /> Lanzas & Referidos
           </h2>
-          <p className="text-beige/40 text-xs md:text-sm mt-0.5">
-            Red de recomendadores — $50.000 por cada cliente convertido
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            {editingComision ? (
+              <form className="flex items-center gap-2" onSubmit={async (e) => {
+                e.preventDefault();
+                const val = parseInt(comisionInput.replace(/\D/g, ""), 10);
+                if (!val || val < 1000) { toast.error("Valor inválido"); return; }
+                const ok = await setComisionLanza(val);
+                if (ok) { setComision(val); setEditingComision(false); toast.success("Comisión actualizada"); }
+                else toast.error("Error al guardar");
+              }}>
+                <span className="text-beige/40 text-xs">Comisión: $</span>
+                <input type="text" inputMode="numeric" autoFocus value={comisionInput}
+                  onChange={(e) => setComisionInput(e.target.value.replace(/\D/g, ""))}
+                  className="bg-white/10 text-oro font-bold text-xs px-2 py-1 rounded border border-oro/30 w-24 focus:outline-none" />
+                <button type="submit" className="text-green-400 hover:text-green-300"><Check className="w-4 h-4" /></button>
+                <button type="button" onClick={() => setEditingComision(false)} className="text-beige/40 hover:text-red-400"><X className="w-4 h-4" /></button>
+              </form>
+            ) : (
+              <p className="text-beige/40 text-xs md:text-sm flex items-center gap-1.5">
+                Red de recomendadores — <span className="text-oro font-medium">{formatMoney(comision)}</span> por cliente convertido
+                <button onClick={() => { setComisionInput(String(comision)); setEditingComision(true); }} className="text-beige/30 hover:text-oro transition-colors">
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </p>
+            )}
+          </div>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? <><X className="w-4 h-4 mr-1" /> Cancelar</> : <><Plus className="w-4 h-4 mr-1" /> Nuevo Lanza</>}
@@ -285,7 +312,7 @@ export default function RecomendacionesPage() {
                     </span>
                     {lanzaConvertidos > 0 && (
                       <span className="text-oro font-medium">
-                        <DollarSign className="w-3 h-3 inline" /> {formatMoney(lanzaConvertidos * 50000)}
+                        <DollarSign className="w-3 h-3 inline" /> {formatMoney(lanzaConvertidos * comision)}
                       </span>
                     )}
                   </div>
@@ -388,8 +415,8 @@ export default function RecomendacionesPage() {
                       </Button>
                     )}
                     {l.status !== "convertido" && l.status !== "perdido" && (
-                      <Button size="sm" onClick={async () => { await updateLeadStatus(l.id, "convertido"); toast.success("Lead convertido — $50.000 para el Lanza"); }}>
-                        <Check className="w-3 h-3 mr-1" /> Convertir — {formatMoney(50000)}
+                      <Button size="sm" onClick={async () => { await updateLeadStatus(l.id, "convertido"); toast.success(`Lead convertido — ${formatMoney(comision)} para el Lanza`); }}>
+                        <Check className="w-3 h-3 mr-1" /> Convertir — {formatMoney(comision)}
                       </Button>
                     )}
                     {l.status !== "perdido" && l.status !== "convertido" && (
@@ -404,7 +431,7 @@ export default function RecomendacionesPage() {
 
                   {l.status === "convertido" && lanza && (
                     <p className="text-green-400/60 text-[10px]">
-                      Se le debe {formatMoney(50000)} a {lanza.nombre}
+                      Se le debe {formatMoney(comision)} a {lanza.nombre}
                     </p>
                   )}
                 </div>

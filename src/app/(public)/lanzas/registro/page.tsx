@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getComisionLanza } from "@/lib/config";
 import { toast } from "sonner";
 import { UserPlus, Check } from "lucide-react";
+
+function formatMoney(n: number) {
+  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+}
 
 const RAMAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea", "Civil", "Otro"];
 
@@ -20,6 +25,9 @@ export default function LanzaRegistroPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [code, setCode] = useState("");
+  const [comision, setComision] = useState(50000);
+
+  useEffect(() => { getComisionLanza().then(setComision); }, []);
   const [form, setForm] = useState({
     nombre: "",
     cedula: "",
@@ -89,7 +97,7 @@ export default function LanzaRegistroPage() {
             Tu código único es: <span className="text-oro font-bold text-lg">{code}</span>
           </p>
           <p className="text-beige/50 text-xs">
-            Comparte tu link personalizado con tus contactos y gana $50.000 por cada cliente que se afilie.
+            Comparte tu link personalizado con tus contactos y gana {formatMoney(comision)} por cada cliente que se afilie.
           </p>
           <div className="space-y-2 pt-2">
             <button
@@ -121,7 +129,7 @@ export default function LanzaRegistroPage() {
         </div>
         <h1 className="text-white text-2xl font-bold">Sé un Lanza</h1>
         <p className="text-beige/50 text-sm mt-1">
-          Regístrate y gana <span className="text-oro font-bold">$50.000</span> por cada persona que afiliemos gracias a ti
+          Regístrate y gana <span className="text-oro font-bold">{formatMoney(comision)}</span> por cada persona que afiliemos gracias a ti
         </p>
       </div>
 

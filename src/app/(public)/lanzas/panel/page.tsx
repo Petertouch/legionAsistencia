@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getComisionLanza } from "@/lib/config";
 import { toast } from "sonner";
 import { Copy, Users, Phone, DollarSign, Share2, LogOut } from "lucide-react";
 
@@ -47,8 +48,10 @@ function LanzaPanelContent() {
   const [lanza, setLanza] = useState<Lanza | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [comision, setComision] = useState(50000);
 
   useEffect(() => {
+    getComisionLanza().then(setComision);
     if (!code) { setLoading(false); return; }
     const supabase = createClient();
     (async () => {
@@ -93,7 +96,7 @@ function LanzaPanelContent() {
   }
 
   const convertidos = leads.filter((l) => l.status === "convertido").length;
-  const saldo = convertidos * 50000;
+  const saldo = convertidos * comision;
   const shareLink = `${window.location.origin}/r/${lanza.code}`;
 
   const handleCopyLink = () => {
@@ -172,7 +175,7 @@ function LanzaPanelContent() {
             { step: "1", text: "Comparte tu link con amigos militares/policías" },
             { step: "2", text: "Ellos se registran con sus datos en tu landing" },
             { step: "3", text: "Nosotros los contactamos y los afiliamos" },
-            { step: "4", text: "Tú ganas $50.000 por cada afiliado" },
+            { step: "4", text: `Tú ganas ${formatMoney(comision)} por cada afiliado` },
           ].map((s) => (
             <div key={s.step} className="flex items-center gap-3">
               <span className="w-6 h-6 bg-oro/20 text-oro text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0">
@@ -218,7 +221,7 @@ function LanzaPanelContent() {
                   </div>
                   {lead.status === "convertido" && (
                     <div className="mt-1.5 flex items-center gap-1 text-xs text-green-400 font-medium">
-                      <DollarSign className="w-3 h-3" /> +{formatMoney(50000)}
+                      <DollarSign className="w-3 h-3" /> +{formatMoney(comision)}
                     </div>
                   )}
                 </div>
