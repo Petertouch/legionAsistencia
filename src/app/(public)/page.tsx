@@ -183,7 +183,7 @@ export default function Home() {
                   ),
                 },
                 {
-                  title: "Proceso disciplinario",
+                  title: "Procesos Disciplinarios",
                   desc: "Tu carrera de años puede terminar por un proceso mal manejado.",
                   icon: (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
