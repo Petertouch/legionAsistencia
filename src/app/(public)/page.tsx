@@ -622,7 +622,7 @@ export default function Home() {
                     Tu servicio merece respaldo
                   </h2>
                   <p className="text-beige/70 text-xs sm:text-lg leading-relaxed mb-4 sm:mb-8">
-                    Cada dia arriesgas tu vida por Colombia. Lo mínimo que mereces
+                    Cada día arriesgas tu vida por Colombia. Lo mínimo que mereces
                     es tener un equipo legal a tu lado.
                   </p>
                   <a
