@@ -268,7 +268,7 @@ export default function Home() {
                 { title: "Consultas ilimitadas", desc: "Pregunta lo que necesites por la plataforma, WhatsApp, llamada o en persona" },
                 { title: "Siempre disponible", desc: "No importa si estas en operaciones, base o licencia" },
                 { title: "Tu familia cubierta", desc: "Tu plan protege también a tu esposa e hijos" },
-                { title: "Respuesta inmediata", desc: "No esperas semanas. Te responden cuando lo necesitas" },
+                { title: "Respuesta inmediata", desc: "No esperas semanas. Te respondemos en corto tiempo" },
                 { title: "Desde $50.000/mes", desc: "Menos de lo que cuesta una sola consulta particular" },
               ].map((benefit, i) => (
                 <StaggerItem key={i}>
