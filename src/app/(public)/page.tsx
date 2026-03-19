@@ -265,7 +265,7 @@ export default function Home() {
             <Stagger className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" staggerDelay={0.08}>
               {[
                 { title: "Abogado asignado", desc: "Uno que conoce tu caso, tu contexto militar y tu historial" },
-                { title: "Consultas ilimitadas", desc: "Pregunta lo que necesites por WhatsApp, llamada o en persona" },
+                { title: "Consultas ilimitadas", desc: "Pregunta lo que necesites por la plataforma, WhatsApp, llamada o en persona" },
                 { title: "Siempre disponible", desc: "No importa si estas en operaciones, base o licencia" },
                 { title: "Tu familia cubierta", desc: "Tu plan protege también a tu esposa e hijos" },
                 { title: "Respuesta inmediata", desc: "No esperas semanas. Te responden cuando lo necesitas" },
