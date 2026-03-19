@@ -58,7 +58,7 @@ export default function ClientContratoPage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: { data: ContratoRow | null }) => {
         setContrato(data as ContratoRow | null);
         setLoading(false);
       });
