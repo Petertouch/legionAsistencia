@@ -3,16 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
-import { MOCK_SUSCRIPTORES } from "@/lib/mock-data";
-import { Shield, UserCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { Shield } from "lucide-react";
 import { toast } from "sonner";
-
-const MOCK_PASSWORDS: Record<string, string> = { "123": "123" };
-const DEFAULT_PASSWORD = "legion2026";
 
 export default function ClientLoginPage() {
   const router = useRouter();
-  const { session, login } = useClientStore();
+  const session = useClientStore((s) => s.session);
+  const login = useClientStore((s) => s.login);
   const [mounted, setMounted] = useState(false);
   const [cedula, setCedula] = useState("");
   const [clave, setClave] = useState("");
@@ -32,17 +30,20 @@ export default function ClientLoginPage() {
     setError("");
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 500));
+    const supabase = createClient();
+    const { data: suscriptor, error: dbError } = await supabase
+      .from("suscriptores")
+      .select("id, nombre, cedula, email, telefono, plan, estado_pago, rama, rango, clave")
+      .eq("cedula", cedula.trim())
+      .single();
 
-    const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.cedula === cedula.trim());
-    if (!suscriptor) {
+    if (dbError || !suscriptor) {
       setError("Cédula no encontrada. Verifica el número.");
       setLoading(false);
       return;
     }
 
-    const expected = MOCK_PASSWORDS[suscriptor.cedula] || DEFAULT_PASSWORD;
-    if (clave !== expected) {
+    if (!suscriptor.clave || suscriptor.clave !== clave) {
       setError("Contraseña incorrecta.");
       setLoading(false);
       return;
@@ -52,12 +53,12 @@ export default function ClientLoginPage() {
       suscriptor_id: suscriptor.id,
       nombre: suscriptor.nombre,
       cedula: suscriptor.cedula,
-      email: suscriptor.email,
+      email: suscriptor.email || "",
       telefono: suscriptor.telefono,
       plan: suscriptor.plan,
       estado_pago: suscriptor.estado_pago,
-      rama: suscriptor.rama,
-      rango: suscriptor.rango,
+      rama: suscriptor.rama || "",
+      rango: suscriptor.rango || "",
     });
 
     toast.success(`Bienvenido, ${suscriptor.nombre}`);

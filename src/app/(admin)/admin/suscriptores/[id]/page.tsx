@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSuscriptor, getCasosBySuscriptor, getSeguimientos, getDocumentosBySuscriptor, createDocumento, deleteDocumento } from "@/lib/db";
+import { getSuscriptor, getCasosBySuscriptor, getSeguimientos, getDocumentosBySuscriptor, createDocumento, deleteDocumento, updateSuscriptor } from "@/lib/db";
 import type { DocumentoContrato } from "@/lib/mock-data";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
@@ -71,6 +71,14 @@ export default function SuscriptorDetailPage() {
     },
   });
 
+  const approveMutation = useMutation({
+    mutationFn: () => updateSuscriptor(id, { estado_pago: "Al dia" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suscriptor", id] });
+      toast.success("Suscriptor aprobado");
+    },
+  });
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -90,6 +98,22 @@ export default function SuscriptorDetailPage() {
         <Badge>{suscriptor.plan}</Badge>
         <Badge>{suscriptor.estado_pago}</Badge>
       </div>
+
+      {suscriptor.estado_pago === "Pendiente" && (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-yellow-400 font-bold text-sm">Suscriptor pendiente de aprobación</p>
+            <p className="text-yellow-400/60 text-xs mt-0.5">Este suscriptor firmó su contrato pero aún no ha sido aprobado.</p>
+          </div>
+          <button
+            onClick={() => approveMutation.mutate()}
+            disabled={approveMutation.isPending}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0 disabled:opacity-50"
+          >
+            {approveMutation.isPending ? "Aprobando..." : "Aprobar"}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Teléfono</p><p className="text-white text-sm">{suscriptor.telefono}</p></div></Card>

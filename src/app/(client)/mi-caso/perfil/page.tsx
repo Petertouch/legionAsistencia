@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
 import { MOCK_CASOS } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
-import { User, Shield, CreditCard, Scale, ArrowRight, Clock, Check, AlertTriangle } from "lucide-react";
+import { User, Shield, CreditCard, Scale, ArrowRight, Clock, Check, AlertTriangle, FileText } from "lucide-react";
 
 const PAGO_CONFIG = {
   "Al dia": { color: "bg-green-100 text-green-700", icon: Check },
@@ -16,7 +16,7 @@ const PAGO_CONFIG = {
 
 export default function ClientProfilePage() {
   const router = useRouter();
-  const { session } = useClientStore();
+  const session = useClientStore((s) => s.session);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -35,6 +35,17 @@ export default function ClientProfilePage() {
 
   return (
     <div className="space-y-5">
+      {/* Pending approval banner */}
+      {session.estado_pago === "Pendiente" && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 text-center space-y-2">
+          <Clock className="w-8 h-8 text-yellow-500 mx-auto" />
+          <h2 className="text-yellow-800 font-bold text-base">Cuenta pendiente de aprobación</h2>
+          <p className="text-yellow-600 text-sm">
+            Tu contrato fue recibido. Un administrador debe aprobar tu cuenta antes de que puedas acceder a todos los servicios.
+          </p>
+        </div>
+      )}
+
       {/* Profile card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
         <div className="flex items-center gap-4 mb-4">
@@ -75,6 +86,25 @@ export default function ClientProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* My contract link */}
+      <Link
+        href="/mi-caso/contrato"
+        className="block bg-white rounded-2xl border border-gray-200 shadow-sm p-4 hover:border-jungle-dark/30 transition-colors active:scale-[0.99]"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-jungle-dark/10 rounded-xl flex items-center justify-center">
+              <FileText className="w-5 h-5 text-jungle-dark" />
+            </div>
+            <div>
+              <p className="text-gray-900 font-bold text-sm">Mi Plan y Contrato</p>
+              <p className="text-gray-500 text-xs">Plan {session.plan} — Ver y descargar</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-gray-300" />
+        </div>
+      </Link>
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3">

@@ -43,6 +43,6 @@ export const useAuthStore = create<AuthStore>()(
       login: (user) => set({ user }),
       logout: () => set({ user: null }),
     }),
-    { name: "legion-auth" }
+    { name: "legion-auth", skipHydration: true }
   )
 );

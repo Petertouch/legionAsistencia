@@ -16,6 +16,6 @@ export const useSidebarStore = create<SidebarStore>()(
       toggle: () => set((s) => ({ collapsed: !s.collapsed })),
       setMobileOpen: (open) => set({ mobileOpen: open }),
     }),
-    { name: "legion-sidebar", partialize: (s) => ({ collapsed: s.collapsed }) }
+    { name: "legion-sidebar", partialize: (s) => ({ collapsed: s.collapsed }), skipHydration: true }
   )
 );

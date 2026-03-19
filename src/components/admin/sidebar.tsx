@@ -19,6 +19,7 @@ import {
   BookOpen,
   Gift,
   UsersRound,
+  FileText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
   { href: "/admin/leads", label: "Leads", icon: Inbox, roles: ["admin"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
+  { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
   { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
 ];
 
@@ -37,7 +39,10 @@ export { NAV_ITEMS };
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebarStore();
+  const collapsed = useSidebarStore((s) => s.collapsed);
+  const toggle = useSidebarStore((s) => s.toggle);
+  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
+  const setMobileOpen = useSidebarStore((s) => s.setMobileOpen);
   const { user, role, logout } = useAuth();
   const pendingLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
 

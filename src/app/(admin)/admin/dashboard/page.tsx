@@ -21,7 +21,9 @@ export default function DashboardPage() {
   const { user, isAbogado, isAdmin } = useAuth();
   const abogadoFilter = isAbogado ? user?.nombre : undefined;
   const fetchAll = useLanzaStore((s) => s.fetchAll);
-  const lanzaData = useLanzaStore((s) => ({ lanzas: s.lanzas.length, leads: s.leads.length, convertidos: s.leads.filter((l) => l.status === "convertido").length, nuevos: s.leads.filter((l) => l.status === "nuevo").length }));
+  const lanzaCount = useLanzaStore((s) => s.lanzas.length);
+  const convertidos = useLanzaStore((s) => s.leads.filter((l) => l.status === "convertido").length);
+  const nuevosLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -49,8 +51,8 @@ export default function DashboardPage() {
           icon={<AlertTriangle className="w-5 h-5" />}
           trend={isAbogado ? { value: `${stats.casosDeadlineCerca} deadline`, positive: false } : { value: `${stats.pagosPendientes} por cobrar`, positive: false }} />
         {isAdmin && (
-          <StatCard title="Lanzas" value={lanzaData.lanzas} icon={<Gift className="w-5 h-5" />}
-            trend={{ value: lanzaData.nuevos > 0 ? `${lanzaData.nuevos} leads nuevos` : `${lanzaData.convertidos} convertidos`, positive: lanzaData.convertidos > 0 }} />
+          <StatCard title="Lanzas" value={lanzaCount} icon={<Gift className="w-5 h-5" />}
+            trend={{ value: nuevosLeads > 0 ? `${nuevosLeads} leads nuevos` : `${convertidos} convertidos`, positive: convertidos > 0 }} />
         )}
       </div>
 

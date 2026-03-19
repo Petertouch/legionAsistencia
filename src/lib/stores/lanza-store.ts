@@ -59,14 +59,13 @@ interface LanzaStore {
   getLeadsByLanza: (lanzaId: string) => LanzaLead[];
 }
 
-const supabase = createClient();
-
 export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   lanzas: [],
   leads: [],
   loaded: false,
 
   fetchAll: async () => {
+    const supabase = createClient();
     const [{ data: lanzas }, { data: leads }] = await Promise.all([
       supabase.from("lanzas").select("*").order("created_at", { ascending: false }),
       supabase.from("lanza_leads").select("*").order("created_at", { ascending: false }),
@@ -79,6 +78,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   registerLanza: async (data) => {
+    const supabase = createClient();
     const code = generateCode();
     const { data: row, error } = await supabase
       .from("lanzas")
@@ -92,6 +92,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   updateLanza: async (id, data) => {
+    const supabase = createClient();
     await supabase.from("lanzas").update(data).eq("id", id);
     set((s) => ({
       lanzas: s.lanzas.map((l) => (l.id === id ? { ...l, ...data } : l)),
@@ -99,6 +100,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   toggleLanzaStatus: async (id) => {
+    const supabase = createClient();
     const lanza = get().lanzas.find((l) => l.id === id);
     if (!lanza) return;
     const newStatus = lanza.status === "activo" ? "inactivo" : "activo";
@@ -114,6 +116,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   getLanzaByCedula: (cedula) => get().lanzas.find((l) => l.cedula === cedula),
 
   addLead: async (data) => {
+    const supabase = createClient();
     const { data: row, error } = await supabase
       .from("lanza_leads")
       .insert({ ...data, status: "nuevo" })
@@ -126,6 +129,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   updateLeadStatus: async (id, status) => {
+    const supabase = createClient();
     await supabase.from("lanza_leads").update({ status }).eq("id", id);
     set((s) => ({
       leads: s.leads.map((l) => (l.id === id ? { ...l, status } : l)),

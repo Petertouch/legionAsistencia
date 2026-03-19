@@ -22,7 +22,13 @@ function formatDate(d: string) {
 }
 
 export default function RecomendacionesPage() {
-  const { lanzas, leads, toggleLanzaStatus, updateLeadStatus, registerLanza, fetchAll, loaded } = useLanzaStore();
+  const lanzas = useLanzaStore((s) => s.lanzas);
+  const leads = useLanzaStore((s) => s.leads);
+  const toggleLanzaStatus = useLanzaStore((s) => s.toggleLanzaStatus);
+  const updateLeadStatus = useLanzaStore((s) => s.updateLeadStatus);
+  const registerLanza = useLanzaStore((s) => s.registerLanza);
+  const fetchAll = useLanzaStore((s) => s.fetchAll);
+  const loaded = useLanzaStore((s) => s.loaded);
   const [tab, setTab] = useState<"lanzas" | "leads">("lanzas");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");

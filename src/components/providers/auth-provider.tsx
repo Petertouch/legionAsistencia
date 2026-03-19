@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useAuthStore, type AuthUser, type UserRole } from "@/lib/stores/auth-store";
 
 interface AuthContextValue {
@@ -15,7 +15,13 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, login, logout } = useAuthStore();
+  useEffect(() => {
+    useAuthStore.persist.rehydrate();
+  }, []);
+
+  const user = useAuthStore((s) => s.user);
+  const login = useAuthStore((s) => s.login);
+  const logout = useAuthStore((s) => s.logout);
 
   const value: AuthContextValue = {
     user,

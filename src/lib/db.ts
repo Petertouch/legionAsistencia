@@ -3,6 +3,7 @@ import {
   type Suscriptor, type Caso, type Lead, type Seguimiento, type DocumentoContrato,
 } from "./mock-data";
 import { PIPELINES, getDaysInStage, getDaysUntilDeadline, type CaseArea } from "./pipelines";
+import { createClient } from "./supabase/client";
 
 // ── Helpers ─────────────────────────────────────────────────────
 let idCounter = 100;
@@ -13,18 +14,26 @@ function now() { return new Date().toISOString(); }
 export async function getSuscriptores(params?: {
   search?: string; plan?: string; estado_pago?: string;
 }): Promise<Suscriptor[]> {
-  let data = [...MOCK_SUSCRIPTORES];
-  if (params?.search) {
-    const q = params.search.toLowerCase();
-    data = data.filter((s) => s.nombre.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.telefono.includes(q));
-  }
-  if (params?.plan) data = data.filter((s) => s.plan === params.plan);
-  if (params?.estado_pago) data = data.filter((s) => s.estado_pago === params.estado_pago);
-  return data;
+  const supabase = createClient();
+  let query = supabase.from("suscriptores").select("*").order("created_at", { ascending: false });
+  if (params?.plan) query = query.eq("plan", params.plan);
+  if (params?.estado_pago) query = query.eq("estado_pago", params.estado_pago);
+  if (params?.search) query = query.or(`nombre.ilike.%${params.search}%,email.ilike.%${params.search}%,telefono.ilike.%${params.search}%,cedula.ilike.%${params.search}%`);
+  const { data } = await query;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data || []).map((s: any) => ({
+    ...s,
+    fecha_inicio: (s.fecha_inicio as string)?.split("T")[0] || "",
+    created_at: s.created_at || "",
+    updated_at: s.updated_at || "",
+  })) as Suscriptor[];
 }
 
 export async function getSuscriptor(id: string): Promise<Suscriptor | null> {
-  return MOCK_SUSCRIPTORES.find((s) => s.id === id) || null;
+  const supabase = createClient();
+  const { data } = await supabase.from("suscriptores").select("*").eq("id", id).single();
+  if (!data) return null;
+  return { ...data, fecha_inicio: data.fecha_inicio?.split("T")[0] || "", created_at: data.created_at || "", updated_at: data.updated_at || "" } as Suscriptor;
 }
 
 export async function createSuscriptor(data: {
@@ -32,15 +41,17 @@ export async function createSuscriptor(data: {
   plan: Suscriptor["plan"]; estado_pago: Suscriptor["estado_pago"];
   rama: string; rango: string; notas: string;
 }): Promise<Suscriptor> {
-  const s: Suscriptor = {
-    id: nextId("s"),
-    ...data,
-    fecha_inicio: now().split("T")[0],
-    created_at: now(),
-    updated_at: now(),
-  };
-  MOCK_SUSCRIPTORES.push(s);
-  return s;
+  const supabase = createClient();
+  const { data: row, error } = await supabase.from("suscriptores").insert(data).select().single();
+  if (error) throw error;
+  return { ...row, fecha_inicio: row.fecha_inicio?.split("T")[0] || "", created_at: row.created_at || "", updated_at: row.updated_at || "" } as Suscriptor;
+}
+
+export async function updateSuscriptor(id: string, updates: Partial<Suscriptor>): Promise<Suscriptor | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("suscriptores").update({ ...updates, updated_at: now() }).eq("id", id).select().single();
+  if (error || !data) return null;
+  return { ...data, fecha_inicio: data.fecha_inicio?.split("T")[0] || "", created_at: data.created_at || "", updated_at: data.updated_at || "" } as Suscriptor;
 }
 
 // ── Casos ───────────────────────────────────────────────────────
@@ -289,7 +300,9 @@ export async function createSeguimiento(data: {
 
 // ── Dashboard Stats ─────────────────────────────────────────────
 export async function getDashboardStats(params?: { abogado?: string }) {
-  const suscriptores = MOCK_SUSCRIPTORES;
+  const supabase = createClient();
+  const { data: suscriptoresData } = await supabase.from("suscriptores").select("id, estado_pago");
+  const suscriptores = (suscriptoresData || []) as { id: string; estado_pago: string }[];
   let casos = [...MOCK_CASOS];
   if (params?.abogado) casos = casos.filter((c) => c.abogado === params.abogado);
   const leads = MOCK_LEADS;
@@ -353,5 +366,8 @@ export async function deleteDocumento(id: string): Promise<boolean> {
 
 // ── Auth: find suscriptor by cedula ─────────────────────────────
 export async function findSuscriptorByCedula(cedula: string): Promise<Suscriptor | null> {
-  return MOCK_SUSCRIPTORES.find((s) => s.cedula === cedula) || null;
+  const supabase = createClient();
+  const { data } = await supabase.from("suscriptores").select("*").eq("cedula", cedula).single();
+  if (!data) return null;
+  return { ...data, fecha_inicio: (data.fecha_inicio as string)?.split("T")[0] || "", created_at: data.created_at || "", updated_at: data.updated_at || "" } as Suscriptor;
 }

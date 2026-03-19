@@ -18,7 +18,7 @@ const PRIORIDAD_COLOR = {
 
 export default function ClientCasosPage() {
   const router = useRouter();
-  const { session } = useClientStore();
+  const session = useClientStore((s) => s.session);
   const messages = useMessagesStore((s) => s.messages);
   const [mounted, setMounted] = useState(false);
 

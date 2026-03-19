@@ -64,6 +64,84 @@
   background-clip: text;
 }
 
+/* Print styles — only show the contract with brand colors */
+@media print {
+  body { background: white !important; margin: 0 !important; }
+  header, nav, footer, .no-print, [aria-label="WhatsApp"] { display: none !important; }
+  main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .print-contract {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+  /* Contract sections: white bg with subtle border */
+  .print-contract > div > div {
+    background: white !important;
+    border: 1.5px solid #0F2B0F !important;
+    border-radius: 8px !important;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+    padding: 20px !important;
+  }
+  /* ContractView root wrapper */
+  .print-contract > div {
+    background: transparent !important;
+  }
+  /* Default text: dark */
+  .print-contract * {
+    color: #1a1a1a !important;
+  }
+  /* Oro headings and accents */
+  .print-contract .text-oro {
+    color: #C29613 !important;
+  }
+  /* Section header borders */
+  .print-contract .border-b {
+    border-color: #0F2B0F !important;
+  }
+  .print-contract .border-t {
+    border-color: #ddd !important;
+  }
+  .print-contract .border {
+    border-color: #ddd !important;
+  }
+  /* Beige text → gray for print */
+  .print-contract [class*="text-beige"] {
+    color: #555 !important;
+  }
+  .print-contract [class*="text-white"] {
+    color: #111 !important;
+  }
+  /* Selected plan highlight */
+  .print-contract .border-oro {
+    border-color: #C29613 !important;
+    background: #fdf8e8 !important;
+  }
+  .print-contract .bg-oro\/10 {
+    background: #fdf8e8 !important;
+  }
+  /* Green checks */
+  .print-contract .text-green-400 {
+    color: #16a34a !important;
+  }
+  /* Signature box stays white */
+  .print-contract .bg-white {
+    background: white !important;
+  }
+  /* Logo print colors */
+  .print-contract .print-logo-text {
+    color: #0F2B0F !important;
+  }
+  .print-contract .print-logo-oro {
+    color: #C29613 !important;
+  }
+  /* Hash section */
+  .print-contract .font-mono {
+    color: #888 !important;
+  }
+}
+
 /* Safe area for notch devices */
 @supports (padding: env(safe-area-inset-bottom)) {
   .safe-bottom {

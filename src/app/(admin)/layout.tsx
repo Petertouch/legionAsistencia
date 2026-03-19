@@ -13,12 +13,14 @@ import { syncPersistedData } from "@/lib/stores/questions-store";
 syncPersistedData();
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { collapsed } = useSidebarStore();
+  const collapsed = useSidebarStore((s) => s.collapsed);
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    useAuthStore.persist.rehydrate();
+    useSidebarStore.persist.rehydrate();
     setHydrated(true);
   }, []);
 

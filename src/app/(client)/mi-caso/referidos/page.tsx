@@ -19,8 +19,8 @@ function formatMoney(n: number) {
 
 export default function ClientReferidosPage() {
   const router = useRouter();
-  const { session } = useClientStore();
-  const { referrals } = useReferralStore();
+  const session = useClientStore((s) => s.session);
+  const referrals = useReferralStore((s) => s.referrals);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);

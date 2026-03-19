@@ -26,6 +26,6 @@ export const useClientStore = create<ClientStore>()(
       login: (session) => set({ session }),
       logout: () => set({ session: null }),
     }),
-    { name: "legion-client", version: 1 }
+    { name: "legion-client", version: 1, skipHydration: true }
   )
 );

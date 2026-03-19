@@ -15,7 +15,8 @@ const TITLES: Record<string, string> = {
 
 export default function Topbar() {
   const pathname = usePathname();
-  const { collapsed, setMobileOpen } = useSidebarStore();
+  const collapsed = useSidebarStore((s) => s.collapsed);
+  const setMobileOpen = useSidebarStore((s) => s.setMobileOpen);
   const { user } = useAuth();
 
   const title = Object.entries(TITLES).find(([path]) => pathname.startsWith(path))?.[1] || "Admin";

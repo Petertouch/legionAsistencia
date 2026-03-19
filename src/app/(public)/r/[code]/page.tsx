@@ -3,13 +3,17 @@
 import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { Shield, Check, MessageCircle, Phone, Star } from "lucide-react";
+import { Shield, Check, MessageCircle, Phone, Star, ArrowLeft, ArrowRight, FileText, Lock, Scale, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import ContractView from "@/components/contract/contract-view";
+import type { ContractData } from "@/components/contract/contract-view";
+import SignaturePad from "@/components/contract/signature-pad";
+import PhotoCapture from "@/components/contract/photo-capture";
 
 const PLANES = [
   {
     name: "Base",
-    price: "50.000",
+    price: "39.000",
     color: "border-green-500/30 bg-green-500/5",
     badge: "bg-green-500/20 text-green-400",
     features: [
@@ -20,7 +24,7 @@ const PLANES = [
   },
   {
     name: "Plus",
-    price: "66.000",
+    price: "51.000",
     color: "border-blue-500/30 bg-blue-500/5",
     badge: "bg-blue-500/20 text-blue-400",
     popular: true,
@@ -33,7 +37,7 @@ const PLANES = [
   },
   {
     name: "Élite",
-    price: "80.000",
+    price: "69.000",
     color: "border-oro/30 bg-oro/5",
     badge: "bg-oro/20 text-oro",
     features: [
@@ -46,7 +50,9 @@ const PLANES = [
   },
 ];
 
-const AREAS = ["Penal Militar", "Disciplinario", "Familia", "Documentos", "Consumidor", "Civil", "Otro"];
+const PLAN_PRICES: Record<string, string> = { Base: "39.000", Plus: "51.000", "Élite": "69.000" };
+const ESTADOS_CIVILES = ["Soltero(a)", "Casado(a)", "Unión libre", "Divorciado(a)", "Viudo(a)"];
+const FUERZAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea"];
 
 interface Lanza {
   id: string;
@@ -58,21 +64,59 @@ interface Props {
   params: Promise<{ code: string }>;
 }
 
+async function generateHash(content: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(content);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function ReferralPage({ params }: Props) {
   const { code } = use(params);
   const [lanza, setLanza] = useState<Lanza | null>(null);
   const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState(1); // 1=form, 2=contract+extras, 3=sign+photo, 4=password, 5=onboarding
+
+  // Step 1: Basic form
   const [plan, setPlan] = useState("Base");
-  const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     nombre: "",
     telefono: "",
     email: "",
     cedula: "",
-    area_interes: "Penal Militar",
-    mensaje: "",
   });
+
+  // Step 2: Extra contract fields
+  const [extra, setExtra] = useState({
+    telefono2: "",
+    estado_civil: "Soltero(a)",
+    grado: "",
+    fuerza: "Ejército",
+    unidad: "",
+    direccion: "",
+    ciudad: "",
+    departamento: "",
+  });
+
+  // Step 3: Signature + Photos (sub-steps: 1=firma, 2=selfie, 3=cedula frente, 4=cedula reverso)
+  const [subStep, setSubStep] = useState(1);
+  const [firmaData, setFirmaData] = useState("");
+  const [fotoData, setFotoData] = useState("");
+  const [cedulaFrenteData, setCedulaFrenteData] = useState("");
+  const [cedulaReversoData, setCedulaReversoData] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Step 4: Password
+  const [clave, setClave] = useState("");
+  const [claveConfirm, setClaveConfirm] = useState("");
+  const [contratoId, setContratoId] = useState<string | null>(null);
+
+  // Confirmation modal
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // Lead ID (saved after step 1)
+  const [leadId, setLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -91,32 +135,181 @@ export default function ReferralPage({ params }: Props) {
   const update = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const updateExtra = (field: string, value: string) =>
+    setExtra((f) => ({ ...f, [field]: value }));
+
+  // Step 1: Show confirmation modal
+  const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfirm(true);
+  };
+
+  // Step 1 → 2: Save lead to Supabase (after user confirms)
+  const confirmAndSaveLead = async () => {
+    setShowConfirm(false);
     setSubmitting(true);
 
-    if (lanza) {
-      const supabase = createClient();
-      await supabase.from("lanza_leads").insert({
-        lanza_id: lanza.id,
-        lanza_code: lanza.code,
+    const supabase = createClient();
+    const { data: leadData, error } = await supabase
+      .from("lanza_leads")
+      .insert({
+        lanza_id: lanza?.id || null,
+        lanza_code: code,
         nombre: form.nombre.trim(),
         telefono: form.telefono.trim(),
         email: form.email.trim(),
         cedula: form.cedula.trim(),
-        area_interes: form.area_interes,
         plan_interes: plan,
-        mensaje: form.mensaje.trim(),
         status: "nuevo",
-      });
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Error guardando lead:", error);
+      toast.error("Error al guardar. Intenta de nuevo.");
+      setSubmitting(false);
+      return;
     }
 
-    const msg = `Hola, quiero afiliarme al Plan ${plan}. Mi nombre es ${form.nombre}, tel: ${form.telefono}. Código: ${code}`;
-    window.open(`https://wa.me/573176689580?text=${encodeURIComponent(msg)}`, "_blank");
-
-    setSent(true);
+    setLeadId(leadData?.id || null);
     setSubmitting(false);
-    toast.success("¡Registro enviado!");
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Step 2 → 3: Move to signing
+  const handleStep2 = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubStep(1);
+    setStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Step 3 → 4: Sign, capture, hash, save contract
+  const handleSign = async () => {
+    setSubmitting(true);
+
+    const contractContent = JSON.stringify({
+      ...form,
+      ...extra,
+      plan,
+      plan_precio: PLAN_PRICES[plan],
+      firma_timestamp: new Date().toISOString(),
+    });
+    const hash = await generateHash(contractContent + firmaData + fotoData + Date.now());
+
+    const supabase = createClient();
+    const { data: contratoRow, error } = await supabase.from("contratos").insert({
+      lead_id: leadId,
+      nombre: form.nombre.trim(),
+      cedula: form.cedula.trim(),
+      telefono: form.telefono.trim(),
+      telefono2: extra.telefono2 || null,
+      email: form.email.trim() || null,
+      estado_civil: extra.estado_civil || null,
+      grado: extra.grado || null,
+      fuerza: extra.fuerza || null,
+      unidad: extra.unidad || null,
+      direccion: extra.direccion || null,
+      ciudad: extra.ciudad || null,
+      plan,
+      precio: PLAN_PRICES[plan],
+      firma_data: firmaData,
+      foto_data: fotoData,
+      hash,
+      nombre_cliente: form.nombre.trim(),
+      cedula_cliente: form.cedula.trim(),
+      datos_completos: {
+        lanza_code: code,
+        departamento: extra.departamento || null,
+        cedula_frente: cedulaFrenteData,
+        cedula_reverso: cedulaReversoData,
+      },
+    }).select("id").single();
+
+    if (error) {
+      console.error("Error guardando contrato:", error);
+      toast.error(`Error al guardar contrato: ${error.message}`);
+      setSubmitting(false);
+      return;
+    }
+
+    setContratoId(contratoRow?.id || null);
+    setSubmitting(false);
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.success("¡Contrato firmado exitosamente!");
+  };
+
+  // Step 4 → 5: Save password + create suscriptor
+  const handlePassword = async () => {
+    if (clave.length < 4) {
+      toast.error("La clave debe tener al menos 4 caracteres");
+      return;
+    }
+    if (clave !== claveConfirm) {
+      toast.error("Las claves no coinciden");
+      return;
+    }
+    setSubmitting(true);
+    const supabase = createClient();
+
+    // Save password to contrato
+    const { error: claveError } = await supabase
+      .from("contratos")
+      .update({ clave })
+      .eq("id", contratoId);
+
+    if (claveError) {
+      toast.error(`Error guardando clave: ${claveError.message}`);
+      setSubmitting(false);
+      return;
+    }
+
+    // Create suscriptor with estado "Pendiente"
+    const { error: suscError } = await supabase.from("suscriptores").insert({
+      contrato_id: contratoId,
+      nombre: form.nombre.trim(),
+      cedula: form.cedula.trim(),
+      telefono: form.telefono.trim(),
+      email: form.email.trim() || null,
+      plan,
+      estado_pago: "Pendiente",
+      rama: extra.fuerza || null,
+      rango: extra.grado || null,
+      clave,
+    });
+
+    if (suscError) {
+      console.error("Error creando suscriptor:", suscError);
+      // Don't block — contrato already saved
+    }
+
+    setSubmitting(false);
+    setStep(5);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const contractData: ContractData = {
+    nombre: form.nombre,
+    cedula: form.cedula,
+    telefono: form.telefono,
+    telefono2: extra.telefono2,
+    email: form.email,
+    estado_civil: extra.estado_civil,
+    grado: extra.grado,
+    fuerza: extra.fuerza,
+    unidad: extra.unidad,
+    direccion: extra.direccion,
+    ciudad: extra.ciudad,
+    departamento: extra.departamento,
+    plan,
+    plan_precio: PLAN_PRICES[plan] || "",
+    firma_data: firmaData || undefined,
+    foto_data: fotoData || undefined,
+    cedula_frente: cedulaFrenteData || undefined,
+    cedula_reverso: cedulaReversoData || undefined,
   };
 
   if (loading) {
@@ -140,9 +333,39 @@ export default function ReferralPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6 md:space-y-8">
+      {/* Progress bar */}
+      {step < 5 && (
+        <div className="max-w-3xl mx-auto px-4 pt-4">
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className="flex-1 flex items-center gap-2">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                    step >= s
+                      ? "bg-oro text-jungle-dark"
+                      : "bg-white/10 text-beige/30"
+                  }`}
+                >
+                  {step > s ? <Check className="w-4 h-4" /> : s}
+                </div>
+                {s < 4 && (
+                  <div className={`flex-1 h-0.5 rounded-full ${step > s ? "bg-oro" : "bg-white/10"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-[10px] text-beige/40">Datos</span>
+            <span className="text-[10px] text-beige/40">Contrato</span>
+            <span className="text-[10px] text-beige/40">Firma</span>
+            <span className="text-[10px] text-beige/40">Clave</span>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
         {/* Lanza banner */}
-        {lanza && (
+        {lanza && step === 1 && (
           <div className="bg-oro/10 border border-oro/20 rounded-xl p-4 text-center">
             <p className="text-oro text-sm font-medium">
               <strong>{lanza.nombre}</strong> te invitó a Legión Jurídica
@@ -150,180 +373,518 @@ export default function ReferralPage({ params }: Props) {
           </div>
         )}
 
-        {/* Hero */}
-        <div className="text-center space-y-3">
-          <h1 className="text-white text-2xl md:text-3xl font-bold leading-tight">
-            Tu abogado en el bolsillo,<br />
-            <span className="text-oro">24/7</span>
-          </h1>
-          <p className="text-beige/60 text-sm md:text-base max-w-md mx-auto">
-            Asistencia legal por suscripción para militares y policías de Colombia. Sin citas. Sin filas. Sin letra pequeña.
-          </p>
-        </div>
-
-        {/* Benefits */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { icon: "⚖️", text: "Penal Militar" },
-            { icon: "🛡️", text: "Disciplinarios" },
-            { icon: "👨‍👩‍👧", text: "Familia" },
-            { icon: "📄", text: "Documentos" },
-          ].map((b) => (
-            <div key={b.text} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <span className="text-xl">{b.icon}</span>
-              <p className="text-beige/70 text-xs mt-1">{b.text}</p>
+        {/* ═══════ STEP 1: FORM + PLANS ═══════ */}
+        {step === 1 && (
+          <>
+            {/* Hero */}
+            <div className="text-center space-y-3">
+              <h1 className="text-white text-2xl md:text-3xl font-bold leading-tight">
+                Tu abogado en el bolsillo,<br />
+                <span className="text-oro">24/7</span>
+              </h1>
+              <p className="text-beige/60 text-sm md:text-base max-w-md mx-auto">
+                Asistencia legal por suscripción para militares y policías de Colombia. Sin citas. Sin filas. Sin letra pequeña.
+              </p>
             </div>
-          ))}
-        </div>
 
-        {/* Plans */}
-        <div>
-          <h2 className="text-white text-lg font-bold text-center mb-4">Elige tu plan</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {PLANES.map((p) => (
-              <button
-                key={p.name}
-                type="button"
-                onClick={() => setPlan(p.name)}
-                className={`relative text-left rounded-xl border p-4 transition-all ${
-                  plan === p.name
-                    ? "border-oro bg-oro/10 ring-1 ring-oro/30"
-                    : p.color + " hover:border-white/20"
-                }`}
-              >
-                {p.popular && (
-                  <span className="absolute -top-2.5 right-3 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Star className="w-3 h-3" /> Popular
-                  </span>
-                )}
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.badge}`}>
-                    {p.name}
-                  </span>
-                  {plan === p.name && <Check className="w-4 h-4 text-oro" />}
+            {/* Benefits */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { icon: "⚖️", text: "Penal Militar" },
+                { icon: "🛡️", text: "Disciplinarios" },
+                { icon: "👨‍👩‍👧", text: "Familia" },
+                { icon: "📄", text: "Documentos" },
+              ].map((b) => (
+                <div key={b.text} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                  <span className="text-xl">{b.icon}</span>
+                  <p className="text-beige/70 text-xs mt-1">{b.text}</p>
                 </div>
-                <p className="text-white text-xl font-bold">
-                  ${p.price}<span className="text-beige/40 text-xs font-normal">/mes</span>
-                </p>
-                <ul className="mt-2.5 space-y-1.5">
-                  {p.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-1.5 text-beige/60 text-xs">
-                      <Check className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
 
-        {/* Registration form */}
-        {!sent ? (
-          <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-            <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-oro" /> Regístrate ahora
-            </h3>
-            <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Plans */}
+            <div>
+              <h2 className="text-white text-lg font-bold text-center mb-1">Elige tu plan</h2>
+              <p className="text-beige/40 text-xs text-center mb-4">Toca el plan que prefieras</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {PLANES.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setPlan(p.name)}
+                    className={`relative text-left rounded-xl border p-4 transition-all ${
+                      plan === p.name
+                        ? "border-oro bg-oro/10 ring-2 ring-oro/40 scale-[1.02]"
+                        : p.color + " hover:border-white/20 opacity-60 hover:opacity-80"
+                    }`}
+                  >
+                    {p.popular && (
+                      <span className="absolute -top-2.5 right-3 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3" /> Popular
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.badge}`}>
+                        {p.name}
+                      </span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        plan === p.name ? "border-oro bg-oro" : "border-white/20"
+                      }`}>
+                        {plan === p.name && <Check className="w-3 h-3 text-jungle-dark" />}
+                      </div>
+                    </div>
+                    <p className="text-white text-xl font-bold">
+                      ${p.price}<span className="text-beige/40 text-xs font-normal">/mes</span>
+                    </p>
+                    <ul className="mt-2.5 space-y-1.5">
+                      {p.features.map((feat) => (
+                        <li key={feat} className="flex items-start gap-1.5 text-beige/60 text-xs">
+                          <Check className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
+                          {feat}
+                        </li>
+                      ))}
+                    </ul>
+                    {plan === p.name && (
+                      <div className="mt-3 bg-oro/20 text-oro text-xs font-bold text-center py-1.5 rounded-lg">
+                        Seleccionado
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Registration form */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+              <h3 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-oro" /> Regístrate ahora
+              </h3>
+              <form onSubmit={handleStep1} className="space-y-3">
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Nombre completo *</label>
+                  <input
+                    type="text" required value={form.nombre}
+                    onChange={(e) => update("nombre", e.target.value)}
+                    placeholder="Tu nombre y apellido"
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono *</label>
+                    <input
+                      type="tel" required value={form.telefono}
+                      onChange={(e) => update("telefono", e.target.value.replace(/\D/g, ""))}
+                      placeholder="3176689580" inputMode="numeric"
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Cédula *</label>
+                    <input
+                      type="text" required value={form.cedula}
+                      onChange={(e) => update("cedula", e.target.value.replace(/\D/g, ""))}
+                      placeholder="12345678" inputMode="numeric"
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Email</label>
+                  <input
+                    type="email" value={form.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+                <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
+                  <span className="text-beige/50 text-xs">Plan seleccionado</span>
+                  <span className="text-oro font-bold text-sm">{plan} — ${PLAN_PRICES[plan]}/mes</span>
+                </div>
+                {lanza && (
+                  <div className="bg-oro/5 rounded-lg px-3 py-2 flex items-center justify-between">
+                    <span className="text-beige/50 text-xs">Referido por</span>
+                    <span className="text-oro text-xs font-medium">{lanza.nombre}</span>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  <FileText className="w-5 h-5" /> {submitting ? "Guardando..." : "Continuar al contrato"}
+                </button>
+                <p className="text-beige/30 text-[10px] text-center">
+                  En el siguiente paso verás y firmarás el contrato de prestación de servicios
+                </p>
+              </form>
+            </div>
+          </>
+        )}
+
+        {/* ═══════ STEP 2: EXTRA DATA + CONTRACT PREVIEW ═══════ */}
+        {step === 2 && (
+          <>
+            <div className="text-center space-y-2">
+              <h1 className="text-white text-xl font-bold">Completa tus datos para el contrato</h1>
+              <p className="text-beige/50 text-sm">Necesitamos algunos datos adicionales para generar tu contrato</p>
+            </div>
+
+            <form onSubmit={handleStep2} className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono 2</label>
+                  <input
+                    type="tel" value={extra.telefono2}
+                    onChange={(e) => updateExtra("telefono2", e.target.value.replace(/\D/g, ""))}
+                    placeholder="Opcional" inputMode="numeric"
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Estado civil *</label>
+                  <select
+                    value={extra.estado_civil} required
+                    onChange={(e) => updateExtra("estado_civil", e.target.value)}
+                    className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                  >
+                    {ESTADOS_CIVILES.map((ec) => <option key={ec} value={ec}>{ec}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Grado / Rango *</label>
+                  <input
+                    type="text" required value={extra.grado}
+                    onChange={(e) => updateExtra("grado", e.target.value)}
+                    placeholder="Sargento, Cabo, etc."
+                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Fuerza *</label>
+                  <select
+                    value={extra.fuerza} required
+                    onChange={(e) => updateExtra("fuerza", e.target.value)}
+                    className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                  >
+                    {FUERZAS.map((f) => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+              </div>
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Nombre completo *</label>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Unidad / Batallón *</label>
                 <input
-                  type="text" required value={form.nombre}
-                  onChange={(e) => update("nombre", e.target.value)}
-                  placeholder="Tu nombre y apellido"
+                  type="text" required value={extra.unidad}
+                  onChange={(e) => updateExtra("unidad", e.target.value)}
+                  placeholder="Batallón de Infantería No. 1"
+                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Dirección *</label>
+                <input
+                  type="text" required value={extra.direccion}
+                  onChange={(e) => updateExtra("direccion", e.target.value)}
+                  placeholder="Calle 123 #45-67"
                   className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono *</label>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Ciudad *</label>
                   <input
-                    type="tel" required value={form.telefono}
-                    onChange={(e) => update("telefono", e.target.value.replace(/\D/g, ""))}
-                    placeholder="3176689580" inputMode="numeric"
+                    type="text" required value={extra.ciudad}
+                    onChange={(e) => updateExtra("ciudad", e.target.value)}
+                    placeholder="Bogotá"
                     className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Cédula</label>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Departamento *</label>
                   <input
-                    type="text" value={form.cedula}
-                    onChange={(e) => update("cedula", e.target.value.replace(/\D/g, ""))}
-                    placeholder="12345678" inputMode="numeric"
+                    type="text" required value={extra.departamento}
+                    onChange={(e) => updateExtra("departamento", e.target.value)}
+                    placeholder="Cundinamarca"
                     className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                   />
                 </div>
               </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Atrás
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  Ver contrato y firmar <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+
+            {/* Contract preview */}
+            <div>
+              <h2 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-oro" /> Vista previa del contrato
+              </h2>
+              <ContractView data={contractData} />
+            </div>
+          </>
+        )}
+
+        {/* ═══════ STEP 3: FIRMA + SELFIE + CÉDULA (sub-steps) ═══════ */}
+        {step === 3 && (
+          <>
+            {/* Sub-step progress */}
+            <div className="flex items-center gap-1.5 justify-center">
+              {["Firma", "Selfie", "Cédula frente", "Cédula reverso"].map((label, i) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full transition-colors ${subStep > i + 1 ? "bg-green-400" : subStep === i + 1 ? "bg-oro" : "bg-white/15"}`} />
+                  <span className={`text-[10px] transition-colors ${subStep === i + 1 ? "text-oro font-medium" : "text-beige/30"}`}>{label}</span>
+                  {i < 3 && <div className={`w-3 h-px ${subStep > i + 1 ? "bg-green-400/50" : "bg-white/10"}`} />}
+                </div>
+              ))}
+            </div>
+
+            {/* ── Sub-step 1: Firma ── */}
+            {subStep === 1 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h1 className="text-white text-xl font-bold">Firma tu contrato</h1>
+                  <p className="text-beige/50 text-sm">Firma con tu dedo o mouse sobre el recuadro</p>
+                </div>
+
+                <details className="bg-white/5 border border-white/10 rounded-xl">
+                  <summary className="px-5 py-3 text-white text-sm font-medium cursor-pointer flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-oro" /> Ver contrato completo
+                  </summary>
+                  <div className="px-5 pb-5">
+                    <ContractView data={contractData} />
+                  </div>
+                </details>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+                  <SignaturePad onSignature={setFirmaData} />
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setStep(2)}
+                      className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Atrás
+                    </button>
+                    <button type="button" disabled={!firmaData}
+                      onClick={() => { setSubStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-40">
+                      Siguiente <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Sub-step 2: Selfie ── */}
+            {subStep === 2 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h1 className="text-white text-xl font-bold">Tómate una selfie</h1>
+                  <p className="text-beige/50 text-sm">Centra tu rostro dentro del círculo</p>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+                  <PhotoCapture onPhoto={setFotoData} label="Abrir cámara" guide="circle" facingMode="user" />
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => { setSubStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Atrás
+                    </button>
+                    <button type="button" disabled={!fotoData}
+                      onClick={() => { setSubStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-40">
+                      Siguiente <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Sub-step 3: Cédula frente ── */}
+            {subStep === 3 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h1 className="text-white text-xl font-bold">Foto de tu cédula</h1>
+                  <p className="text-beige/50 text-sm">Parte frontal — encuadra la cédula dentro del marco</p>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+                  <PhotoCapture onPhoto={setCedulaFrenteData} label="Abrir cámara" guide="card" facingMode="environment" />
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => { setSubStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Atrás
+                    </button>
+                    <button type="button" disabled={!cedulaFrenteData}
+                      onClick={() => { setSubStep(4); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-40">
+                      Siguiente <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Sub-step 4: Cédula reverso ── */}
+            {subStep === 4 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-2">
+                  <h1 className="text-white text-xl font-bold">Foto de tu cédula</h1>
+                  <p className="text-beige/50 text-sm">Parte trasera — voltea la cédula y encuádrala</p>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+                  <PhotoCapture onPhoto={setCedulaReversoData} label="Abrir cámara" guide="card" facingMode="environment" />
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => { setSubStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+                      <ArrowLeft className="w-4 h-4" /> Atrás
+                    </button>
+                    <button type="button" disabled={submitting || !cedulaReversoData}
+                      onClick={handleSign}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <Check className="w-5 h-5" /> {submitting ? "Firmando..." : "Firmar contrato"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ═══════ STEP 4: CREATE PASSWORD ═══════ */}
+        {step === 4 && (
+          <div className="space-y-6 py-4">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
+                <Check className="w-8 h-8 text-green-400" />
+              </div>
+              <h1 className="text-white text-xl font-bold">¡Contrato firmado!</h1>
+              <p className="text-beige/60 text-sm">Ahora crea tu clave para acceder al portal de clientes</p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Lock className="w-5 h-5 text-oro" />
+                <h3 className="text-white font-bold text-sm">Crea tu clave de acceso</h3>
+              </div>
+              <p className="text-beige/40 text-xs">
+                Tu usuario es tu número de cédula: <strong className="text-white">{form.cedula}</strong>
+              </p>
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Email</label>
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Clave</label>
                 <input
-                  type="email" value={form.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="correo@ejemplo.com"
+                  type="password"
+                  value={clave}
+                  onChange={(e) => setClave(e.target.value)}
+                  placeholder="Mínimo 4 caracteres"
                   className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">¿En qué área necesitas ayuda?</label>
-                <select
-                  value={form.area_interes}
-                  onChange={(e) => update("area_interes", e.target.value)}
-                  className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
-                >
-                  {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Cuéntanos tu situación (opcional)</label>
-                <textarea
-                  value={form.mensaje}
-                  onChange={(e) => update("mensaje", e.target.value)}
-                  placeholder="Describe brevemente tu caso..."
-                  rows={3}
-                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none resize-none"
+                <label className="text-beige/60 text-xs font-medium mb-1 block">Confirmar clave</label>
+                <input
+                  type="password"
+                  value={claveConfirm}
+                  onChange={(e) => setClaveConfirm(e.target.value)}
+                  placeholder="Repite tu clave"
+                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                 />
               </div>
-              <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
-                <span className="text-beige/50 text-xs">Plan seleccionado</span>
-                <span className="text-oro font-bold text-sm">{plan} — ${PLANES.find((p) => p.name === plan)?.price}/mes</span>
-              </div>
-              {lanza && (
-                <div className="bg-oro/5 rounded-lg px-3 py-2 flex items-center justify-between">
-                  <span className="text-beige/50 text-xs">Referido por</span>
-                  <span className="text-oro text-xs font-medium">{lanza.nombre}</span>
-                </div>
-              )}
               <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98] disabled:opacity-50"
+                type="button"
+                onClick={handlePassword}
+                disabled={submitting || clave.length < 4 || clave !== claveConfirm}
+                className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <MessageCircle className="w-5 h-5" /> {submitting ? "Enviando..." : "Registrarme y contactar por WhatsApp"}
+                <Lock className="w-4 h-4" /> {submitting ? "Guardando..." : "Crear mi clave"}
               </button>
-              <p className="text-beige/30 text-[10px] text-center">
-                Tus datos quedan registrados y también se abrirá WhatsApp para contacto directo
-              </p>
-            </form>
+            </div>
           </div>
-        ) : (
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center space-y-3">
-            <Check className="w-10 h-10 text-green-400 mx-auto" />
-            <h3 className="text-white font-bold text-lg">¡Registro exitoso!</h3>
-            <p className="text-beige/60 text-sm">
-              Un abogado te contactará por WhatsApp para completar tu afiliación al <strong className="text-white">Plan {plan}</strong>.
-            </p>
+        )}
+
+        {/* ═══════ STEP 5: ONBOARDING ═══════ */}
+        {step === 5 && (
+          <div className="space-y-6 py-4">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-oro/20 rounded-full flex items-center justify-center mx-auto">
+                <Shield className="w-8 h-8 text-oro" />
+              </div>
+              <h1 className="text-white text-xl font-bold">¡Bienvenido a Legión Jurídica!</h1>
+              <p className="text-beige/60 text-sm">Tu cuenta está lista. Así funciona tu portal:</p>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                {
+                  icon: <Scale className="w-5 h-5 text-oro" />,
+                  title: "Mis Casos",
+                  desc: "Aquí verás el estado de tus procesos legales. Tu abogado actualizará cada etapa y podrás seguir el avance en tiempo real.",
+                },
+                {
+                  icon: <MessageCircle className="w-5 h-5 text-green-400" />,
+                  title: "Solicitar asesoría",
+                  desc: "Desde tu portal puedes enviar consultas directamente a tu abogado asignado. También puedes escribirnos por WhatsApp.",
+                },
+                {
+                  icon: <HelpCircle className="w-5 h-5 text-blue-400" />,
+                  title: "¿Cómo pedir algo?",
+                  desc: "Entra a tu portal con tu cédula y la clave que acabas de crear. Desde ahí puedes ver tus casos, enviar mensajes y más.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-3">
+                  <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm">{item.title}</h3>
+                    <p className="text-beige/50 text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-oro/10 border border-oro/20 rounded-xl p-4 text-center space-y-2">
+              <p className="text-oro text-sm font-medium">Tu acceso al portal</p>
+              <div className="flex items-center justify-center gap-4 text-xs">
+                <span className="text-beige/50">Usuario: <strong className="text-white">{form.cedula}</strong></span>
+                <span className="text-beige/50">Clave: <strong className="text-white">la que creaste</strong></span>
+              </div>
+              <a
+                href="/mi-caso"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-oro to-oro-light text-jungle-dark px-5 py-2.5 rounded-xl font-bold text-sm mt-2 transition-all active:scale-[0.98]"
+              >
+                <Lock className="w-4 h-4" /> Ir al portal
+              </a>
+            </div>
+
             <a
-              href="https://wa.me/573176689580"
+              href={`https://wa.me/573176689580?text=${encodeURIComponent(
+                `Hola, acabo de firmar mi contrato del Plan ${plan}. Mi nombre es ${form.nombre}, cédula ${form.cedula}. Código: ${code}`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-green-700 transition-colors text-sm"
+              className="w-full inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors text-sm"
             >
-              <MessageCircle className="w-4 h-4" /> Abrir WhatsApp
+              <MessageCircle className="w-5 h-5" /> Contactar por WhatsApp
             </a>
           </div>
         )}
 
-        {/* Trust */}
+        {/* Footer */}
         <div className="text-center space-y-2 pb-6">
           <div className="flex items-center justify-center gap-4 text-beige/40 text-xs">
             <a href="tel:+573176689580" className="flex items-center gap-1 hover:text-oro transition-colors">
@@ -337,6 +898,67 @@ export default function ReferralPage({ params }: Props) {
           </p>
         </div>
       </main>
+
+      {/* ═══ Confirmation Modal ═══ */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowConfirm(false)}>
+          <div className="bg-jungle-dark border border-white/10 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <h3 className="text-white font-bold text-lg">Confirma tus datos</h3>
+              <p className="text-beige/50 text-xs mt-1">Revisa que todo esté correcto antes de continuar</p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2.5">
+              <div className="flex justify-between items-center">
+                <span className="text-beige/50 text-xs">Nombre</span>
+                <span className="text-white text-sm font-medium">{form.nombre}</span>
+              </div>
+              <div className="border-t border-white/5" />
+              <div className="flex justify-between items-center">
+                <span className="text-beige/50 text-xs">Teléfono</span>
+                <span className="text-white text-sm font-medium">{form.telefono}</span>
+              </div>
+              <div className="border-t border-white/5" />
+              <div className="flex justify-between items-center">
+                <span className="text-beige/50 text-xs">Cédula</span>
+                <span className="text-white text-sm font-medium">{form.cedula}</span>
+              </div>
+              {form.email && (
+                <>
+                  <div className="border-t border-white/5" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-beige/50 text-xs">Email</span>
+                    <span className="text-white text-sm font-medium">{form.email}</span>
+                  </div>
+                </>
+              )}
+              <div className="border-t border-white/5" />
+              <div className="flex justify-between items-center">
+                <span className="text-beige/50 text-xs">Plan</span>
+                <span className="text-oro text-sm font-bold">{plan} — ${PLAN_PRICES[plan]}/mes</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 text-beige/60 hover:text-white text-sm py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors font-medium"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={confirmAndSaveLead}
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" /> {submitting ? "Guardando..." : "Datos correctos"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

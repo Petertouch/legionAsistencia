@@ -16,8 +16,10 @@ interface Props {
 export default function ClientCaseDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
-  const { session } = useClientStore();
-  const { messages, getMessages, addMessage } = useMessagesStore();
+  const session = useClientStore((s) => s.session);
+  const messages = useMessagesStore((s) => s.messages);
+  const getMessages = useMessagesStore((s) => s.getMessages);
+  const addMessage = useMessagesStore((s) => s.addMessage);
   const [mounted, setMounted] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatFullscreen, setChatFullscreen] = useState(false);
