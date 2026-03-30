@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendMail, renderTemplate } from "@/lib/mail";
-import { useMailStore } from "@/lib/stores/mail-store";
+import { sendMail } from "@/lib/mail";
 
 const SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET || "legion-fallback-secret-change-me-in-prod"

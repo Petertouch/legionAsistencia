@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { KeyRound, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function ResetClaveAdminPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-beige/30 text-sm">Cargando...</div>}>
+      <ResetClaveAdminForm />
+    </Suspense>
+  );
+}
+
+function ResetClaveAdminForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");

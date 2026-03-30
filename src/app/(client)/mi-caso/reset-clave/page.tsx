@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { KeyRound, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function ResetClavePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Cargando...</div>}>
+      <ResetClaveForm />
+    </Suspense>
+  );
+}
+
+function ResetClaveForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");
