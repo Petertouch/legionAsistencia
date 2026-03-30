@@ -87,6 +87,21 @@ export const MOCK_DOCUMENTOS: DocumentoContrato[] = [];
 // ── Suscriptores ────────────────────────────────────────────────
 export const MOCK_SUSCRIPTORES: Suscriptor[] = [
   {
+    id: "477f9b02-ad4c-4ecd-a680-f9cdf0565e0d",
+    nombre: "Cliente Demo",
+    telefono: "3001234567",
+    email: "demo@legion.com",
+    cedula: "123",
+    plan: "Plus",
+    estado_pago: "Al dia",
+    rama: "Ejército Nacional",
+    rango: "Cabo Primero",
+    fecha_inicio: "2026-03-24",
+    notas: "",
+    created_at: "2026-03-24T17:36:00Z",
+    updated_at: "2026-03-24T17:36:00Z",
+  },
+  {
     id: "s1",
     nombre: "Carlos Andrés Gómez",
     telefono: "3101234567",
@@ -134,7 +149,48 @@ export const MOCK_SUSCRIPTORES: Suscriptor[] = [
 ];
 
 // ── Casos (Pipeline-based) ──────────────────────────────────────
-export const MOCK_CASOS: Caso[] = [];
+export const MOCK_CASOS: Caso[] = [
+  {
+    id: "c-demo-1",
+    suscriptor_id: "477f9b02-ad4c-4ecd-a680-f9cdf0565e0d",
+    suscriptor_nombre: "Cliente Demo",
+    area: "Disciplinario",
+    titulo: "Investigación disciplinaria por presunta inasistencia",
+    etapa: "Pruebas",
+    etapa_index: 3,
+    prioridad: "alta",
+    abogado: "Dr. Ramírez",
+    descripcion: "Proceso disciplinario iniciado por presunta inasistencia injustificada a servicio. Se presentaron descargos argumentando licencia médica no registrada por error administrativo. Actualmente en etapa probatoria solicitando testimonios de compañeros y registro médico.",
+    fecha_limite: "2026-04-15",
+    fecha_ingreso_etapa: "2026-03-18T10:00:00Z",
+    fecha_audiencia: null,
+    fecha_cierre: null,
+    checklist: { "d-pru-1": true, "d-pru-2": false, "d-pru-3": false },
+    notas_etapa: "Se solicitaron 3 testimonios. Pendiente respuesta del hospital militar.",
+    created_at: "2026-02-10T10:00:00Z",
+    updated_at: "2026-03-18T10:00:00Z",
+  },
+  {
+    id: "c-demo-2",
+    suscriptor_id: "477f9b02-ad4c-4ecd-a680-f9cdf0565e0d",
+    suscriptor_nombre: "Cliente Demo",
+    area: "Familia",
+    titulo: "Demanda de custodia y regulación de visitas",
+    etapa: "Conciliacion",
+    etapa_index: 4,
+    prioridad: "normal",
+    abogado: "Dra. López",
+    descripcion: "Demanda de custodia compartida del menor. Se busca regulación de visitas cada quince días y vacaciones alternas. Demanda admitida y notificada. Próxima audiencia de conciliación programada.",
+    fecha_limite: "2026-05-01",
+    fecha_ingreso_etapa: "2026-03-20T14:00:00Z",
+    fecha_audiencia: "2026-04-02",
+    fecha_cierre: null,
+    checklist: { "f-con-1": true, "f-con-2": false },
+    notas_etapa: "Audiencia de conciliación fijada para el 2 de abril. Preparar propuesta de custodia compartida.",
+    created_at: "2026-01-20T08:00:00Z",
+    updated_at: "2026-03-20T14:00:00Z",
+  },
+];
 
 // ── Leads ───────────────────────────────────────────────────────
 export const MOCK_LEADS: Lead[] = [];

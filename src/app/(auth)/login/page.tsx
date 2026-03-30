@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-import { useAuthStore, authenticate } from "@/lib/stores/auth-store";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -17,18 +18,30 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
 
-    const user = authenticate(email, password);
-    if (!user) {
-      toast.error("Email o contraseña incorrectos");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Error al iniciar sesión");
+        setLoading(false);
+        return;
+      }
+
+      // Guardar en Zustand para UI client-side (navbar, etc)
+      login(data.user);
+      toast.success(`Bienvenido, ${data.user.nombre}`);
+      router.push("/admin/dashboard");
+    } catch {
+      toast.error("Error de conexión");
       setLoading(false);
-      return;
     }
-
-    login(user);
-    toast.success(`Bienvenido, ${user.nombre}`);
-    router.push("/admin/dashboard");
   };
 
   return (
@@ -61,9 +74,12 @@ export default function LoginPage() {
         {loading ? "Ingresando..." : "Ingresar"}
       </Button>
 
-      <p className="text-center text-beige/30 text-xs">
-        Acceso exclusivo para el equipo de Legión Jurídica
-      </p>
+      <Link
+        href="/recuperar"
+        className="block text-center text-beige/30 text-xs hover:text-oro transition-colors"
+      >
+        ¿Olvidaste tu contraseña?
+      </Link>
     </form>
   );
 }

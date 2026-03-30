@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useCallback } from "react";
 import { useAuthStore, type AuthUser, type UserRole } from "@/lib/stores/auth-store";
 
 interface AuthContextValue {
@@ -20,15 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const user = useAuthStore((s) => s.user);
-  const login = useAuthStore((s) => s.login);
-  const logout = useAuthStore((s) => s.logout);
+  const storeLogin = useAuthStore((s) => s.login);
+  const storeLogout = useAuthStore((s) => s.logout);
+
+  const logout = useCallback(() => {
+    // Limpiar cookie server-side
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    // Limpiar Zustand
+    storeLogout();
+  }, [storeLogout]);
 
   const value: AuthContextValue = {
     user,
     role: user?.role ?? null,
     isAdmin: user?.role === "admin",
     isAbogado: user?.role === "abogado",
-    login,
+    login: storeLogin,
     logout,
   };
 

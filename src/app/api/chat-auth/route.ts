@@ -1,29 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  MOCK_SUSCRIPTORES, MOCK_CASOS,
-} from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/server";
+import { MOCK_CASOS } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
-
-// Mock passwords — in production this would be hashed in the database
-const MOCK_PASSWORDS: Record<string, string> = {
-  "123": "123", // Sgto. Juan Felipe Pulido
-};
-
-// Default password for suscriptors without a specific one
-const DEFAULT_PASSWORD = "legion2026";
 
 export async function POST(request: NextRequest) {
   try {
     const { cedula, clave } = await request.json();
 
-    const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.cedula === cedula?.trim());
-    if (!suscriptor) {
+    const supabase = await createClient();
+    const { data: suscriptor, error } = await supabase
+      .from("suscriptores")
+      .select("id, nombre, cedula, plan, estado_pago, clave")
+      .eq("cedula", cedula?.trim())
+      .single();
+
+    if (error || !suscriptor) {
       return NextResponse.json({ error: "Cedula no encontrada" }, { status: 404 });
     }
 
-    // Verify password
-    const expectedPassword = MOCK_PASSWORDS[suscriptor.cedula] || DEFAULT_PASSWORD;
-    if (clave !== expectedPassword) {
+    if (!suscriptor.clave || suscriptor.clave !== clave) {
       return NextResponse.json({ error: "Contrasena incorrecta" }, { status: 401 });
     }
 

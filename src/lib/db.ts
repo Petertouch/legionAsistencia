@@ -12,10 +12,11 @@ function now() { return new Date().toISOString(); }
 
 // ── Suscriptores ────────────────────────────────────────────────
 export async function getSuscriptores(params?: {
-  search?: string; plan?: string; estado_pago?: string;
+  search?: string; plan?: string; estado_pago?: string; orderBy?: "created_at" | "updated_at";
 }): Promise<Suscriptor[]> {
   const supabase = createClient();
-  let query = supabase.from("suscriptores").select("*").order("created_at", { ascending: false });
+  const orderField = params?.orderBy || "created_at";
+  let query = supabase.from("suscriptores").select("*").order(orderField, { ascending: false });
   if (params?.plan) query = query.eq("plan", params.plan);
   if (params?.estado_pago) query = query.eq("estado_pago", params.estado_pago);
   if (params?.search) query = query.or(`nombre.ilike.%${params.search}%,email.ilike.%${params.search}%,telefono.ilike.%${params.search}%,cedula.ilike.%${params.search}%`);
@@ -47,11 +48,20 @@ export async function createSuscriptor(data: {
   return { ...row, fecha_inicio: row.fecha_inicio?.split("T")[0] || "", created_at: row.created_at || "", updated_at: row.updated_at || "" } as Suscriptor;
 }
 
-export async function updateSuscriptor(id: string, updates: Partial<Suscriptor>): Promise<Suscriptor | null> {
-  const supabase = createClient();
-  const { data, error } = await supabase.from("suscriptores").update({ ...updates, updated_at: now() }).eq("id", id).select().single();
-  if (error || !data) return null;
-  return { ...data, fecha_inicio: data.fecha_inicio?.split("T")[0] || "", created_at: data.created_at || "", updated_at: data.updated_at || "" } as Suscriptor;
+export async function updateSuscriptor(id: string, updates: Partial<Suscriptor>): Promise<Suscriptor> {
+  const res = await fetch(`/api/suscriptores/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(err.error || "Error al actualizar suscriptor");
+  }
+
+  const row = await res.json();
+  return { ...row, fecha_inicio: row.fecha_inicio?.split("T")[0] || "", created_at: row.created_at || "", updated_at: row.updated_at || "" } as Suscriptor;
 }
 
 // ── Casos ───────────────────────────────────────────────────────

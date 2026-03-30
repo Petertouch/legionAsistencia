@@ -71,13 +71,21 @@ export default function SuscriptorDetailPage() {
     },
   });
 
-  const approveMutation = useMutation({
-    mutationFn: () => updateSuscriptor(id, { estado_pago: "Al dia" }),
-    onSuccess: () => {
+  const [approving, setApproving] = useState(false);
+  const handleAprobar = async () => {
+    setApproving(true);
+    try {
+      await updateSuscriptor(id, { estado_pago: "Al dia" });
       queryClient.invalidateQueries({ queryKey: ["suscriptor", id] });
+      queryClient.invalidateQueries({ queryKey: ["suscriptores-pendientes"] });
+      queryClient.invalidateQueries({ queryKey: ["suscriptores-activos"] });
       toast.success("Suscriptor aprobado");
-    },
-  });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al aprobar");
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,11 +114,11 @@ export default function SuscriptorDetailPage() {
             <p className="text-yellow-400/60 text-xs mt-0.5">Este suscriptor firmó su contrato pero aún no ha sido aprobado.</p>
           </div>
           <button
-            onClick={() => approveMutation.mutate()}
-            disabled={approveMutation.isPending}
+            onClick={handleAprobar}
+            disabled={approving}
             className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0 disabled:opacity-50"
           >
-            {approveMutation.isPending ? "Aprobando..." : "Aprobar"}
+            {approving ? "Aprobando..." : "Aprobar"}
           </button>
         </div>
       )}

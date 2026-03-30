@@ -19,6 +19,8 @@ import {
   Gift,
   UsersRound,
   FileText,
+  GraduationCap,
+  Mail,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -26,9 +28,11 @@ const NAV_ITEMS = [
   { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
   { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
   { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
+  { href: "/admin/cursos", label: "Cursos", icon: GraduationCap, roles: ["admin"] },
   { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
   { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
   { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
+  { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
   { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
 ];
 

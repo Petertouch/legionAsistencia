@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
 import { createClient } from "@/lib/supabase/client";
 import { Shield } from "lucide-react";
@@ -115,9 +116,12 @@ export default function ClientLoginPage() {
           {loading ? "Verificando..." : "Ingresar"}
         </button>
 
-        <p className="text-center text-gray-400 text-xs">
-          Si no tienes acceso, contacta a tu abogado
-        </p>
+        <Link
+          href="/mi-caso/recuperar"
+          className="block text-center text-gray-400 text-xs hover:text-jungle-dark transition-colors"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
       </form>
     </div>
   );
