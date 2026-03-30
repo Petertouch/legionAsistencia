@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
-import { User, Scale, Gift, LogOut, MessageCircle, FileText, GraduationCap } from "lucide-react";
+import { User, Scale, Gift, LogOut, MessageCircle, FileText, GraduationCap, Award } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -59,6 +59,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               { href: "/mi-caso/perfil", label: "Inicio", icon: User },
               { href: "/mi-caso/casos", label: "Mis Casos", icon: Scale },
               { href: "/mi-caso/cursos", label: "Cursos", icon: GraduationCap },
+              { href: "/mi-caso/diplomas", label: "Diplomas", icon: Award },
               { href: "/mi-caso/referidos", label: "Referidos", icon: Gift },
               { href: "/mi-caso/contrato", label: "Contrato", icon: FileText },
             ].map(({ href, label, icon: Icon }) => {
@@ -82,7 +83,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       )}
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6 w-full flex-1">
+      <main className={`mx-auto w-full flex-1 ${
+        pathname.startsWith("/mi-caso/cursos/") && session
+          ? "max-w-7xl px-0 py-0"
+          : "max-w-2xl px-4 py-6"
+      }`}>
         {children}
       </main>
 

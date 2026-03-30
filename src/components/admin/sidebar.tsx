@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useLanzaStore } from "@/lib/stores/lanza-store";
 import {
   LayoutDashboard, Users, Scale, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen,
+  LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen, Award,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,6 +47,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/cursos", label: "Mis Cursos", icon: GraduationCap, roles: ["profesor"] },
       { href: "/admin/cursos", label: "Cursos", icon: GraduationCap, roles: ["admin"] },
       { href: "/admin/profesores", label: "Profesores", icon: UserPen, roles: ["admin"] },
+      { href: "/admin/diplomas", label: "Diplomas", icon: Award, roles: ["admin"] },
     ],
   },
   {
