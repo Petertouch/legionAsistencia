@@ -69,21 +69,19 @@ export function renderDiplomaHtml(
   <div style="position:absolute;inset:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
     ${template.showLogo ? `<img src="${template.logoUrl}" width="48" height="48" style="margin-bottom:12px;opacity:0.8" />` : ""}
 
-    <p style="margin:0;font-size:10px;color:${template.accentColor}80;letter-spacing:4px;text-transform:uppercase">${template.subtitleText}</p>
+    <h1 style="margin:0 0 8px;font-size:28px;font-weight:bold;color:${template.accentColor};letter-spacing:3px">${template.titleText}</h1>
 
-    <h1 style="margin:8px 0 16px;font-size:28px;font-weight:bold;color:${template.accentColor};letter-spacing:3px">${template.titleText}</h1>
+    <div style="width:60px;height:1px;background:${template.accentColor}40;margin:0 auto 16px"></div>
 
-    <div style="width:60px;height:1px;background:${template.accentColor}40;margin:0 auto 20px"></div>
+    <p style="margin:0 0 4px;font-size:11px;color:${template.accentColor}80;letter-spacing:2px;text-transform:uppercase">${template.subtitleText}</p>
 
-    <p style="margin:0 0 6px;font-size:11px;color:${template.accentColor}60;letter-spacing:1px">${template.bodyText.split("{curso}")[0] || template.bodyText}</p>
+    <p style="margin:0 0 12px;font-size:28px;color:#ffffff;font-weight:bold;max-width:600px;line-height:1.3">${data.nombre}</p>
 
-    <p style="margin:0 0 8px;font-size:26px;color:#ffffff;font-weight:bold;max-width:600px;line-height:1.3">${data.nombre}</p>
+    <p style="margin:0 0 8px;font-size:12px;color:${template.accentColor}60;letter-spacing:0.5px">${template.bodyText}</p>
 
-    <p style="margin:0 0 6px;font-size:11px;color:${template.accentColor}60">${template.bodyText}</p>
+    <p style="margin:0;font-size:20px;color:${template.accentColor};font-weight:bold;font-style:italic;max-width:500px;line-height:1.3">"${data.curso}"</p>
 
-    <p style="margin:4px 0 0;font-size:18px;color:${template.accentColor};font-weight:bold;font-style:italic;max-width:500px;line-height:1.3">"${data.curso}"</p>
-
-    <p style="margin:12px 0 0;font-size:10px;color:${template.accentColor}40">Completado el ${data.fecha}</p>
+    <p style="margin:14px 0 0;font-size:10px;color:${template.accentColor}40">Completado el ${data.fecha}</p>
 
     <!-- Signatures -->
     <div style="display:flex;gap:100px;margin-top:28px">
