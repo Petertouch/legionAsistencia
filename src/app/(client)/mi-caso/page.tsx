@@ -118,7 +118,7 @@ export default function ClientLoginPage() {
 
         <Link
           href="/mi-caso/recuperar"
-          className="block text-center text-gray-400 text-xs hover:text-jungle-dark transition-colors"
+          className="block text-center text-jungle-dark/60 text-sm font-medium hover:text-jungle-dark underline underline-offset-2 transition-colors"
         >
           ¿Olvidaste tu contraseña?
         </Link>
