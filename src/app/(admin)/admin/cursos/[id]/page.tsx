@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCourseAdmin, updateCourse, getModules, createModule, updateModule, deleteModule,
@@ -8,6 +8,7 @@ import {
   createQuiz, deleteQuiz, addQuizQuestion, updateQuizQuestion, deleteQuizQuestion,
 } from "@/lib/stores/courses-store";
 import type { CourseModule, Lesson, Quiz, QuizQuestion } from "@/lib/stores/courses-store";
+import { useTeamStore } from "@/lib/stores/team-store";
 import Button from "@/components/ui/button";
 import Modal from "@/components/ui/modal";
 import Link from "next/link";
@@ -33,8 +34,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("0");
   const [status, setStatus] = useState("DRAFT");
-  const [instructorName, setInstructorName] = useState("");
-  const [instructorBio, setInstructorBio] = useState("");
+  const [profesorId, setProfesorId] = useState("");
+  const allMembers = useTeamStore((s) => s.abogados);
+  const profesores = useMemo(() => allMembers.filter((a) => a.role === "profesor"), [allMembers]);
   const [categoryId, setCategoryId] = useState("");
   const [totalHours, setTotalHours] = useState("0");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
@@ -68,8 +70,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     setDescription(course.description || "");
     setPrice(String(course.price));
     setStatus(course.status);
-    setInstructorName(course.instructor_name || "");
-    setInstructorBio(course.instructor_bio || "");
+    const matchedProf = profesores.find((p) => p.nombre === course.instructor_name);
+    setProfesorId(matchedProf?.id || "");
     setCategoryId(course.category_id || "");
     setTotalHours(String(course.total_hours));
     setThumbnailUrl(course.thumbnail_url || "");
@@ -77,10 +79,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   }
 
   // Mutations
+  const selectedProfesor = profesores.find((p) => p.id === profesorId);
+
   const saveMutation = useMutation({
     mutationFn: () => updateCourse(id, {
       title, description, price: parseFloat(price) || 0, status: status as "DRAFT" | "PUBLISHED" | "DISABLED",
-      instructor_name: instructorName || null, instructor_bio: instructorBio || null,
+      instructor_name: selectedProfesor?.nombre || null, instructor_bio: selectedProfesor?.especialidad_academica || null,
+      instructor_avatar: selectedProfesor?.avatar_url || null,
       category_id: categoryId || null, total_hours: parseInt(totalHours) || 0,
       thumbnail_url: thumbnailUrl || null,
     }),
@@ -288,15 +293,41 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <label className={labelCls}>Thumbnail URL</label>
           <input type="text" value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} placeholder="https://..." className={inputCls} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls}>Instructor</label>
-            <input type="text" value={instructorName} onChange={(e) => setInstructorName(e.target.value)} className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Bio instructor</label>
-            <input type="text" value={instructorBio} onChange={(e) => setInstructorBio(e.target.value)} className={inputCls} />
-          </div>
+        <div>
+          <label className={labelCls}>Profesor</label>
+          {profesores.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between">
+              <p className="text-beige/30 text-xs">No hay profesores registrados</p>
+              <Link href="/admin/profesores/nuevo" className="text-oro text-xs font-medium hover:underline">Crear profesor</Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <select value={profesorId} onChange={(e) => setProfesorId(e.target.value)} className={`${inputCls} appearance-none`}>
+                <option value="" className="bg-jungle-dark">Sin profesor asignado</option>
+                {profesores.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-jungle-dark">{p.nombre} — {p.especialidad_academica}</option>
+                ))}
+              </select>
+              {selectedProfesor && (
+                <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3">
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden"
+                    style={{ backgroundColor: selectedProfesor.avatar_url ? "transparent" : selectedProfesor.color }}>
+                    {selectedProfesor.avatar_url ? (
+                      <img src={selectedProfesor.avatar_url} alt={selectedProfesor.nombre} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                        {selectedProfesor.nombre.split(" ").pop()?.[0] || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{selectedProfesor.nombre}</p>
+                    <p className="text-beige/40 text-xs truncate">{selectedProfesor.especialidad_academica}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

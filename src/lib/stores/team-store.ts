@@ -2,29 +2,41 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CaseArea } from "@/lib/pipelines";
 
-export type AbogadoEstado = "activo" | "inactivo" | "vacaciones";
+export type MemberRole = "abogado" | "profesor";
+export type MemberEstado = "activo" | "inactivo" | "vacaciones";
 
-export interface Abogado {
+export interface TeamMember {
   id: string;
+  role: MemberRole;
   nombre: string;
   email: string;
   telefono: string;
   cedula: string;
-  areas_habilitadas: CaseArea[];
-  especialidad: CaseArea;
-  estado: AbogadoEstado;
+  estado: MemberEstado;
   fecha_ingreso: string;
   password: string;
-  color: string; // avatar color
+  color: string;
   notas: string;
-  max_casos: number; // max active cases
   created_at: string;
   updated_at: string;
+  // Abogado-specific
+  areas_habilitadas: CaseArea[];
+  especialidad: CaseArea;
+  max_casos: number;
+  // Profesor-specific
+  especialidad_academica: string;
+  bio: string;
+  avatar_url: string;
 }
 
-const INITIAL_ABOGADOS: Abogado[] = [
+// Keep backward compat
+export type Abogado = TeamMember;
+export type AbogadoEstado = MemberEstado;
+
+const INITIAL_MEMBERS: TeamMember[] = [
   {
     id: "ab1",
+    role: "abogado",
     nombre: "Dr. Ramirez",
     email: "ramirez@legionjuridica.com",
     telefono: "3176689010",
@@ -37,35 +49,53 @@ const INITIAL_ABOGADOS: Abogado[] = [
     color: "#3b82f6",
     notas: "Abogado senior. 8 años de experiencia en justicia penal militar.",
     max_casos: 15,
+    especialidad_academica: "",
+    bio: "",
+    avatar_url: "",
     created_at: "2024-06-01T10:00:00Z",
     updated_at: "2026-03-01T10:00:00Z",
   },
 ];
 
 interface TeamStore {
-  abogados: Abogado[];
+  abogados: TeamMember[];
   idCounter: number;
-  getAbogado: (id: string) => Abogado | undefined;
-  addAbogado: (data: Omit<Abogado, "id" | "created_at" | "updated_at">) => void;
-  updateAbogado: (id: string, data: Partial<Abogado>) => void;
+  getAbogado: (id: string) => TeamMember | undefined;
+  getMember: (id: string) => TeamMember | undefined;
+  getByRole: (role: MemberRole) => TeamMember[];
+  getProfesores: () => TeamMember[];
+  addAbogado: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
+  addMember: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
+  updateAbogado: (id: string, data: Partial<TeamMember>) => void;
   toggleArea: (id: string, area: CaseArea) => void;
   changePassword: (id: string, newPassword: string) => void;
-  setEstado: (id: string, estado: AbogadoEstado) => void;
+  setEstado: (id: string, estado: MemberEstado) => void;
   deleteAbogado: (id: string) => void;
 }
 
 export const useTeamStore = create<TeamStore>()(
   persist(
     (set, get) => ({
-      abogados: INITIAL_ABOGADOS,
+      abogados: INITIAL_MEMBERS,
       idCounter: 10,
 
       getAbogado: (id) => get().abogados.find((a) => a.id === id),
+      getMember: (id) => get().abogados.find((a) => a.id === id),
+      getByRole: (role) => get().abogados.filter((a) => a.role === role),
+      getProfesores: () => get().abogados.filter((a) => a.role === "profesor"),
 
       addAbogado: (data) => {
         const now = new Date().toISOString();
         set((s) => ({
-          abogados: [...s.abogados, { ...data, id: `ab${s.idCounter}`, created_at: now, updated_at: now }],
+          abogados: [...s.abogados, { ...data, id: `mb${s.idCounter}`, created_at: now, updated_at: now }],
+          idCounter: s.idCounter + 1,
+        }));
+      },
+
+      addMember: (data) => {
+        const now = new Date().toISOString();
+        set((s) => ({
+          abogados: [...s.abogados, { ...data, id: `mb${s.idCounter}`, created_at: now, updated_at: now }],
           idCounter: s.idCounter + 1,
         }));
       },
@@ -109,6 +139,22 @@ export const useTeamStore = create<TeamStore>()(
       deleteAbogado: (id) =>
         set((s) => ({ abogados: s.abogados.filter((a) => a.id !== id) })),
     }),
-    { name: "legion-team", version: 1 }
+    {
+      name: "legion-team",
+      version: 2,
+      migrate: (state: unknown) => {
+        const old = state as { abogados?: TeamMember[]; idCounter?: number };
+        return {
+          abogados: (old.abogados || INITIAL_MEMBERS).map((a) => ({
+            ...a,
+            role: a.role || "abogado" as MemberRole,
+            especialidad_academica: a.especialidad_academica || "",
+            bio: a.bio || "",
+            avatar_url: a.avatar_url || "",
+          })),
+          idCounter: old.idCounter || 10,
+        };
+      },
+    }
   )
 );

@@ -8,6 +8,7 @@ interface AuthContextValue {
   role: UserRole | null;
   isAdmin: boolean;
   isAbogado: boolean;
+  isProfesor: boolean;
   login: (user: AuthUser) => void;
   logout: () => void;
 }
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: user?.role ?? null,
     isAdmin: user?.role === "admin",
     isAbogado: user?.role === "abogado",
+    isProfesor: user?.role === "profesor",
     login: storeLogin,
     logout,
   };

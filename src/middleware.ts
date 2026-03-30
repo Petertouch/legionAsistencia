@@ -7,7 +7,7 @@ const SECRET = new TextEncoder().encode(
 );
 
 // Rutas de API que requieren auth (excluir login/logout/me)
-const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail"];
+const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -71,5 +71,5 @@ async function verifyToken(token: string) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/api/suscriptores/:path*", "/api/mail/:path*"],
+  matcher: ["/admin/:path*", "/login", "/api/suscriptores/:path*", "/api/mail/:path*", "/api/upload/:path*"],
 };

@@ -56,11 +56,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <nav className="bg-jungle-dark border-b border-white/10 px-4 flex-shrink-0">
           <div className="max-w-2xl mx-auto flex gap-1">
             {[
-              { href: "/mi-caso/perfil", label: "Mi Perfil", icon: User },
-              { href: "/mi-caso/contrato", label: "Mi Contrato", icon: FileText },
+              { href: "/mi-caso/perfil", label: "Inicio", icon: User },
               { href: "/mi-caso/casos", label: "Mis Casos", icon: Scale },
               { href: "/mi-caso/cursos", label: "Cursos", icon: GraduationCap },
               { href: "/mi-caso/referidos", label: "Referidos", icon: Gift },
+              { href: "/mi-caso/contrato", label: "Contrato", icon: FileText },
             ].map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href === "/mi-caso/casos" && pathname.startsWith("/mi-caso/casos/"));
               return (

@@ -190,6 +190,7 @@ export async function createCourse(input: {
   status?: string;
   instructor_name?: string;
   instructor_bio?: string;
+  instructor_avatar?: string;
   category_id?: string | null;
   thumbnail_url?: string | null;
 }): Promise<Course> {

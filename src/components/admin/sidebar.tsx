@@ -7,36 +7,66 @@ import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanzaStore } from "@/lib/stores/lanza-store";
 import {
-  LayoutDashboard,
-  Users,
-  Scale,
-  ClipboardList,
-  PanelLeftClose,
-  PanelLeftOpen,
-  LogOut,
-  X,
-  BookOpen,
-  Gift,
-  UsersRound,
-  FileText,
-  GraduationCap,
-  Mail,
+  LayoutDashboard, Users, Scale, ClipboardList, PanelLeftClose, PanelLeftOpen,
+  LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen,
+  type LucideIcon,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado"] },
-  { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
-  { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
-  { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
-  { href: "/admin/cursos", label: "Cursos", icon: GraduationCap, roles: ["admin"] },
-  { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
-  { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
-  { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
-  { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
-  { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  roles: string[];
+  badge?: number;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: "General",
+    items: [
+      { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado", "profesor"] },
+      { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
+    ],
+  },
+  {
+    label: "Legal",
+    items: [
+      { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
+      { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
+      { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Educación",
+    items: [
+      { href: "/admin/cursos", label: "Mis Cursos", icon: GraduationCap, roles: ["profesor"] },
+      { href: "/admin/cursos", label: "Cursos", icon: GraduationCap, roles: ["admin"] },
+      { href: "/admin/profesores", label: "Profesores", icon: UserPen, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Equipo",
+    items: [
+      { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
+      { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
+      { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
+    ],
+  },
 ];
 
-export { NAV_ITEMS };
+// Flat list for external use
+export const NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -47,8 +77,6 @@ export default function Sidebar() {
   const setMobileOpen = useSidebarStore((s) => s.setMobileOpen);
   const { user, role, logout } = useAuth();
   const pendingLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
-
-  const visibleItems = NAV_ITEMS.filter((item) => !role || item.roles.includes(role));
 
   const handleLogout = () => {
     logout();
@@ -89,7 +117,6 @@ export default function Sidebar() {
               </div>
             )}
           </a>
-          {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
             className="md:hidden p-1.5 text-beige/40 hover:text-white transition-colors"
@@ -99,40 +126,62 @@ export default function Sidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-          {visibleItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href);
+        <nav className="flex-1 py-2 px-2 overflow-y-auto">
+          {NAV_SECTIONS.map((section) => {
+            const visibleItems = section.items.filter((item) => !role || item.roles.includes(role));
+            if (visibleItems.length === 0) return null;
+
             return (
-              <Link
-                key={href}
-                href={href}
-                onClick={handleNavClick}
-                title={collapsed ? label : undefined}
-                className={`flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  active
-                    ? "bg-oro/15 text-oro"
-                    : "text-beige/50 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <span className="relative flex-shrink-0">
-                  <Icon className="w-5 h-5" />
-                  {href === "/admin/recomendaciones" && pendingLeads > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {pendingLeads}
-                    </span>
-                  )}
-                </span>
+              <div key={section.label} className="mb-1">
+                {/* Section label */}
                 {!collapsed && (
-                  <span className="flex items-center gap-2">
-                    {label}
-                    {href === "/admin/recomendaciones" && pendingLeads > 0 && (
-                      <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                        {pendingLeads}
-                      </span>
-                    )}
-                  </span>
+                  <p className="px-3 pt-3 pb-1 text-beige/25 text-[9px] font-semibold uppercase tracking-[0.15em]">
+                    {section.label}
+                  </p>
                 )}
-              </Link>
+                {collapsed && <div className="h-2" />}
+
+                {/* Items */}
+                <div className="space-y-0.5">
+                  {visibleItems.map(({ href, label, icon: Icon }) => {
+                    const active = pathname.startsWith(href);
+                    const isLanzas = href === "/admin/recomendaciones";
+
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={handleNavClick}
+                        title={collapsed ? label : undefined}
+                        className={`flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          active
+                            ? "bg-oro/15 text-oro"
+                            : "text-beige/50 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <span className="relative flex-shrink-0">
+                          <Icon className="w-[18px] h-[18px]" />
+                          {isLanzas && pendingLeads > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                              {pendingLeads}
+                            </span>
+                          )}
+                        </span>
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {label}
+                            {isLanzas && pendingLeads > 0 && (
+                              <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                {pendingLeads}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
@@ -145,7 +194,6 @@ export default function Sidebar() {
               <p className="text-oro/60 text-[10px] capitalize">{user.role}</p>
             </div>
           )}
-          {/* Collapse toggle — desktop only */}
           <button
             onClick={toggle}
             className="hidden md:flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-beige/40 hover:text-white hover:bg-white/5 transition-colors"
