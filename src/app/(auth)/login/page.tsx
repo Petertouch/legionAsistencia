@@ -12,7 +12,8 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
-  const teamMembers = useTeamStore((s) => s.abogados);
+  // Subscribe to force hydration before submit
+  const _members = useTeamStore((s) => s.abogados);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,40 +36,40 @@ export default function LoginPage() {
         const data = await res.json();
         login(data.user);
         toast.success(`Bienvenido, ${data.user.nombre}`);
-        router.push(data.user.role === "profesor" ? "/admin/dashboard" : "/admin/dashboard");
+        router.push("/admin/dashboard");
         return;
       }
     } catch {
-      // Si falla la API, intentar con profesores locales
+      // Error de red — continuar con login local
     }
 
-    // ── 2. Verificar profesores del team store (client-side) ──
-    const profesor = teamMembers.find(
-      (m) => m.role === "profesor" && m.email.toLowerCase() === emailNorm && m.password === password
+    // ── 2. Verificar miembros del team store (profesores, abogados locales) ──
+    const currentMembers = useTeamStore.getState().abogados;
+    const member = currentMembers.find(
+      (m) => m.email.toLowerCase() === emailNorm && m.password === password
     );
 
-    if (profesor) {
-      // Crear sesión via API
+    if (member) {
       try {
         const res = await fetch("/api/auth/create-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: profesor.id,
-            nombre: profesor.nombre,
-            email: profesor.email,
-            role: "profesor",
+            id: member.id,
+            nombre: member.nombre,
+            email: member.email,
+            role: member.role || "abogado",
           }),
         });
 
         if (res.ok) {
           login({
-            id: profesor.id,
-            nombre: profesor.nombre,
-            email: profesor.email,
-            role: "profesor" as any,
+            id: member.id,
+            nombre: member.nombre,
+            email: member.email,
+            role: (member.role || "abogado") as any,
           });
-          toast.success(`Bienvenido, ${profesor.nombre}`);
+          toast.success(`Bienvenido, ${member.nombre}`);
           router.push("/admin/dashboard");
           setLoading(false);
           return;

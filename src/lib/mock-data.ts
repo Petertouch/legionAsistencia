@@ -74,10 +74,11 @@ export interface Seguimiento {
 export interface DocumentoContrato {
   id: string;
   suscriptor_id: string;
+  caso_id?: string;
   nombre: string;
   tipo: "contrato" | "anexo" | "identificacion" | "otro";
-  archivo_url: string;      // in production: Supabase Storage URL
-  tamano: string;            // display size e.g. "1.2 MB"
+  archivo_url: string;
+  tamano: string;
   subido_por: string;
   created_at: string;
 }

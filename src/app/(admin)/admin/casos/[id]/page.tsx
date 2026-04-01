@@ -10,9 +10,9 @@ import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import StageChecklist from "@/components/admin/stage-checklist";
 import { useAuth } from "@/components/providers/auth-provider";
-import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2, FileText, Upload, Download, Loader2, File } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
   llamada: <Phone className="w-4 h-4" />, whatsapp: <MessageSquare className="w-4 h-4" />,
@@ -37,7 +37,60 @@ export default function CasoDetailPage() {
   const [respuesta, setRespuesta] = useState("");
   const [respLoading, setRespLoading] = useState(false);
   const [editingResp, setEditingResp] = useState(false);
+  const [docs, setDocs] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [deletingDoc, setDeletingDoc] = useState<{ id: string; nombre: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useAuth();
+
+  useEffect(() => {
+    fetch(`/api/documentos?caso_id=${id}`).then((r) => r.json()).then(setDocs).catch(() => {});
+  }, [id]);
+
+  const uploadFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) { toast.error("Máximo 10MB"); return; }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) { toast.error(uploadData.error || "Error subiendo archivo"); return; }
+
+      const docRes = await fetch("/api/documentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          suscriptor_id: caso?.suscriptor_id || "",
+          caso_id: id,
+          nombre: file.name,
+          tipo: "otro",
+          archivo_url: uploadData.url,
+          tamano: file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(0)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          subido_por: user?.nombre || "Admin",
+        }),
+      });
+      const doc = await docRes.json();
+      if (!docRes.ok) { toast.error(doc.error || "Error guardando documento"); return; }
+      setDocs((prev) => [doc, ...prev]);
+      toast.success("Documento subido");
+    } catch { toast.error("Error subiendo documento"); }
+    finally { setUploading(false); }
+  };
+
+  const handleUploadDoc = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) uploadFile(files[0]);
+  };
 
   const { data: caso, refetch } = useQuery({ queryKey: ["caso", id], queryFn: () => getCaso(id) });
   const { data: seguimientos, refetch: refetchSeg } = useQuery({ queryKey: ["seguimientos", { caso_id: id }], queryFn: () => getSeguimientos({ caso_id: id }) });
@@ -367,6 +420,138 @@ export default function CasoDetailPage() {
             </div>
           )}
         </Card>
+      )}
+      {/* ── Documentos del caso ── */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white font-bold text-sm flex items-center gap-2">
+            <FileText className="w-4 h-4 text-oro" /> Documentos del caso
+            {docs.length > 0 && <span className="text-beige/30 text-xs font-normal">({docs.length})</span>}
+          </h3>
+          <label className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
+            uploading ? "bg-white/5 text-beige/30" : "bg-white/5 text-beige/50 hover:text-oro hover:bg-oro/10"
+          }`}>
+            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            {uploading ? "Subiendo..." : "Subir documento"}
+            <input type="file" className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.xlsx,.xls" onChange={handleUploadDoc} disabled={uploading} />
+          </label>
+        </div>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={`rounded-xl border-2 border-dashed transition-all mb-3 ${
+            dragging
+              ? "border-oro bg-oro/5 py-8"
+              : "border-white/10 hover:border-white/20 py-4"
+          } ${uploading ? "pointer-events-none opacity-50" : ""}`}
+        >
+          <div className="flex flex-col items-center justify-center text-center">
+            {uploading ? (
+              <Loader2 className="w-6 h-6 text-oro animate-spin mb-1" />
+            ) : (
+              <Upload className={`w-6 h-6 mb-1 transition-colors ${dragging ? "text-oro" : "text-beige/15"}`} />
+            )}
+            <p className={`text-xs transition-colors ${dragging ? "text-oro font-medium" : "text-beige/30"}`}>
+              {uploading ? "Subiendo..." : dragging ? "Suelta aquí para subir" : "Arrastra archivos aquí"}
+            </p>
+            <p className="text-[10px] text-beige/20 mt-0.5">PDF, Word, Excel, imágenes · max 10MB</p>
+          </div>
+        </div>
+
+        {docs.length === 0 ? (
+          <div className="text-center py-2">
+            <p className="text-beige/20 text-xs">Sin documentos aún</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {docs.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 hover:bg-white/[0.07] transition-colors group">
+                <div className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4 text-beige/40" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{doc.nombre}</p>
+                  <div className="flex items-center gap-2 text-[10px] mt-0.5 flex-wrap">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-medium ${
+                      doc.subido_por === user?.nombre || doc.subido_por === "Admin"
+                        ? "bg-oro/15 text-oro"
+                        : "bg-blue-500/15 text-blue-400"
+                    }`}>
+                      <User className="w-2.5 h-2.5" />
+                      {doc.subido_por === user?.nombre ? "Tú" : doc.subido_por || "Cliente"}
+                    </span>
+                    <span className="text-beige/20">·</span>
+                    <span className="text-beige/30">{doc.tamano}</span>
+                    <span className="text-beige/20">·</span>
+                    <span className="text-beige/30">{new Date(doc.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
+                  </div>
+                </div>
+                <a href={doc.archivo_url} target="_blank" rel="noopener noreferrer"
+                  className="p-1.5 rounded-lg text-beige/30 hover:text-oro hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100" title="Descargar">
+                  <Download className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={() => setDeletingDoc({ id: doc.id, nombre: doc.nombre })}
+                  className="p-1.5 rounded-lg text-beige/30 hover:text-red-400 hover:bg-red-500/5 transition-colors opacity-0 group-hover:opacity-100" title="Eliminar">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+      {/* ── Modal confirmar eliminación ── */}
+      {deletingDoc && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => !deleteLoading && setDeletingDoc(null)}>
+          <div className="bg-jungle-dark border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 bg-red-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-sm">Eliminar documento</h3>
+                <p className="text-beige/40 text-xs mt-0.5">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-3 mb-5 flex items-center gap-3">
+              <FileText className="w-5 h-5 text-beige/30 flex-shrink-0" />
+              <p className="text-beige/70 text-sm truncate">{deletingDoc.nombre}</p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeletingDoc(null)}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-beige/60 bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  setDeleteLoading(true);
+                  const res = await fetch(`/api/documentos?id=${deletingDoc.id}`, { method: "DELETE" });
+                  if (res.ok) {
+                    setDocs((prev) => prev.filter((d) => d.id !== deletingDoc.id));
+                    toast.success("Documento eliminado");
+                  } else {
+                    toast.error("Error eliminando documento");
+                  }
+                  setDeleteLoading(false);
+                  setDeletingDoc(null);
+                }}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {deleteLoading ? "Eliminando..." : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

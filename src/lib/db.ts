@@ -350,6 +350,11 @@ export async function getDocumentosBySuscriptor(suscriptorId: string): Promise<D
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
+export async function getDocumentosByCaso(casoId: string): Promise<DocumentoContrato[]> {
+  return MOCK_DOCUMENTOS.filter((d) => d.caso_id === casoId)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
+
 export async function createDocumento(data: {
   suscriptor_id: string;
   nombre: string;

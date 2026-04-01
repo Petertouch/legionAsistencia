@@ -4,8 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
-import { User, Scale, Gift, LogOut, MessageCircle, FileText, GraduationCap, Award } from "lucide-react";
+import { User, Scale, Gift, LogOut, MessageCircle, FileText, GraduationCap, Award, HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import OnboardingTour from "@/components/client/onboarding-tour";
+import ClientChatBot from "@/components/client/client-chatbot";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +45,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           {showNav && (
             <div className="flex items-center gap-2">
               <span className="text-beige/50 text-xs hidden sm:block">{session.nombre}</span>
+              <button onClick={() => { localStorage.removeItem("legion-tour-done"); window.location.href = "/mi-caso/perfil"; }}
+                className="text-beige/40 hover:text-oro p-1.5 transition-colors" title="Ver tour">
+                <HelpCircle className="w-4 h-4" />
+              </button>
               <button onClick={handleLogout} className="text-beige/40 hover:text-red-400 p-1.5 transition-colors" title="Cerrar sesión">
                 <LogOut className="w-4 h-4" />
               </button>
@@ -82,6 +88,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </nav>
       )}
 
+      {/* Onboarding tour */}
+      {showNav && !isPublicCasePage && pathname === "/mi-caso/perfil" && <OnboardingTour />}
+
       {/* Content */}
       <main className={`mx-auto w-full flex-1 ${
         pathname.startsWith("/mi-caso/cursos/") && session
@@ -91,7 +100,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
 
-      {/* WhatsApp FAB */}
+      {/* WhatsApp FAB (always) */}
       <a
         href="https://wa.me/573176689580"
         target="_blank"
@@ -101,6 +110,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       >
         <MessageCircle className="w-6 h-6 text-white" />
       </a>
+
+      {/* AI Chat (logged in) */}
+      {showNav && <ClientChatBot />}
 
       {/* Footer */}
       <footer className="text-center py-4 text-gray-400 text-xs flex-shrink-0">

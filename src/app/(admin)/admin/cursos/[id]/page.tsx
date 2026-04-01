@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, use, useMemo } from "react";
+import { useState, use, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCourseAdmin, updateCourse, getModules, createModule, updateModule, deleteModule,
   createLesson, updateLesson, deleteLesson, getCategories, createCategory,
   createQuiz, deleteQuiz, addQuizQuestion, updateQuizQuestion, deleteQuizQuestion,
 } from "@/lib/stores/courses-store";
-import type { CourseModule, Lesson, Quiz, QuizQuestion } from "@/lib/stores/courses-store";
+import type { CourseModule, Lesson, Quiz, QuizQuestion, ScriptBlock } from "@/lib/stores/courses-store";
 import { useTeamStore } from "@/lib/stores/team-store";
 import Button from "@/components/ui/button";
 import Modal from "@/components/ui/modal";
+import ScriptBlockEditor from "@/components/admin/script-block-editor";
+import ScriptPreview from "@/components/admin/script-preview";
+import HeyGenPanel from "@/components/admin/heygen-panel";
+import type { SlideImage } from "@/lib/pdf-to-slides";
 import Link from "next/link";
 import {
   ArrowLeft, Save, Plus, Trash2, GripVertical, Video, FileText,
@@ -48,7 +52,16 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [lessonModal, setLessonModal] = useState(false);
   const [lessonModuleId, setLessonModuleId] = useState("");
-  const [lessonForm, setLessonForm] = useState({ title: "", video_url: "", description: "", materials_url: "", duration: "0", is_free: false });
+  const [lessonForm, setLessonForm] = useState<{
+    title: string; video_url: string; description: string; materials_url: string;
+    script: string; duration: string; is_free: boolean;
+    presentation_url: string; script_blocks: ScriptBlock[];
+  }>({ title: "", video_url: "", description: "", materials_url: "", script: "", duration: "0", is_free: false, presentation_url: "", script_blocks: [] });
+  const [lessonSlides, setLessonSlides] = useState<SlideImage[]>([]);
+  const [extractingSlides, setExtractingSlides] = useState(false);
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [showHeyGen, setShowHeyGen] = useState(false);
 
   // Quiz states
   const [quizModal, setQuizModal] = useState(false);
@@ -105,17 +118,36 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
   const saveLessonMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
+      // Upload PDF if pending
+      let presentationUrl = lessonForm.presentation_url || undefined;
+      if (pendingPdfFile) {
+        const formData = new FormData();
+        formData.append("file", pendingPdfFile);
+        formData.append("folder", "presentaciones");
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!uploadRes.ok) throw new Error("Error subiendo presentación");
+        const { url } = await uploadRes.json();
+        presentationUrl = url;
+      }
+
+      // Combine block texts into the legacy script field for backward compat
+      const blockTexts = lessonForm.script_blocks.map((b) => b.text).filter(Boolean);
+      const combinedScript = blockTexts.length > 0 ? blockTexts.join("\n\n---\n\n") : (lessonForm.script || undefined);
+
+      const payload: Record<string, unknown> = {
         title: lessonForm.title,
         video_url: lessonForm.video_url || undefined,
         description: lessonForm.description || undefined,
         materials_url: lessonForm.materials_url || undefined,
+        script: combinedScript,
+        presentation_url: presentationUrl || null,
+        script_blocks: lessonForm.script_blocks.length > 0 ? lessonForm.script_blocks : null,
         duration: parseInt(lessonForm.duration) || 0,
         is_free: lessonForm.is_free,
       };
       if (editingLesson) { await updateLesson(editingLesson.id, payload); return; }
       const mod = modules?.find((m) => m.id === lessonModuleId);
-      await createLesson(lessonModuleId, { ...payload, order: mod?.lessons?.length || 0 });
+      await createLesson(lessonModuleId, { ...payload, order: mod?.lessons?.length || 0 } as Parameters<typeof createLesson>[1]);
     },
     onSuccess: () => {
       refetchModules();
@@ -174,11 +206,17 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     },
   });
 
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+
   function openNewLesson(moduleId: string) {
     setLessonModuleId(moduleId);
     setEditingLesson(null);
-    setLessonForm({ title: "", video_url: "", description: "", materials_url: "", duration: "0", is_free: false });
-    setLessonModal(true);
+    setLessonForm({ title: "", video_url: "", description: "", materials_url: "", script: "", duration: "0", is_free: false, presentation_url: "", script_blocks: [] });
+    setLessonSlides([]);
+    setPendingPdfFile(null);
+    setPreviewMode(false);
+    setShowHeyGen(false);
+    setInlineEditId(`new-${moduleId}`);
   }
 
   function openEditLesson(lesson: Lesson, moduleId: string) {
@@ -189,10 +227,68 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       video_url: lesson.video_url || "",
       description: lesson.description || "",
       materials_url: lesson.materials_url || "",
+      script: lesson.script || "",
       duration: String(lesson.duration),
       is_free: lesson.is_free,
+      presentation_url: lesson.presentation_url || "",
+      script_blocks: lesson.script_blocks || [],
     });
-    setLessonModal(true);
+    setLessonSlides([]);
+    setPendingPdfFile(null);
+    setPreviewMode(false);
+    setShowHeyGen(false);
+    // If lesson has a presentation, re-extract slides from the URL
+    if (lesson.presentation_url) {
+      reExtractSlides(lesson.presentation_url);
+    }
+    setInlineEditId(lesson.id);
+  }
+
+  async function reExtractSlides(url: string) {
+    try {
+      setExtractingSlides(true);
+      const { extractSlidesFromPdf } = await import("@/lib/pdf-to-slides");
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const file = new File([blob], "presentation.pdf", { type: "application/pdf" });
+      const slides = await extractSlidesFromPdf(file);
+      setLessonSlides(slides);
+    } catch {
+      // silent — slides just won't show previews
+    } finally {
+      setExtractingSlides(false);
+    }
+  }
+
+  const handleExtractSlides = useCallback(async (file: File) => {
+    try {
+      setExtractingSlides(true);
+      const { extractSlidesFromPdf } = await import("@/lib/pdf-to-slides");
+      const slides = await extractSlidesFromPdf(file);
+      setLessonSlides(slides);
+      setPendingPdfFile(file);
+    } catch (err) {
+      toast.error("Error extrayendo diapositivas del PDF");
+    } finally {
+      setExtractingSlides(false);
+    }
+  }, []);
+
+  const handlePresentationChange = useCallback((url: string | null, file: File | null) => {
+    setLessonForm((f) => ({ ...f, presentation_url: url || "" }));
+    setPendingPdfFile(file);
+    if (!file && !url) {
+      setLessonSlides([]);
+    }
+  }, []);
+
+  function saveAndClose() {
+    saveLessonMutation.mutate(undefined, { onSuccess: () => setInlineEditId(null) });
+  }
+
+  function cancelInlineEdit() {
+    setInlineEditId(null);
+    setEditingLesson(null);
   }
 
   function openNewQuiz(lesson: Lesson) {
@@ -360,32 +456,128 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             {expandedModule === mod.id && (
               <div className="border-t border-white/10">
                 {mod.lessons?.map((lesson) => (
-                  <div key={lesson.id} className="flex items-center gap-3 px-4 py-2.5 pl-12 border-b border-white/5 last:border-0 hover:bg-white/[0.03] transition-colors group">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {lesson.video_url ? <Video className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" /> : <FileText className="w-3.5 h-3.5 text-beige/30 flex-shrink-0" />}
-                      <span className="text-beige/70 text-sm truncate">{lesson.title}</span>
-                      {lesson.is_free && <span className="text-[9px] font-bold text-green-400 bg-green-500/15 px-1.5 py-0.5 rounded-full">GRATIS</span>}
-                      {lesson.quiz && <span className="text-[9px] font-bold text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><HelpCircle className="w-2.5 h-2.5" />QUIZ</span>}
-                    </div>
-                    {lesson.duration > 0 && <span className="text-beige/30 text-xs">{Math.floor(lesson.duration / 60)}m</span>}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {!lesson.quiz && (
-                        <button onClick={() => openNewQuiz(lesson)} className="p-1.5 text-beige/30 hover:text-purple-400 transition-colors" title="Agregar quiz">
-                          <HelpCircle className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {lesson.quiz && (
-                        <button onClick={() => openQuestionModal(lesson.quiz!)} className="p-1.5 text-beige/30 hover:text-purple-400 transition-colors" title="Gestionar preguntas">
-                          <HelpCircle className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      <button onClick={() => openEditLesson(lesson, mod.id)} className="p-1.5 text-beige/30 hover:text-oro transition-colors" title="Editar">
-                        <FileText className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => { if (confirm("¿Eliminar lección?")) deleteLessonMutation.mutate(lesson.id); }} className="p-1.5 text-beige/30 hover:text-red-400 transition-colors" title="Eliminar">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  <div key={lesson.id} className="border-b border-white/5 last:border-0">
+                    {/* Collapsed view */}
+                    {inlineEditId !== lesson.id ? (
+                      <div className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                        onClick={() => openEditLesson(lesson, mod.id)}>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {lesson.video_url ? <Video className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" /> : <FileText className="w-3.5 h-3.5 text-beige/30 flex-shrink-0" />}
+                          <span className="text-beige/70 text-sm truncate">{lesson.title}</span>
+                          {lesson.is_free && <span className="text-[9px] font-bold text-green-400 bg-green-500/15 px-1.5 py-0.5 rounded-full">GRATIS</span>}
+                          {lesson.quiz && <span className="text-[9px] font-bold text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><HelpCircle className="w-2.5 h-2.5" />QUIZ</span>}
+                        </div>
+                        {lesson.duration > 0 && <span className="text-beige/30 text-xs">{lesson.duration}min</span>}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!lesson.quiz && (
+                            <button onClick={(e) => { e.stopPropagation(); openNewQuiz(lesson); }} className="p-1.5 text-beige/30 hover:text-purple-400 transition-colors" title="Agregar quiz">
+                              <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button onClick={(e) => { e.stopPropagation(); if (confirm("¿Eliminar lección?")) deleteLessonMutation.mutate(lesson.id); }} className="p-1.5 text-beige/30 hover:text-red-400 transition-colors" title="Eliminar">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : previewMode ? (
+                      /* ── Preview mode ── */
+                      <div className="bg-white/[0.04] border-l-2 border-l-purple-500 px-4 py-4 pl-8 space-y-3">
+                        {!showHeyGen ? (
+                          <ScriptPreview
+                            lessonTitle={lessonForm.title}
+                            blocks={lessonForm.script_blocks}
+                            slides={lessonSlides}
+                            onBack={() => setPreviewMode(false)}
+                            onApprove={() => setShowHeyGen(true)}
+                          />
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <button
+                                onClick={() => setShowHeyGen(false)}
+                                className="text-beige/40 hover:text-white text-xs flex items-center gap-1 transition-colors"
+                              >
+                                ← Volver al preview
+                              </button>
+                            </div>
+                            <HeyGenPanel
+                              lessonTitle={lessonForm.title}
+                              lessonId={editingLesson?.id}
+                              blocks={lessonForm.script_blocks}
+                              slides={lessonSlides}
+                              presentationUrl={lessonForm.presentation_url || null}
+                              onVideoGenerated={(url) => {
+                                setLessonForm((f) => ({ ...f, video_url: url }));
+                                toast.success("URL del video actualizada automáticamente");
+                              }}
+                            />
+                            <div className="flex items-center gap-2 pt-2">
+                              <button onClick={() => { setPreviewMode(false); setShowHeyGen(false); }} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Volver a editar</button>
+                              <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
+                                <Save className="w-3.5 h-3.5" /> Guardar lección
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* ── Expanded inline edit ── */
+                      <div className="bg-white/[0.04] border-l-2 border-l-oro px-4 py-4 pl-12 space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="sm:col-span-2">
+                            <label className={labelCls}>Título *</label>
+                            <input type="text" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className={inputCls} autoFocus />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className={labelCls}>URL del video</label>
+                            <input type="text" value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} placeholder="https://youtube.com/..." className={inputCls} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className={labelCls}>Descripción</label>
+                            <textarea value={lessonForm.description} onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })} rows={2} className={`${inputCls} resize-none`} />
+                          </div>
+                          <div>
+                            <label className={labelCls}>Material (URL)</label>
+                            <input type="text" value={lessonForm.materials_url} onChange={(e) => setLessonForm({ ...lessonForm, materials_url: e.target.value })} placeholder="PDF, doc..." className={inputCls} />
+                          </div>
+                          <div>
+                            <label className={labelCls}>Duración (min)</label>
+                            <input type="number" value={lessonForm.duration} onChange={(e) => setLessonForm({ ...lessonForm, duration: e.target.value })} min="0" className={inputCls} />
+                          </div>
+                        </div>
+
+                        {/* Guión del profesor — Block editor */}
+                        <div className="border-t border-white/10 pt-3 mt-1">
+                          <ScriptBlockEditor
+                            blocks={lessonForm.script_blocks}
+                            onChange={(blocks) => setLessonForm({ ...lessonForm, script_blocks: blocks })}
+                            presentationUrl={lessonForm.presentation_url || null}
+                            onPresentationChange={handlePresentationChange}
+                            slides={lessonSlides}
+                            onExtractSlides={handleExtractSlides}
+                            extracting={extractingSlides}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <label className="flex items-center gap-2 text-sm text-beige/60 cursor-pointer">
+                            <input type="checkbox" checked={lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} className="accent-oro" />
+                            Lección gratuita (preview)
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {lessonForm.script_blocks.filter((b) => b.text.trim()).length > 0 && (
+                              <Button size="sm" variant="ghost" onClick={() => setPreviewMode(true)} className="text-purple-400 hover:text-purple-300 border-purple-500/30">
+                                <Eye className="w-3.5 h-3.5" /> Previsualizar guión
+                              </Button>
+                            )}
+                            <button onClick={cancelInlineEdit} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Cancelar</button>
+                            <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
+                              <Save className="w-3.5 h-3.5" /> {saveLessonMutation.isPending ? "Guardando..." : "Guardar"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -413,12 +605,79 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   </div>
                 ))}
 
-                <button
-                  onClick={() => openNewLesson(mod.id)}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 pl-12 text-beige/40 hover:text-oro text-xs hover:bg-white/[0.03] transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Agregar lección
-                </button>
+                {/* New lesson inline form */}
+                {inlineEditId === `new-${mod.id}` ? (
+                  <div className="bg-white/[0.04] border-l-2 border-l-green-500 px-4 py-4 pl-12 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className={labelCls}>Título *</label>
+                        <input type="text" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className={inputCls} autoFocus placeholder="Nombre de la lección" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className={labelCls}>URL del video</label>
+                        <input type="text" value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} placeholder="https://youtube.com/..." className={inputCls} />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className={labelCls}>Descripción</label>
+                        <textarea value={lessonForm.description} onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })} rows={2} className={`${inputCls} resize-none`} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Material (URL)</label>
+                        <input type="text" value={lessonForm.materials_url} onChange={(e) => setLessonForm({ ...lessonForm, materials_url: e.target.value })} placeholder="PDF, doc..." className={inputCls} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Duración (min)</label>
+                        <input type="number" value={lessonForm.duration} onChange={(e) => setLessonForm({ ...lessonForm, duration: e.target.value })} min="0" className={inputCls} />
+                      </div>
+                    </div>
+
+                    {/* Guión del profesor — Block editor */}
+                    <div className="border-t border-white/10 pt-3 mt-1">
+                      <ScriptBlockEditor
+                        blocks={lessonForm.script_blocks}
+                        onChange={(blocks) => setLessonForm({ ...lessonForm, script_blocks: blocks })}
+                        presentationUrl={lessonForm.presentation_url || null}
+                        onPresentationChange={handlePresentationChange}
+                        slides={lessonSlides}
+                        onExtractSlides={handleExtractSlides}
+                        extracting={extractingSlides}
+                      />
+                    </div>
+
+                    {/* HeyGen video generation — new lessons */}
+                    {lessonForm.script_blocks.length > 0 && (
+                      <HeyGenPanel
+                        lessonTitle={lessonForm.title}
+                        blocks={lessonForm.script_blocks}
+                        slides={lessonSlides}
+                        presentationUrl={lessonForm.presentation_url || null}
+                        onVideoGenerated={(url) => {
+                          setLessonForm((f) => ({ ...f, video_url: url }));
+                        }}
+                      />
+                    )}
+
+                    <div className="flex items-center justify-between pt-1">
+                      <label className="flex items-center gap-2 text-sm text-beige/60 cursor-pointer">
+                        <input type="checkbox" checked={lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} className="accent-oro" />
+                        Lección gratuita (preview)
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button onClick={cancelInlineEdit} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Cancelar</button>
+                        <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
+                          <Plus className="w-3.5 h-3.5" /> {saveLessonMutation.isPending ? "Creando..." : "Crear lección"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => openNewLesson(mod.id)}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 pl-12 text-beige/40 hover:text-oro text-xs hover:bg-white/[0.03] transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Agregar lección
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -439,50 +698,6 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           </Button>
         </div>
       </div>
-
-      {/* ── Lesson Modal ── */}
-      <Modal
-        open={lessonModal}
-        onClose={() => setLessonModal(false)}
-        title={editingLesson ? "Editar lección" : "Nueva lección"}
-        actions={
-          <>
-            <Button variant="ghost" onClick={() => setLessonModal(false)}>Cancelar</Button>
-            <Button onClick={() => saveLessonMutation.mutate()} disabled={!lessonForm.title.trim()}>
-              {editingLesson ? "Guardar" : "Crear"}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <div>
-            <label className={labelCls}>Título *</label>
-            <input type="text" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>URL del video</label>
-            <input type="text" value={lessonForm.video_url} onChange={(e) => setLessonForm({ ...lessonForm, video_url: e.target.value })} placeholder="https://youtube.com/... o URL directa" className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Descripción</label>
-            <textarea value={lessonForm.description} onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })} rows={2} className={inputCls} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>Material (URL)</label>
-              <input type="text" value={lessonForm.materials_url} onChange={(e) => setLessonForm({ ...lessonForm, materials_url: e.target.value })} placeholder="PDF, doc..." className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Duración (seg)</label>
-              <input type="number" value={lessonForm.duration} onChange={(e) => setLessonForm({ ...lessonForm, duration: e.target.value })} min="0" className={inputCls} />
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm text-beige/60 cursor-pointer">
-            <input type="checkbox" checked={lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} className="accent-oro" />
-            Lección gratuita (preview)
-          </label>
-        </div>
-      </Modal>
 
       {/* ── Quiz Creation Modal ── */}
       <Modal

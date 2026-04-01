@@ -55,6 +55,27 @@ const INITIAL_MEMBERS: TeamMember[] = [
     created_at: "2024-06-01T10:00:00Z",
     updated_at: "2026-03-01T10:00:00Z",
   },
+  {
+    id: "prof1",
+    role: "profesor",
+    nombre: "Pedro Tobar",
+    email: "pedrotobarcaldas@gmail.com",
+    telefono: "3124426783",
+    cedula: "1110448098",
+    areas_habilitadas: [],
+    especialidad: "Disciplinario",
+    estado: "activo",
+    fecha_ingreso: "2026-03-30",
+    password: "legion2026",
+    color: "#a855f7",
+    notas: "",
+    max_casos: 0,
+    especialidad_academica: "Finanzas personales y educación financiera",
+    bio: "Especialista en finanzas personales para servidores públicos",
+    avatar_url: "",
+    created_at: "2026-03-30T10:00:00Z",
+    updated_at: "2026-03-30T10:00:00Z",
+  },
 ];
 
 interface TeamStore {
@@ -141,7 +162,7 @@ export const useTeamStore = create<TeamStore>()(
     }),
     {
       name: "legion-team",
-      version: 2,
+      version: 3,
       migrate: (state: unknown) => {
         const old = state as { abogados?: TeamMember[]; idCounter?: number };
         return {

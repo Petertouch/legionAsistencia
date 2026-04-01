@@ -49,6 +49,13 @@ export interface CourseModule {
   lessons?: Lesson[];
 }
 
+export interface ScriptBlock {
+  id: string;
+  order: number;
+  text: string;
+  slide_number: number | null; // null = avatar solo, sin diapositiva
+}
+
 export interface Lesson {
   id: string;
   module_id: string;
@@ -56,6 +63,9 @@ export interface Lesson {
   description: string | null;
   video_url: string | null;
   materials_url: string | null;
+  script: string | null;
+  presentation_url: string | null;
+  script_blocks: ScriptBlock[] | null;
   duration: number;
   order: number;
   is_free: boolean;
@@ -268,6 +278,8 @@ export async function createLesson(moduleId: string, input: {
   video_url?: string;
   description?: string;
   materials_url?: string;
+  presentation_url?: string;
+  script_blocks?: ScriptBlock[];
   duration?: number;
   is_free?: boolean;
 }): Promise<Lesson> {
