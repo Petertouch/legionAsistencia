@@ -9,6 +9,7 @@ import { useLanzaStore } from "@/lib/stores/lanza-store";
 import {
   LayoutDashboard, Users, Scale, ClipboardList, PanelLeftClose, PanelLeftOpen,
   LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen, Award,
+  BadgeDollarSign,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,7 +30,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "General",
     items: [
-      { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado", "profesor"] },
+      { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado", "profesor", "vendedor"] },
+      { href: "/admin/mi-panel-vendedor", label: "Mi Panel", icon: BadgeDollarSign, roles: ["vendedor"] },
       { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
     ],
   },
@@ -38,7 +40,13 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
       { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Contrato Clientes",
+    items: [
       { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
+      { href: "/admin/validacion-identidad", label: "Validación de identidad", icon: Users, roles: ["admin"] },
     ],
   },
   {
@@ -54,6 +62,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Equipo",
     items: [
       { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
+      { href: "/admin/vendedores", label: "Vendedores", icon: BadgeDollarSign, roles: ["admin"] },
       { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
     ],
   },

@@ -34,6 +34,10 @@ export default function NuevoMiembroPage() {
     especialidad_academica: "",
     bio: "",
     avatar_url: "",
+    // Vendedor
+    comision_porcentaje: 0,
+    vendedor_code: "",
+    ciudad: "",
   });
 
   useEffect(() => { setMounted(true); }, []);

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CaseArea } from "@/lib/pipelines";
 
-export type MemberRole = "abogado" | "profesor";
+export type MemberRole = "abogado" | "profesor" | "vendedor";
 export type MemberEstado = "activo" | "inactivo" | "vacaciones";
 
 export interface TeamMember {
@@ -27,6 +27,10 @@ export interface TeamMember {
   especialidad_academica: string;
   bio: string;
   avatar_url: string;
+  // Vendedor-specific
+  comision_porcentaje: number;
+  vendedor_code: string;
+  ciudad: string;
 }
 
 // Keep backward compat
@@ -52,6 +56,9 @@ const INITIAL_MEMBERS: TeamMember[] = [
     especialidad_academica: "",
     bio: "",
     avatar_url: "",
+    comision_porcentaje: 0,
+    vendedor_code: "",
+    ciudad: "",
     created_at: "2024-06-01T10:00:00Z",
     updated_at: "2026-03-01T10:00:00Z",
   },
@@ -73,6 +80,9 @@ const INITIAL_MEMBERS: TeamMember[] = [
     especialidad_academica: "Finanzas personales y educación financiera",
     bio: "Especialista en finanzas personales para servidores públicos",
     avatar_url: "",
+    comision_porcentaje: 0,
+    vendedor_code: "",
+    ciudad: "",
     created_at: "2026-03-30T10:00:00Z",
     updated_at: "2026-03-30T10:00:00Z",
   },
@@ -85,6 +95,8 @@ interface TeamStore {
   getMember: (id: string) => TeamMember | undefined;
   getByRole: (role: MemberRole) => TeamMember[];
   getProfesores: () => TeamMember[];
+  getVendedores: () => TeamMember[];
+  getVendedorByCode: (code: string) => TeamMember | undefined;
   addAbogado: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
   addMember: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
   updateAbogado: (id: string, data: Partial<TeamMember>) => void;
@@ -104,6 +116,8 @@ export const useTeamStore = create<TeamStore>()(
       getMember: (id) => get().abogados.find((a) => a.id === id),
       getByRole: (role) => get().abogados.filter((a) => a.role === role),
       getProfesores: () => get().abogados.filter((a) => a.role === "profesor"),
+      getVendedores: () => get().abogados.filter((a) => a.role === "vendedor"),
+      getVendedorByCode: (code) => get().abogados.find((a) => a.role === "vendedor" && a.vendedor_code === code),
 
       addAbogado: (data) => {
         const now = new Date().toISOString();
@@ -162,7 +176,7 @@ export const useTeamStore = create<TeamStore>()(
     }),
     {
       name: "legion-team",
-      version: 3,
+      version: 4,
       migrate: (state: unknown) => {
         const old = state as { abogados?: TeamMember[]; idCounter?: number };
         return {
@@ -172,6 +186,9 @@ export const useTeamStore = create<TeamStore>()(
             especialidad_academica: a.especialidad_academica || "",
             bio: a.bio || "",
             avatar_url: a.avatar_url || "",
+            comision_porcentaje: a.comision_porcentaje || 0,
+            vendedor_code: a.vendedor_code || "",
+            ciudad: a.ciudad || "",
           })),
           idCounter: old.idCounter || 10,
         };

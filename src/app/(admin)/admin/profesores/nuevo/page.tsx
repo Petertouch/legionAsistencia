@@ -61,6 +61,9 @@ export default function NuevoProfesorPage() {
       areas_habilitadas: [],
       especialidad: "Disciplinario",
       max_casos: 0,
+      comision_porcentaje: 0,
+      vendedor_code: "",
+      ciudad: "",
     });
     toast.success("Profesor creado");
     router.push("/admin/profesores");

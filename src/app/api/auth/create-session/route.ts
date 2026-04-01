@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Solo permitir roles válidos
-    if (!["profesor", "abogado"].includes(role)) {
+    if (!["profesor", "abogado", "vendedor"].includes(role)) {
       return NextResponse.json({ error: "Rol no válido" }, { status: 400 });
     }
 
