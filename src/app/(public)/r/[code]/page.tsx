@@ -50,7 +50,21 @@ const PLANES = [
   },
 ];
 
-const PLAN_PRICES: Record<string, string> = { Base: "39.000", Plus: "51.000", "Élite": "69.000" };
+// Valores por defecto si la plantilla de DB no carga. El valor real usado en
+// el contrato es `precio_alianza` (lo que el suscriptor paga mensualmente
+// bajo el acuerdo de alianza), con fallback a `precio` si no está definido.
+const DEFAULT_PLAN_PRICES: Record<string, string> = { Base: "39.000", Plus: "51.000", "Élite": "69.000" };
+
+// Normaliza nombres para emparejar "Élite" (con tilde) con "Elite" de la DB.
+const normalizePlanName = (name: string) =>
+  name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+interface PlantillaPlan {
+  nombre: string;
+  precio?: string;
+  precio_alianza?: string;
+}
+
 const ESTADOS_CIVILES = ["Soltero(a)", "Casado(a)", "Unión libre", "Divorciado(a)", "Viudo(a)"];
 const FUERZAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea"];
 
@@ -118,6 +132,17 @@ export default function ReferralPage({ params }: Props) {
   // Lead ID (saved after step 1)
   const [leadId, setLeadId] = useState<string | null>(null);
 
+  // Precios cargados desde contrato_plantilla.planes. Preferimos precio_alianza
+  // porque es el valor real que el suscriptor paga mensualmente bajo alianza.
+  const [planPrices, setPlanPrices] = useState<Record<string, string>>(DEFAULT_PLAN_PRICES);
+
+  const getPlanPrice = (planName: string): string => {
+    const key = normalizePlanName(planName);
+    // Busca coincidencia normalizada (maneja "Élite" vs "Elite").
+    const match = Object.keys(planPrices).find((k) => normalizePlanName(k) === key);
+    return match ? planPrices[match] : DEFAULT_PLAN_PRICES[planName] || "";
+  };
+
   useEffect(() => {
     const supabase = createClient();
     supabase
@@ -129,6 +154,25 @@ export default function ReferralPage({ params }: Props) {
       .then((res: { data: Lanza | null }) => {
         setLanza(res.data);
         setLoading(false);
+      });
+
+    // Carga los planes de la plantilla activa y construye el mapa de precios
+    // usando precio_alianza (con fallback a precio).
+    supabase
+      .from("contrato_plantilla")
+      .select("planes")
+      .eq("activo", true)
+      .single()
+      .then(({ data }: { data: { planes: PlantillaPlan[] } | null }) => {
+        if (data?.planes && Array.isArray(data.planes)) {
+          const prices: Record<string, string> = {};
+          for (const p of data.planes) {
+            if (!p?.nombre) continue;
+            const valor = (p.precio_alianza && p.precio_alianza.trim()) || p.precio || "";
+            if (valor) prices[p.nombre] = valor;
+          }
+          if (Object.keys(prices).length > 0) setPlanPrices(prices);
+        }
       });
   }, [code]);
 
@@ -194,7 +238,7 @@ export default function ReferralPage({ params }: Props) {
       ...form,
       ...extra,
       plan,
-      plan_precio: PLAN_PRICES[plan],
+      plan_precio: getPlanPrice(plan),
       firma_timestamp: new Date().toISOString(),
     });
     const hash = await generateHash(contractContent + firmaData + fotoData + Date.now());
@@ -214,7 +258,7 @@ export default function ReferralPage({ params }: Props) {
       direccion: extra.direccion || null,
       ciudad: extra.ciudad || null,
       plan,
-      precio: PLAN_PRICES[plan],
+      precio: getPlanPrice(plan),
       firma_data: firmaData,
       foto_data: fotoData,
       hash,
@@ -242,10 +286,10 @@ export default function ReferralPage({ params }: Props) {
     toast.success("¡Contrato firmado exitosamente!");
   };
 
-  // Step 4 → 5: Save password + create suscriptor
+  // Step 4 → 5: Save password + create suscriptor (via secure API)
   const handlePassword = async () => {
-    if (clave.length < 4) {
-      toast.error("La clave debe tener al menos 4 caracteres");
+    if (clave.length < 8) {
+      toast.error("La clave debe tener al menos 8 caracteres");
       return;
     }
     if (clave !== claveConfirm) {
@@ -253,37 +297,34 @@ export default function ReferralPage({ params }: Props) {
       return;
     }
     setSubmitting(true);
-    const supabase = createClient();
 
-    // Save password to contrato
-    const { error: claveError } = await supabase
-      .from("contratos")
-      .update({ clave })
-      .eq("id", contratoId);
+    try {
+      const res = await fetch("/api/client/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contrato_id: contratoId,
+          nombre: form.nombre.trim(),
+          cedula: form.cedula.trim(),
+          telefono: form.telefono.trim(),
+          email: form.email.trim() || null,
+          plan,
+          fuerza: extra.fuerza || null,
+          grado: extra.grado || null,
+          clave,
+        }),
+      });
 
-    if (claveError) {
-      toast.error(`Error guardando clave: ${claveError.message}`);
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Error al registrar");
+        setSubmitting(false);
+        return;
+      }
+    } catch {
+      toast.error("Error de conexión");
       setSubmitting(false);
       return;
-    }
-
-    // Create suscriptor with estado "Pendiente"
-    const { error: suscError } = await supabase.from("suscriptores").insert({
-      contrato_id: contratoId,
-      nombre: form.nombre.trim(),
-      cedula: form.cedula.trim(),
-      telefono: form.telefono.trim(),
-      email: form.email.trim() || null,
-      plan,
-      estado_pago: "Pendiente",
-      rama: extra.fuerza || null,
-      rango: extra.grado || null,
-      clave,
-    });
-
-    if (suscError) {
-      console.error("Error creando suscriptor:", suscError);
-      // Don't block — contrato already saved
     }
 
     setSubmitting(false);
@@ -305,7 +346,7 @@ export default function ReferralPage({ params }: Props) {
     ciudad: extra.ciudad,
     departamento: extra.departamento,
     plan,
-    plan_precio: PLAN_PRICES[plan] || "",
+    plan_precio: getPlanPrice(plan),
     firma_data: firmaData || undefined,
     foto_data: fotoData || undefined,
     cedula_frente: cedulaFrenteData || undefined,
@@ -434,7 +475,7 @@ export default function ReferralPage({ params }: Props) {
                       </div>
                     </div>
                     <p className="text-white text-xl font-bold">
-                      ${p.price}<span className="text-beige/40 text-xs font-normal">/mes</span>
+                      ${getPlanPrice(p.name)}<span className="text-beige/40 text-xs font-normal">/mes</span>
                     </p>
                     <ul className="mt-2.5 space-y-1.5">
                       {p.features.map((feat) => (
@@ -500,7 +541,7 @@ export default function ReferralPage({ params }: Props) {
                 </div>
                 <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
                   <span className="text-beige/50 text-xs">Plan seleccionado</span>
-                  <span className="text-oro font-bold text-sm">{plan} — ${PLAN_PRICES[plan]}/mes</span>
+                  <span className="text-oro font-bold text-sm">{plan} — ${getPlanPrice(plan)}/mes</span>
                 </div>
                 {lanza && (
                   <div className="bg-oro/5 rounded-lg px-3 py-2 flex items-center justify-between">
@@ -790,7 +831,7 @@ export default function ReferralPage({ params }: Props) {
                   type="password"
                   value={clave}
                   onChange={(e) => setClave(e.target.value)}
-                  placeholder="Mínimo 4 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                 />
               </div>
@@ -807,7 +848,7 @@ export default function ReferralPage({ params }: Props) {
               <button
                 type="button"
                 onClick={handlePassword}
-                disabled={submitting || clave.length < 4 || clave !== claveConfirm}
+                disabled={submitting || clave.length < 8 || clave !== claveConfirm}
                 className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Lock className="w-4 h-4" /> {submitting ? "Guardando..." : "Crear mi clave"}
@@ -935,7 +976,7 @@ export default function ReferralPage({ params }: Props) {
               <div className="border-t border-white/5" />
               <div className="flex justify-between items-center">
                 <span className="text-beige/50 text-xs">Plan</span>
-                <span className="text-oro text-sm font-bold">{plan} — ${PLAN_PRICES[plan]}/mes</span>
+                <span className="text-oro text-sm font-bold">{plan} — ${getPlanPrice(plan)}/mes</span>
               </div>
             </div>
 
