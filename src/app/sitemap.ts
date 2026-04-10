@@ -26,12 +26,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
-    {
-      url: `${BASE_URL}/mi-caso`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
   ];
 
   const blogPages: MetadataRoute.Sitemap = BLOG_ARTICLES.map((article) => ({
