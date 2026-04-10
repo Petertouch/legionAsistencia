@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/components/providers";
 
-const BASE_URL = "https://legion-crm.vercel.app";
+const BASE_URL = "https://legionjuridica.com";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -77,6 +77,15 @@ export const metadata: Metadata = {
     canonical: BASE_URL,
   },
   category: "Legal Services",
+  verification: {
+    // Reemplaza estos valores con los códigos reales de cada plataforma.
+    // Google Search Console → Ajustes → Verificación de propiedad → Etiqueta HTML
+    google: "REPLACE_WITH_GOOGLE_SEARCH_CONSOLE_TOKEN",
+    // Bing Webmaster Tools → My Sites → Verify → Meta tag
+    other: {
+      "msvalidate.01": "REPLACE_WITH_BING_WEBMASTER_TOKEN",
+    },
+  },
 };
 
 const jsonLd = {
@@ -148,12 +157,67 @@ const jsonLd = {
       },
     ],
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    reviewCount: "8000",
-    bestRating: "5",
+};
+
+const organizationLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
+  name: "Legión Jurídica",
+  alternateName: "Legión Jurídica Colombia",
+  url: BASE_URL,
+  logo: {
+    "@type": "ImageObject",
+    url: `${BASE_URL}/images/logo.svg`,
+    width: 512,
+    height: 512,
   },
+  image: `${BASE_URL}/images/index-meta.webp`,
+  description:
+    "Firma de abogados colombiana especializada en asesoría jurídica integral para miembros activos y retirados de las Fuerzas Militares y Policía Nacional de Colombia.",
+  foundingDate: "2020",
+  areaServed: {
+    "@type": "Country",
+    name: "Colombia",
+  },
+  knowsAbout: [
+    "Derecho Penal Militar",
+    "Procesos Disciplinarios Militares",
+    "Procesos Disciplinarios Policiales",
+    "Derecho de Familia",
+    "Derecho Civil",
+    "Tutelas",
+    "Derechos de Petición",
+  ],
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      telephone: "+573176689580",
+      contactType: "customer service",
+      areaServed: "CO",
+      availableLanguage: ["Spanish"],
+    },
+    {
+      "@type": "ContactPoint",
+      telephone: "+573160541006",
+      contactType: "customer service",
+      areaServed: "CO",
+      availableLanguage: ["Spanish"],
+    },
+  ],
+  sameAs: ["https://wa.me/573176689580"],
+};
+
+const websiteLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
+  url: BASE_URL,
+  name: "Legión Jurídica",
+  description:
+    "Asesoría jurídica ilimitada para Fuerzas Militares y Policía Nacional de Colombia.",
+  publisher: { "@id": `${BASE_URL}/#organization` },
+  inLanguage: "es-CO",
 };
 
 export default function RootLayout({
@@ -167,6 +231,14 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
         />
       </head>
       <body className="bg-arena text-gray-900 antialiased">

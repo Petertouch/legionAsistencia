@@ -27,10 +27,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${article.pregunta} — Legión Jurídica`,
       description: article.respuesta.slice(0, 160),
       type: "article",
-      url: `https://legion-crm.vercel.app/blog/${slug}`,
+      url: `https://legionjuridica.com/blog/${slug}`,
     },
     alternates: {
-      canonical: `https://legion-crm.vercel.app/blog/${slug}`,
+      canonical: `https://legionjuridica.com/blog/${slug}`,
     },
   };
 }
@@ -53,9 +53,9 @@ export default async function BlogArticlePage({ params }: Props) {
     publisher: {
       "@type": "Organization",
       name: "Legión Jurídica",
-      logo: { "@type": "ImageObject", url: "https://legion-crm.vercel.app/images/logo.svg" },
+      logo: { "@type": "ImageObject", url: "https://legionjuridica.com/images/logo.svg" },
     },
-    mainEntityOfPage: `https://legion-crm.vercel.app/blog/${slug}`,
+    mainEntityOfPage: `https://legionjuridica.com/blog/${slug}`,
     articleSection: article.categoria,
   };
 
@@ -72,10 +72,32 @@ export default async function BlogArticlePage({ params }: Props) {
     ],
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: "https://legionjuridica.com" },
+      { "@type": "ListItem", position: 2, name: "Guía Legal", item: "https://legionjuridica.com/blog" },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: article.categoria,
+        item: `https://legionjuridica.com/blog?cat=${encodeURIComponent(article.categoria)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: article.pregunta,
+        item: `https://legionjuridica.com/blog/${slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-arena pt-20 sm:pt-24">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Breadcrumb */}

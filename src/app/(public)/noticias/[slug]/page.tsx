@@ -16,9 +16,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const noticia = getNoticiaBySlug(slug);
   if (!noticia) return { title: "No encontrado" };
+  const url = `https://legionjuridica.com/noticias/${slug}`;
   return {
     title: `${noticia.titulo} | Legión Jurídica`,
     description: noticia.extracto,
+    alternates: { canonical: url },
+    openGraph: {
+      title: noticia.titulo,
+      description: noticia.extracto,
+      type: "article",
+      url,
+      publishedTime: noticia.fecha,
+      authors: [noticia.autor],
+      images: [{ url: noticia.imagen, alt: noticia.titulo }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: noticia.titulo,
+      description: noticia.extracto,
+      images: [noticia.imagen],
+    },
   };
 }
 
@@ -29,8 +46,45 @@ export default async function NoticiaDetailPage({ params }: Props) {
 
   const cat = CATEGORIA_COLORS[noticia.categoria] ?? { bg: "bg-white/10", text: "text-white" };
 
+  const url = `https://legionjuridica.com/noticias/${slug}`;
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: noticia.titulo,
+    description: noticia.extracto,
+    image: noticia.imagen.startsWith("http")
+      ? noticia.imagen
+      : `https://legionjuridica.com${noticia.imagen}`,
+    datePublished: noticia.fecha,
+    dateModified: noticia.fecha,
+    author: { "@type": "Person", name: noticia.autor },
+    publisher: {
+      "@type": "Organization",
+      name: "Legión Jurídica",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://legionjuridica.com/images/logo.svg",
+      },
+    },
+    mainEntityOfPage: url,
+    articleSection: noticia.categoria,
+    inLanguage: "es-CO",
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: "https://legionjuridica.com" },
+      { "@type": "ListItem", position: 2, name: "Noticias", item: "https://legionjuridica.com/noticias" },
+      { "@type": "ListItem", position: 3, name: noticia.titulo, item: url },
+    ],
+  };
+
   return (
     <article className="pt-20 pb-16">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       {/* Hero image */}
       <div className="relative w-full aspect-[21/9] max-h-[420px]">
         <Image

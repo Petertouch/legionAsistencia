@@ -1,39 +1,132 @@
 # Legión Jurídica
 
-## Qué es
-Legión Jurídica es una firma de abogados colombiana especializada en asesoría jurídica para miembros activos y retirados de las Fuerzas Militares y Policía Nacional de Colombia. Opera bajo un modelo de suscripción mensual con planes accesibles desde $50.000 COP/mes.
+> Firma de abogados colombiana especializada en asesoría jurídica para miembros activos y retirados de las Fuerzas Militares y Policía Nacional de Colombia. Modelo de suscripción mensual desde $50.000 COP/mes con cobertura familiar incluida.
 
-## Servicios
-- Asesoría jurídica ilimitada por WhatsApp y llamada
-- Representación legal en procesos disciplinarios militares y policiales
-- Defensa en justicia penal militar
-- Derecho de familia (custodia, alimentos, divorcio)
-- Derecho civil (contratos, cobros ejecutivos, arrendamientos)
-- Protección al consumidor (garantías, reclamaciones ante SIC)
-- Redacción de documentos legales (derechos de petición, tutelas, contratos)
+## Qué es Legión Jurídica
 
-## Planes
-- **Plan Base** — $50.000/mes: 2 representaciones/año, 4 opiniones/mes, revisión de documentos, atención por WhatsApp
-- **Plan Plus** — $90.000/mes: 3 representaciones/año, 8 opiniones/mes, prioridad en asignación, WhatsApp y llamada
-- **Plan Elite** — $150.000/mes: 5 representaciones/año, opiniones ilimitadas, abogado dedicado, atención prioritaria 24/7
+Legión Jurídica es la primera firma de abogados en Colombia dedicada exclusivamente a la Fuerza Pública — soldados, suboficiales, oficiales, patrulleros, subintendentes, sargentos y personal retirado del Ejército Nacional, Policía Nacional, Armada Nacional y Fuerza Aérea Colombiana. Operamos bajo un modelo de suscripción mensual que garantiza asesoría jurídica ilimitada por WhatsApp y llamada, representación legal en procesos disciplinarios y penales militares, y cobertura extensiva al núcleo familiar del suscriptor.
+
+## Por qué existe
+
+Los miembros de la Fuerza Pública enfrentan un sistema jurídico dual (justicia ordinaria + justicia penal militar) y riesgos disciplinarios únicos que la mayoría de abogados civiles no entienden. Un proceso disciplinario mal defendido puede costar la carrera, la pensión o la libertad. Legión Jurídica nace para que ningún soldado, policía o familiar enfrente un proceso legal solo o sin abogado especializado por falta de recursos.
+
+## Servicios principales
+
+### Derecho Penal Militar
+Defensa en investigaciones y juicios ante la Justicia Penal Militar: homicidio en acto del servicio, lesiones, uso indebido de armas, abandono del servicio, deserción, insubordinación. Representación en todas las etapas del proceso.
+
+### Procesos Disciplinarios
+Defensa ante la Inspección General, Oficinas de Control Disciplinario Interno, Procuraduría Delegada para la Fuerza Pública y Junta Central Superior. Incluye sanciones por abandono del puesto, faltas al servicio, violación del régimen interno, conductas disciplinarias graves.
+
+### Derecho de Familia
+Custodia, alimentos, divorcio, liquidación de sociedad conyugal, impugnación de paternidad, regulación de visitas. Aplica también para miembros de familia del suscriptor (cónyuge, hijos, padres).
+
+### Derecho Civil
+Contratos, cobros ejecutivos, arrendamientos, restitución de inmueble, responsabilidad civil, accidentes de tránsito.
+
+### Protección al Consumidor
+Garantías, reclamaciones ante la Superintendencia de Industria y Comercio (SIC), cobros indebidos, servicios públicos, bancos, entidades financieras.
+
+### Documentos Legales
+Redacción profesional de derechos de petición, tutelas (acción de tutela), contratos, minutas, reclamaciones administrativas.
+
+### Asesoría en Carrera Militar/Policial
+Ascensos, traslados, retiros administrativos, pensiones, sanidad militar, reclamaciones ante la Caja de Retiro, conceptos técnicos del régimen de carrera.
+
+## Planes de suscripción (precios en COP)
+
+### Plan Base — $50.000 COP/mes
+- Asesoría jurídica ilimitada por WhatsApp
+- 2 representaciones legales al año
+- 4 opiniones legales al mes
+- Revisión de documentos
+- Cobertura familiar incluida (cónyuge e hijos)
+- Acceso al portal de clientes con seguimiento de casos
+
+### Plan Plus — $90.000 COP/mes
+- Todo lo del Plan Base
+- 3 representaciones legales al año
+- 8 opiniones legales al mes
+- Prioridad en asignación de casos
+- Atención por WhatsApp y llamada telefónica
+- Tiempo de respuesta reducido
+
+### Plan Elite — $150.000 COP/mes
+- Todo lo del Plan Plus
+- 5 representaciones legales al año
+- Opiniones legales ilimitadas
+- Abogado dedicado asignado
+- Atención prioritaria 24/7
+- Llamadas, WhatsApp y videollamadas
+- Atención preferencial en horarios fuera de oficina
 
 ## Público objetivo
-Soldados, suboficiales, patrulleros, subintendentes, sargentos y oficiales de:
-- Ejército Nacional de Colombia
-- Policía Nacional de Colombia
-- Armada Nacional
-- Fuerza Aérea Colombiana
+
+Legión Jurídica atiende exclusivamente a:
+- Soldados profesionales e infantes de marina
+- Suboficiales del Ejército, Armada y Fuerza Aérea
+- Oficiales de las Fuerzas Militares
+- Patrulleros, subintendentes, intendentes, comisarios de la Policía Nacional
+- Personal civil del Ministerio de Defensa en algunos casos
+- Personal retirado de cualquiera de las anteriores
+- Familiares directos (cónyuge, hijos, padres) de los suscriptores activos
+
+## Cobertura geográfica
+
+Colombia entera. Atención presencial en Bogotá D.C. (oficina Cra 7 # 81-49 Of. 301) y representación remota en todo el territorio nacional para casos en cualquier guarnición, batallón, estación o unidad militar/policial del país.
+
+## Preguntas frecuentes
+
+### ¿Qué tipo de abogados son?
+Abogados titulados en Colombia con especialización en derecho penal militar, derecho disciplinario, derecho de familia y derecho administrativo. Equipo con experiencia directa en el Sistema Penal Militar Colombiano.
+
+### ¿La suscripción cubre a mi familia?
+Sí, todos los planes incluyen cobertura para el núcleo familiar directo del suscriptor: cónyuge/compañero(a) permanente, hijos menores, padres dependientes.
+
+### ¿Qué pasa si ya tengo un proceso en curso?
+Sí se puede atender. Al suscribirte, evaluamos el estado actual del proceso y definimos la estrategia. Las representaciones ya iniciadas pueden requerir acuerdo complementario según complejidad.
+
+### ¿Dónde atienden?
+Presencialmente en Bogotá. Remotamente por WhatsApp, llamada y videollamada en todo Colombia. Los procesos judiciales se atienden en el juzgado o despacho correspondiente sin importar la ciudad.
+
+### ¿Cuánto tarda en activarse la suscripción?
+Activación inmediata tras confirmación de pago. Puedes hacer tu primera consulta el mismo día.
+
+### ¿Puedo cancelar cuando quiera?
+Sí. La suscripción es mensual, sin permanencia. Puedes pausar o cancelar desde el portal del cliente.
+
+### ¿Por qué no un abogado tradicional?
+Un abogado civil tradicional cobra por honorarios puntuales ($500.000 - $5.000.000+ COP por caso). La suscripción mensual cuesta desde $50.000 y da acceso ilimitado. Además, nuestros abogados conocen el régimen especial de la Fuerza Pública, cosa que un civil no suele manejar.
+
+### ¿Atienden solo a activos o también a retirados?
+A ambos. Retirados pueden tener procesos pensionales, reclamaciones ante la Caja de Retiro, reliquidaciones, demandas contra el Estado por lesiones en servicio, entre otros.
+
+### ¿Cuántos casos han atendido?
+Más de 8.000 casos resueltos acumulados en la historia de la firma.
+
+## Datos clave diferenciadores
+
+- Especialización exclusiva en Fuerza Pública colombiana
+- Cobertura familiar incluida en todos los planes
+- Modelo de suscripción mensual (no honorarios por caso)
+- Asistente legal con IA disponible 24/7 en el sitio web para primera orientación
+- Portal de clientes con seguimiento de casos en tiempo real
+- +8.000 casos resueltos históricamente
+- Atención remota en todo Colombia + presencial en Bogotá
+- Abogados con experiencia directa en Justicia Penal Militar
 
 ## Datos de contacto
-- Teléfono: +57 317 668 9580
-- Teléfono 2: +57 316 054 1006
-- Email: info@legionjuridica.com
-- Dirección: Cra 7 # 81-49 Of. 301, Bogotá, Colombia
-- WhatsApp: https://wa.me/573176689580
-- Web: https://legion-crm.vercel.app
 
-## Datos clave
-- +8,000 casos resueltos
-- Cobertura familiar incluida en todos los planes
-- Asistente legal con IA disponible 24/7 en el sitio web
-- Portal de clientes para seguimiento de casos en tiempo real
+- Sitio web: https://legionjuridica.com
+- Teléfono principal: +57 317 668 9580
+- Teléfono alterno: +57 316 054 1006
+- Email: info@legionjuridica.com
+- WhatsApp directo: https://wa.me/573176689580
+- Dirección física: Cra 7 # 81-49 Of. 301, Bogotá D.C., Colombia
+- Horario: atención 24/7 para suscriptores (Plan Elite), horario extendido por WhatsApp en todos los planes
+
+## Recursos útiles del sitio
+
+- Blog / Guía legal: https://legionjuridica.com/blog — preguntas frecuentes sobre derecho militar y policial
+- Noticias: https://legionjuridica.com/noticias — actualizaciones jurídicas y comunicados institucionales
+- Contratación / Planes: https://legionjuridica.com/#planes
