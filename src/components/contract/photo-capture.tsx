@@ -22,6 +22,10 @@ export default function PhotoCapture({
   const [error, setError] = useState("");
 
   const startCamera = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Tu navegador no soporta el acceso a la cámara. Usa Chrome, Safari o Firefox actualizado.");
+      return;
+    }
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -32,8 +36,23 @@ export default function PhotoCapture({
       });
       setStream(mediaStream);
       setError("");
-    } catch {
-      setError("No se pudo acceder a la cámara. Verifica los permisos.");
+    } catch (err) {
+      const e = err as DOMException;
+      const name = e?.name || "";
+      // Mensajes específicos según la causa real, para que el usuario sepa qué hacer.
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setError("Permiso denegado. Activa la cámara para este sitio en los ajustes del navegador y vuelve a intentar.");
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        setError("No se detectó ninguna cámara en este dispositivo.");
+      } else if (name === "NotReadableError" || name === "TrackStartError") {
+        setError("La cámara está siendo usada por otra aplicación. Ciérrala y vuelve a intentar.");
+      } else if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+        setError("Tu cámara no soporta la resolución requerida.");
+      } else if (name === "SecurityError") {
+        setError("Acceso a la cámara bloqueado por seguridad. Asegúrate de estar usando HTTPS.");
+      } else {
+        setError(`No se pudo acceder a la cámara${name ? ` (${name})` : ""}. Verifica los permisos.`);
+      }
     }
   }, [facingMode, guide]);
 
