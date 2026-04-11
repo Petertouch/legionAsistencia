@@ -243,47 +243,58 @@ export default function ReferralPage({ params }: Props) {
     });
     const hash = await generateHash(contractContent + firmaData + fotoData + Date.now());
 
-    const supabase = createClient();
-    const { data: contratoRow, error } = await supabase.from("contratos").insert({
-      lead_id: leadId,
-      nombre: form.nombre.trim(),
-      cedula: form.cedula.trim(),
-      telefono: form.telefono.trim(),
-      telefono2: extra.telefono2 || null,
-      email: form.email.trim() || null,
-      estado_civil: extra.estado_civil || null,
-      grado: extra.grado || null,
-      fuerza: extra.fuerza || null,
-      unidad: extra.unidad || null,
-      direccion: extra.direccion || null,
-      ciudad: extra.ciudad || null,
-      plan,
-      precio: getPlanPrice(plan),
-      firma_data: firmaData,
-      foto_data: fotoData,
-      hash,
-      nombre_cliente: form.nombre.trim(),
-      cedula_cliente: form.cedula.trim(),
-      datos_completos: {
-        lanza_code: code,
-        departamento: extra.departamento || null,
-        cedula_frente: cedulaFrenteData,
-        cedula_reverso: cedulaReversoData,
-      },
-    }).select("id").single();
+    // El insert va vía API server-side con service role porque la tabla
+    // contratos tiene RLS que bloquea inserts desde anon. La API valida
+    // que el lanza_code exista y esté activo antes de aceptar el contrato.
+    try {
+      const res = await fetch("/api/contratos/firmar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: leadId,
+          lanza_code: code,
+          nombre: form.nombre.trim(),
+          cedula: form.cedula.trim(),
+          telefono: form.telefono.trim(),
+          telefono2: extra.telefono2 || null,
+          email: form.email.trim() || null,
+          estado_civil: extra.estado_civil || null,
+          grado: extra.grado || null,
+          fuerza: extra.fuerza || null,
+          unidad: extra.unidad || null,
+          direccion: extra.direccion || null,
+          ciudad: extra.ciudad || null,
+          departamento: extra.departamento || null,
+          plan,
+          precio: getPlanPrice(plan),
+          firma_data: firmaData,
+          foto_data: fotoData,
+          cedula_frente: cedulaFrenteData,
+          cedula_reverso: cedulaReversoData,
+          hash,
+        }),
+      });
 
-    if (error) {
-      console.error("Error guardando contrato:", error);
-      toast.error(`Error al guardar contrato: ${error.message}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const errorMsg = data?.error || `Error ${res.status}`;
+        console.error("Error guardando contrato:", errorMsg);
+        toast.error(`Error al guardar contrato: ${errorMsg}`);
+        setSubmitting(false);
+        return;
+      }
+
+      const { id: newContratoId } = await res.json();
+      setContratoId(newContratoId || null);
       setSubmitting(false);
-      return;
+      setStep(4);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      toast.success("¡Contrato firmado exitosamente!");
+    } catch (err) {
+      console.error("Error de red al guardar contrato:", err);
+      toast.error("Error de conexión. Intenta de nuevo.");
+      setSubmitting(false);
     }
-
-    setContratoId(contratoRow?.id || null);
-    setSubmitting(false);
-    setStep(4);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    toast.success("¡Contrato firmado exitosamente!");
   };
 
   // Step 4 → 5: Save password + create suscriptor (via secure API)
