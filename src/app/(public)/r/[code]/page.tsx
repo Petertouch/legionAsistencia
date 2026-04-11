@@ -129,6 +129,9 @@ export default function ReferralPage({ params }: Props) {
   // Confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Duplicate error modal — se muestra cuando cédula/email/teléfono ya existen
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
+
   // Lead ID (saved after step 1)
   const [leadId, setLeadId] = useState<string | null>(null);
 
@@ -193,33 +196,45 @@ export default function ReferralPage({ params }: Props) {
     setShowConfirm(false);
     setSubmitting(true);
 
-    const supabase = createClient();
-    const { data: leadData, error } = await supabase
-      .from("lanza_leads")
-      .insert({
-        lanza_id: lanza?.id || null,
-        lanza_code: code,
-        nombre: form.nombre.trim(),
-        telefono: form.telefono.trim(),
-        email: form.email.trim(),
-        cedula: form.cedula.trim(),
-        plan_interes: plan,
-        status: "nuevo",
-      })
-      .select("id")
-      .single();
+    // El insert va vía API server-side para validar unicidad global de
+    // cédula, email y teléfono contra suscriptores, contratos y otros leads.
+    try {
+      const res = await fetch("/api/lanza-leads/crear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lanza_id: lanza?.id || null,
+          lanza_code: code,
+          nombre: form.nombre.trim(),
+          telefono: form.telefono.trim(),
+          email: form.email.trim(),
+          cedula: form.cedula.trim(),
+          plan_interes: plan,
+        }),
+      });
 
-    if (error) {
-      console.error("Error guardando lead:", error);
-      toast.error("Error al guardar. Intenta de nuevo.");
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // 409 = conflicto de unicidad. Mostramos modal con CTA a WhatsApp.
+        if (res.status === 409 && data?.error) {
+          setDuplicateError(data.error);
+        } else {
+          toast.error(data?.error || "Error al guardar. Intenta de nuevo.");
+        }
+        setSubmitting(false);
+        return;
+      }
+
+      setLeadId(data?.id || null);
       setSubmitting(false);
-      return;
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("Error de red al guardar lead:", err);
+      toast.error("Error de conexión. Intenta de nuevo.");
+      setSubmitting(false);
     }
-
-    setLeadId(leadData?.id || null);
-    setSubmitting(false);
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Step 2 → 3: Move to signing
@@ -1006,6 +1021,45 @@ export default function ReferralPage({ params }: Props) {
                 className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {submitting ? "Guardando..." : "Datos correctos"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Duplicate Error Modal ═══ */}
+      {duplicateError && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setDuplicateError(null)}
+        >
+          <div
+            className="bg-jungle-dark border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 mx-auto bg-amber-500/15 rounded-full flex items-center justify-center">
+                <Shield className="w-7 h-7 text-amber-400" />
+              </div>
+              <h3 className="text-white font-bold text-lg">Datos ya registrados</h3>
+              <p className="text-beige/60 text-sm leading-relaxed">{duplicateError}</p>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <a
+                href="https://wa.me/573176689580?text=Hola%2C%20intent%C3%A9%20registrarme%20en%20Legi%C3%B3n%20Jur%C3%ADdica%20pero%20mis%20datos%20ya%20est%C3%A1n%20registrados.%20Necesito%20ayuda."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#25D366] text-white text-center font-bold py-3 rounded-xl text-sm hover:bg-[#20BD5A] transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" /> Contactar por WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={() => setDuplicateError(null)}
+                className="w-full text-beige/60 hover:text-white text-sm py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors font-medium"
+              >
+                Cerrar
               </button>
             </div>
           </div>
