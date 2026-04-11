@@ -53,7 +53,18 @@ interface LanzaStore {
 
   fetchAll: () => Promise<void>;
 
-  registerLanza: (data: Omit<Lanza, "id" | "code" | "status" | "created_at">) => Promise<Lanza | null>;
+  // Acepta el subset mínimo + los campos del sistema de tipos como opcionales,
+  // para mantener backwards-compat con código que aún no los pasa explícitamente.
+  // El método rellena defaults seguros (tipo='lanza', resto NULL).
+  registerLanza: (
+    data: Omit<Lanza, "id" | "code" | "status" | "created_at" | "tipo" | "comision_personalizada" | "meta_bono" | "monto_bono" | "bono_pagado_at"> & {
+      tipo?: AliadoTipo;
+      comision_personalizada?: number | null;
+      meta_bono?: number | null;
+      monto_bono?: number | null;
+      bono_pagado_at?: string | null;
+    }
+  ) => Promise<Lanza | null>;
   updateLanza: (id: string, data: Partial<Lanza>) => Promise<void>;
   toggleLanzaStatus: (id: string) => Promise<void>;
   getLanzaByCode: (code: string) => Lanza | undefined;
