@@ -282,7 +282,7 @@ export default function ProbarValidacionPage() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-[55%] h-[70%] border-2 border-oro/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
                 </div>
-                <p className="absolute bottom-3 left-0 right-0 text-center text-gray-900/70 text-xs font-medium">Centra tu cara en el óvalo</p>
+                <p className="absolute bottom-3 left-0 right-0 text-center text-white text-xs font-medium drop-shadow-lg">Centra tu cara en el óvalo</p>
                 {/* Countdown overlay */}
                 {countdown !== null && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -303,20 +303,20 @@ export default function ProbarValidacionPage() {
               {/* Validation badge */}
               <div className="absolute bottom-2 left-2 right-2">
                 {validatingSelfie ? (
-                  <span className="bg-black/70 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><Loader2 className="w-3 h-3 animate-spin" /> Verificando cara...</span>
+                  <span className="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><Loader2 className="w-3 h-3 animate-spin" /> Verificando cara...</span>
                 ) : selfieValid === true ? (
-                  <span className="bg-green-600/90 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><CheckCircle className="w-3 h-3" /> Cara detectada</span>
+                  <span className="bg-green-600/90 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><CheckCircle className="w-3 h-3" /> Cara detectada</span>
                 ) : selfieValid === false ? (
-                  <span className="bg-red-600/90 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><AlertTriangle className="w-3 h-3" /> No se detectó cara — repite</span>
+                  <span className="bg-red-600/90 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><AlertTriangle className="w-3 h-3" /> No se detectó cara — repite</span>
                 ) : null}
               </div>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 aspect-[3/4] flex flex-col items-center justify-center gap-3">
-                <Camera className="w-12 h-12 text-beige/15" />
-                <p className="text-gray-300 text-sm text-center px-4">Toma una selfie</p>
-                <p className="text-beige/15 text-[10px] text-center px-6">Buena iluminación, sin gafas de sol, mirando a la cámara</p>
+                <Camera className="w-12 h-12 text-gray-300" />
+                <p className="text-gray-500 text-sm text-center px-4">Toma una selfie</p>
+                <p className="text-gray-400 text-[10px] text-center px-6">Buena iluminación, sin gafas de sol, mirando a la cámara</p>
               </div>
               <Button size="sm" onClick={() => startCamera("selfie")} className="w-full"><Camera className="w-4 h-4" /> Abrir cámara</Button>
             </div>
@@ -347,7 +347,7 @@ export default function ProbarValidacionPage() {
                 {/* Rectangle guide for cédula */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-[80%] h-[50%] border-2 border-purple-400/50 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
-                    <div className="absolute -top-6 left-0 right-0 text-center text-gray-900/70 text-[10px]">Ubica la cédula dentro del recuadro</div>
+                    <div className="absolute -top-6 left-0 right-0 text-center text-white text-[10px] drop-shadow-lg">Ubica la cédula dentro del recuadro</div>
                   </div>
                 </div>
                 {/* Countdown */}
@@ -377,20 +377,20 @@ export default function ProbarValidacionPage() {
               <img src={cedula} alt="Cédula" className="w-full rounded-lg border border-gray-200 aspect-[3/4] object-contain bg-black/30" />
               <div className="absolute bottom-2 left-2 right-2">
                 {validatingCedula ? (
-                  <span className="bg-black/70 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><Loader2 className="w-3 h-3 animate-spin" /> Verificando cara en cédula...</span>
+                  <span className="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><Loader2 className="w-3 h-3 animate-spin" /> Verificando cara en cédula...</span>
                 ) : cedulaValid === true ? (
-                  <span className="bg-green-600/90 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><CheckCircle className="w-3 h-3" /> Cara detectada en cédula</span>
+                  <span className="bg-green-600/90 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><CheckCircle className="w-3 h-3" /> Cara detectada en cédula</span>
                 ) : cedulaValid === false ? (
-                  <span className="bg-red-600/90 text-gray-900 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><AlertTriangle className="w-3 h-3" /> No se detectó cara — acerca más</span>
+                  <span className="bg-red-600/90 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 w-fit"><AlertTriangle className="w-3 h-3" /> No se detectó cara — acerca más</span>
                 ) : null}
               </div>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 aspect-[3/4] flex flex-col items-center justify-center gap-3">
-                <CreditCard className="w-12 h-12 text-beige/15" />
-                <p className="text-gray-300 text-sm text-center px-4">Toma foto de tu cédula</p>
-                <p className="text-beige/15 text-[10px] text-center px-6">Frente del documento, plano, buena luz, sin reflejos</p>
+                <CreditCard className="w-12 h-12 text-gray-300" />
+                <p className="text-gray-500 text-sm text-center px-4">Toma foto de tu cédula</p>
+                <p className="text-gray-400 text-[10px] text-center px-6">Frente del documento, plano, buena luz, sin reflejos</p>
               </div>
               <Button size="sm" onClick={() => startCamera("cedula")} className="w-full"><Camera className="w-4 h-4" /> Abrir cámara</Button>
             </div>
