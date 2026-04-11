@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 
+export type AliadoTipo = "lanza" | "esposa" | string;
+
 export interface Lanza {
   id: string;
   code: string;
@@ -14,6 +16,11 @@ export interface Lanza {
   suscriptor_id: string | null;
   status: "activo" | "inactivo";
   created_at: string;
+  tipo: AliadoTipo;
+  comision_personalizada: number | null;
+  meta_bono: number | null;
+  monto_bono: number | null;
+  bono_pagado_at: string | null;
 }
 
 export interface LanzaLead {
@@ -31,11 +38,12 @@ export interface LanzaLead {
   created_at: string;
 }
 
-function generateCode() {
+export function generateAliadoCode(tipo: AliadoTipo): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
   for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
+  const prefix = tipo === "esposa" ? "E-" : tipo === "lanza" ? "L-" : `${tipo[0].toUpperCase()}-`;
+  return `${prefix}${code}`;
 }
 
 interface LanzaStore {
@@ -43,17 +51,15 @@ interface LanzaStore {
   leads: LanzaLead[];
   loaded: boolean;
 
-  // Data fetching
   fetchAll: () => Promise<void>;
 
-  // Lanza actions
   registerLanza: (data: Omit<Lanza, "id" | "code" | "status" | "created_at">) => Promise<Lanza | null>;
   updateLanza: (id: string, data: Partial<Lanza>) => Promise<void>;
   toggleLanzaStatus: (id: string) => Promise<void>;
   getLanzaByCode: (code: string) => Lanza | undefined;
   getLanzaByCedula: (cedula: string) => Lanza | undefined;
+  getLanzasByTipo: (tipo: AliadoTipo) => Lanza[];
 
-  // Lead actions
   addLead: (data: Omit<LanzaLead, "id" | "status" | "created_at">) => Promise<LanzaLead | null>;
   updateLeadStatus: (id: string, status: LanzaLead["status"]) => Promise<void>;
   getLeadsByLanza: (lanzaId: string) => LanzaLead[];
@@ -79,10 +85,11 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
 
   registerLanza: async (data) => {
     const supabase = createClient();
-    const code = generateCode();
+    const tipo = data.tipo || "lanza";
+    const code = generateAliadoCode(tipo);
     const { data: row, error } = await supabase
       .from("lanzas")
-      .insert({ ...data, code, status: "activo" })
+      .insert({ ...data, tipo, code, status: "activo" })
       .select()
       .single();
     if (error || !row) return null;
@@ -92,19 +99,27 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   updateLanza: async (id, data) => {
-    const supabase = createClient();
-    await supabase.from("lanzas").update(data).eq("id", id);
+    const res = await fetch("/api/lanzas", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...data }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error);
     set((s) => ({
       lanzas: s.lanzas.map((l) => (l.id === id ? { ...l, ...data } : l)),
     }));
   },
 
   toggleLanzaStatus: async (id) => {
-    const supabase = createClient();
     const lanza = get().lanzas.find((l) => l.id === id);
     if (!lanza) return;
     const newStatus = lanza.status === "activo" ? "inactivo" : "activo";
-    await supabase.from("lanzas").update({ status: newStatus }).eq("id", id);
+    const res = await fetch("/api/lanzas", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: newStatus }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error);
     set((s) => ({
       lanzas: s.lanzas.map((l) =>
         l.id === id ? { ...l, status: newStatus as "activo" | "inactivo" } : l
@@ -114,6 +129,7 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
 
   getLanzaByCode: (code) => get().lanzas.find((l) => l.code === code),
   getLanzaByCedula: (cedula) => get().lanzas.find((l) => l.cedula === cedula),
+  getLanzasByTipo: (tipo) => get().lanzas.filter((l) => l.tipo === tipo),
 
   addLead: async (data) => {
     const supabase = createClient();
@@ -129,8 +145,12 @@ export const useLanzaStore = create<LanzaStore>()((set, get) => ({
   },
 
   updateLeadStatus: async (id, status) => {
-    const supabase = createClient();
-    await supabase.from("lanza_leads").update({ status }).eq("id", id);
+    const res = await fetch("/api/lanza-leads", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error);
     set((s) => ({
       leads: s.leads.map((l) => (l.id === id ? { ...l, status } : l)),
     }));
