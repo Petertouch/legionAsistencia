@@ -9,7 +9,9 @@ import { PIPELINES } from "@/lib/pipelines";
 import {
   User, Shield, Scale, ArrowRight, Clock, Check, AlertTriangle,
   FileText, GraduationCap, Gift, Phone, Mail, ChevronRight, MessageCircle,
+  Users, Lock, Plus,
 } from "lucide-react";
+import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
 const ClientContratoPage = dynamic(() => import("@/app/(client)/mi-caso/contrato/page"), { ssr: false });
@@ -163,6 +165,51 @@ export default function ClientDashboardPage() {
           <p className="text-gray-900 font-semibold text-sm">Referidos</p>
           <p className="text-gray-400 text-xs mt-0.5">Gana comisiones</p>
         </Link>
+      </div>
+
+      {/* Familia */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <h2 className="text-gray-900 font-bold text-sm flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-jungle-dark/50" /> Mi Familia
+          </h2>
+          {session.estado_pago !== "Pendiente" && (
+            <button
+              className="text-jungle-dark text-xs font-medium flex items-center gap-1 hover:underline"
+              onClick={() => toast("Próximamente podrás agregar familiares")}
+            >
+              <Plus className="w-3 h-3" /> Agregar
+            </button>
+          )}
+        </div>
+
+        {session.estado_pago === "Pendiente" ? (
+          <div className="p-6 text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Lock className="w-5 h-5 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-sm font-medium">Disponible cuando tu cuenta sea aprobada</p>
+            <p className="text-gray-400 text-xs mt-1">
+              Una vez aprobado tu contrato, podrás agregar a tu cónyuge, hijos y padres dependientes para que también reciban cobertura legal.
+            </p>
+          </div>
+        ) : (
+          <div className="p-5 text-center">
+            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Users className="w-5 h-5 text-blue-400" />
+            </div>
+            <p className="text-gray-500 text-sm">Aún no tienes familiares registrados</p>
+            <p className="text-gray-400 text-xs mt-1">
+              Agrega a tu cónyuge, hijos o padres dependientes. Tu plan incluye cobertura familiar.
+            </p>
+            <button
+              onClick={() => toast("Próximamente podrás agregar familiares")}
+              className="mt-3 bg-jungle-dark text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-jungle transition-colors flex items-center gap-1.5 mx-auto"
+            >
+              <Plus className="w-3.5 h-3.5" /> Agregar familiar
+            </button>
+          </div>
+        )}
       </div>
 
       </>)}
