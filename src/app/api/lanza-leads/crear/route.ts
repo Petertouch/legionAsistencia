@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// Rate limit: 10 leads/hora por IP (anti-spam del flujo público /r/[code])
-const attempts = new Map<string, number[]>();
-const MAX = 10;
-const WINDOW_MS = 60 * 60 * 1000;
+// Rate limit por IP: 10 leads/hora (anti-spam del flujo público /r/[code])
+const ipAttempts = new Map<string, number[]>();
+const IP_MAX = 10;
+const IP_WINDOW_MS = 60 * 60 * 1000;
 
-function isRateLimited(ip: string): boolean {
+function isIpRateLimited(ip: string): boolean {
   const now = Date.now();
-  const list = (attempts.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-  attempts.set(ip, list);
-  if (list.length >= MAX) return true;
+  const list = (ipAttempts.get(ip) || []).filter((t) => now - t < IP_WINDOW_MS);
+  ipAttempts.set(ip, list);
+  if (list.length >= IP_MAX) return true;
   list.push(now);
-  attempts.set(ip, list);
+  ipAttempts.set(ip, list);
   return false;
 }
 
@@ -51,12 +51,32 @@ function findConflictField(
   return null;
 }
 
-// POST: crear un lead desde el flujo público /r/[code] con validación de unicidad
-// global por cédula, email y teléfono. Bloquea duplicados en lanza_leads, contratos
-// y suscriptores. Usa service role para bypasear RLS.
+// Construye el filtro OR de Supabase para buscar candidatos con los datos del input.
+function buildFilter(cedulaN: string, telefonoN: string, emailN: string | null): string {
+  const phoneTail = telefonoN.slice(-7);
+  const parts: string[] = [
+    `cedula.ilike.%${cedulaN}%`,
+    `telefono.ilike.%${phoneTail}%`,
+  ];
+  if (emailN) parts.push(`email.ilike.${emailN}`);
+  return parts.join(",");
+}
+
+// POST: Crea un lead desde el flujo público /r/[code] con sistema "smart-resume":
+//
+// - Bloquea duplicados estrictos (suscriptores activos, contratos firmados,
+//   leads completados/descartados).
+// - Detecta leads en proceso del mismo cliente (status nuevo|en_proceso|contactado|abandonado)
+//   y devuelve { resume: true } con los datos del lead viejo para que el frontend
+//   ofrezca continuar donde quedó.
+// - Auto-marca como "abandonado" leads con > 7 días sin actividad (lazy on read).
+// - Aplica first-touch attribution: el lead pertenece al primer aliado que lo trajo.
+// - Rate limit por IP (10/hora) y por cédula (5 reanudaciones/24h).
+//
+// Usa service role para bypasear RLS.
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(ip)) {
+  if (isIpRateLimited(ip)) {
     return NextResponse.json(
       { error: "Demasiados intentos. Espera una hora." },
       { status: 429 }
@@ -83,31 +103,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createAdminClient();
+    const filter = buildFilter(cedulaN, telefonoN, emailN);
 
-    // Estrategia: query laxo (filtros amplios con ilike) que trae candidatos,
-    // luego normaliza y compara en JS. Esto detecta duplicados aunque los
-    // datos en DB tengan formato distinto al input (espacios, guiones, +57, etc).
-    // Los últimos 7 dígitos del teléfono son un buen anchor: cubren el número
-    // local sin prefijo país y son raros como falsos positivos.
-    const phoneTail = telefonoN.slice(-7);
-
-    // Construye los filtros OR del query. Email solo si vino.
-    const buildFilter = () => {
-      const parts: string[] = [];
-      // cédula: match parcial (digits-only no contiene caracteres raros, así que
-      // ilike sobre la cédula cruda en DB sí encuentra "12.345.678" cuando buscas "12345678"
-      // sólo si los dígitos coinciden — usamos ilike con wildcard al inicio y al final).
-      parts.push(`cedula.ilike.%${cedulaN}%`);
-      parts.push(`telefono.ilike.%${phoneTail}%`);
-      if (emailN) parts.push(`email.ilike.${emailN}`);
-      return parts.join(",");
-    };
-
-    // 1) ¿Ya es suscriptor activo?
+    // 1) ¿Ya es suscriptor activo? — bloqueo duro
     const { data: suscriptorCands } = await supabase
       .from("suscriptores")
       .select("id, cedula, email, telefono")
-      .or(buildFilter())
+      .or(filter)
       .limit(20);
 
     for (const row of (suscriptorCands || []) as RowWithIdentity[]) {
@@ -124,11 +126,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2) ¿Ya hay contrato firmado con esos datos?
+    // 2) ¿Hay contrato firmado con esos datos? — bloqueo duro
     const { data: contratoCands } = await supabase
       .from("contratos")
       .select("id, cedula, email, telefono")
-      .or(buildFilter())
+      .or(filter)
       .limit(20);
 
     for (const row of (contratoCands || []) as RowWithIdentity[]) {
@@ -145,28 +147,116 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3) ¿Ya hay un lead en proceso?
+    // 3) Buscar leads existentes con esos datos (smart-resume)
     const { data: leadCands } = await supabase
       .from("lanza_leads")
-      .select("id, cedula, email, telefono")
-      .or(buildFilter())
+      .select("id, cedula, email, telefono, status, current_step, last_activity_at, resumed_count, nombre, plan_interes, lanza_id, lanza_code")
+      .or(filter)
       .limit(20);
 
-    for (const row of (leadCands || []) as RowWithIdentity[]) {
-      const field = findConflictField(row, cedulaN, emailN, telefonoN);
-      if (field) {
+    type LeadCandidate = RowWithIdentity & {
+      id: string;
+      status: string;
+      current_step: number | null;
+      last_activity_at: string | null;
+      resumed_count: number | null;
+      nombre: string | null;
+      plan_interes: string | null;
+      lanza_id: string | null;
+      lanza_code: string | null;
+    };
+
+    let matchedLead: LeadCandidate | null = null;
+    for (const row of (leadCands || []) as LeadCandidate[]) {
+      if (findConflictField(row, cedulaN, emailN, telefonoN)) {
+        matchedLead = row;
+        break;
+      }
+    }
+
+    if (matchedLead) {
+      // Lazy abandonment: si lleva > 7 días sin actividad y aún no completado/descartado,
+      // lo marcamos como abandonado en este momento.
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const lastActivity = matchedLead.last_activity_at
+        ? new Date(matchedLead.last_activity_at).getTime()
+        : 0;
+      const isStale = lastActivity > 0 && Date.now() - lastActivity > SEVEN_DAYS_MS;
+      const reanudableStatuses = ["nuevo", "en_proceso", "contactado", "abandonado"];
+
+      if (
+        isStale &&
+        !["completado", "descartado"].includes(matchedLead.status) &&
+        matchedLead.status !== "abandonado"
+      ) {
+        await supabase
+          .from("lanza_leads")
+          .update({ status: "abandonado", abandonado_at: new Date().toISOString() })
+          .eq("id", matchedLead.id);
+        matchedLead.status = "abandonado";
+      }
+
+      // Bloqueo duro: lead ya completado (firma + suscriptor) o descartado por aliado.
+      if (matchedLead.status === "completado") {
         return NextResponse.json(
           {
-            error: `Esta ${field} ya está registrada. Contáctanos por WhatsApp para ayudarte.`,
-            conflict: "lead",
-            field,
+            error: "Esta cédula ya completó su registro como suscriptor de Legión Jurídica. Contáctanos por WhatsApp para ayudarte.",
+            conflict: "completado",
           },
           { status: 409 }
         );
       }
+      if (matchedLead.status === "descartado") {
+        return NextResponse.json(
+          {
+            error: "No podemos procesar este registro en este momento. Contáctanos por WhatsApp para ayudarte.",
+            conflict: "descartado",
+          },
+          { status: 409 }
+        );
+      }
+
+      // Estado reanudable: ofrecer al usuario continuar donde quedó.
+      if (reanudableStatuses.includes(matchedLead.status)) {
+        // Rate limit por cédula: 5 reanudaciones/24h
+        const resumedCount = matchedLead.resumed_count || 0;
+        if (resumedCount >= 5) {
+          return NextResponse.json(
+            {
+              error: "Demasiados intentos con esta cédula. Contáctanos por WhatsApp para ayudarte.",
+              conflict: "rate_limit",
+            },
+            { status: 429 }
+          );
+        }
+
+        // Incrementa el contador y actualiza last_activity_at
+        await supabase
+          .from("lanza_leads")
+          .update({
+            resumed_count: resumedCount + 1,
+            last_activity_at: new Date().toISOString(),
+            status: matchedLead.status === "abandonado" ? "en_proceso" : matchedLead.status,
+          })
+          .eq("id", matchedLead.id);
+
+        return NextResponse.json({
+          resume: true,
+          lead: {
+            id: matchedLead.id,
+            current_step: matchedLead.current_step || 1,
+            nombre: matchedLead.nombre,
+            cedula: matchedLead.cedula,
+            telefono: matchedLead.telefono,
+            email: matchedLead.email,
+            plan_interes: matchedLead.plan_interes,
+            last_activity_at: matchedLead.last_activity_at,
+          },
+        });
+      }
     }
 
-    // 4) Validar que el lanza_code exista y esté activo
+    // 4) Validar que el lanza_code exista y esté activo (solo para leads nuevos)
     const { data: lanza, error: lanzaError } = await supabase
       .from("lanzas")
       .select("id, status")
@@ -180,7 +270,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Aliado inactivo" }, { status: 403 });
     }
 
-    // 5) Insertar lead con los datos normalizados
+    // 5) Insertar lead nuevo con datos normalizados
     const { data: leadData, error } = await supabase
       .from("lanza_leads")
       .insert({
@@ -192,6 +282,8 @@ export async function POST(request: NextRequest) {
         cedula: cedulaN,
         plan_interes: plan_interes || null,
         status: "nuevo",
+        current_step: 1,
+        last_activity_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -200,7 +292,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ id: leadData?.id });
+    return NextResponse.json({ id: leadData?.id, resume: false });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error del servidor";
     return NextResponse.json({ error: message }, { status: 500 });

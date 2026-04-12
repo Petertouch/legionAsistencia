@@ -129,8 +129,23 @@ export default function ReferralPage({ params }: Props) {
   // Confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Duplicate error modal — se muestra cuando cédula/email/teléfono ya existen
+  // Duplicate error modal — se muestra cuando ya hay suscriptor/contrato
+  // o cuando el lead está en estado bloqueado (completado/descartado).
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
+
+  // Smart-resume modal — se muestra cuando detectamos que el cliente ya
+  // tiene un proceso de registro a medio camino y le ofrecemos retomarlo.
+  interface ResumePayload {
+    id: string;
+    current_step: number;
+    nombre: string | null;
+    cedula: string | null;
+    telefono: string | null;
+    email: string | null;
+    plan_interes: string | null;
+    last_activity_at: string | null;
+  }
+  const [resumeData, setResumeData] = useState<ResumePayload | null>(null);
 
   // Lead ID (saved after step 1)
   const [leadId, setLeadId] = useState<string | null>(null);
@@ -198,6 +213,8 @@ export default function ReferralPage({ params }: Props) {
 
     // El insert va vía API server-side para validar unicidad global de
     // cédula, email y teléfono contra suscriptores, contratos y otros leads.
+    // Si la persona tiene un lead a medio camino, el endpoint devuelve
+    // { resume: true } y mostramos el modal de reanudar.
     try {
       const res = await fetch("/api/lanza-leads/crear", {
         method: "POST",
@@ -216,12 +233,19 @@ export default function ReferralPage({ params }: Props) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // 409 = conflicto de unicidad. Mostramos modal con CTA a WhatsApp.
-        if (res.status === 409 && data?.error) {
+        // 409/429 = conflicto de unicidad o rate limit con cédula. Modal con WhatsApp.
+        if ((res.status === 409 || res.status === 429) && data?.error) {
           setDuplicateError(data.error);
         } else {
           toast.error(data?.error || "Error al guardar. Intenta de nuevo.");
         }
+        setSubmitting(false);
+        return;
+      }
+
+      // Smart-resume: hay lead en proceso del mismo cliente. Mostramos modal.
+      if (data?.resume && data?.lead) {
+        setResumeData(data.lead as ResumePayload);
         setSubmitting(false);
         return;
       }
@@ -237,11 +261,66 @@ export default function ReferralPage({ params }: Props) {
     }
   };
 
+  // Llamado cuando el usuario decide continuar su proceso anterior.
+  // Pre-carga los datos del lead viejo y avanza al step donde quedó.
+  const handleResumeContinue = () => {
+    if (!resumeData) return;
+    // Pre-cargar los datos del step 1 (editables)
+    setForm({
+      nombre: resumeData.nombre || "",
+      cedula: resumeData.cedula || "",
+      telefono: resumeData.telefono || "",
+      email: resumeData.email || "",
+    });
+    if (resumeData.plan_interes) setPlan(resumeData.plan_interes);
+    setLeadId(resumeData.id);
+    // No avanzamos más allá del step 2: los pasos 3 y 4 requieren capturar
+    // firma/fotos/clave de nuevo en este dispositivo, no se pueden recuperar.
+    const targetStep = Math.max(2, Math.min(2, resumeData.current_step || 2));
+    setStep(targetStep);
+    setResumeData(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.success("Continuando tu registro...");
+  };
+
+  // Llamado cuando el usuario decide empezar de cero.
+  // Mantiene el lead_id existente pero reinicia el flujo desde step 2.
+  const handleResumeRestart = () => {
+    if (!resumeData) return;
+    setForm({
+      nombre: resumeData.nombre || "",
+      cedula: resumeData.cedula || "",
+      telefono: resumeData.telefono || "",
+      email: resumeData.email || "",
+    });
+    if (resumeData.plan_interes) setPlan(resumeData.plan_interes);
+    setLeadId(resumeData.id);
+    setStep(2);
+    setResumeData(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Helper que notifica al backend que el usuario avanzó a un nuevo step.
+  // Falla silenciosa: no bloquea el flujo si la red falla.
+  const trackStep = async (newStep: number, newStatus?: string) => {
+    if (!leadId) return;
+    try {
+      await fetch("/api/lanza-leads/avanzar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_id: leadId, current_step: newStep, status: newStatus }),
+      });
+    } catch {
+      // Silencioso — no debe interrumpir el onboarding del usuario
+    }
+  };
+
   // Step 2 → 3: Move to signing
   const handleStep2 = (e: React.FormEvent) => {
     e.preventDefault();
     setSubStep(1);
     setStep(3);
+    trackStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -303,6 +382,7 @@ export default function ReferralPage({ params }: Props) {
       setContratoId(newContratoId || null);
       setSubmitting(false);
       setStep(4);
+      trackStep(4);
       window.scrollTo({ top: 0, behavior: "smooth" });
       toast.success("¡Contrato firmado exitosamente!");
     } catch (err) {
@@ -351,6 +431,26 @@ export default function ReferralPage({ params }: Props) {
       toast.error("Error de conexión");
       setSubmitting(false);
       return;
+    }
+
+    // Marcar lead como completado: el suscriptor ya existe en el sistema.
+    // Falla silenciosa: si esto falla por red, el lead queda como "en_proceso"
+    // pero el suscriptor sí está creado y funcional.
+    if (leadId && contratoId) {
+      try {
+        await fetch("/api/lanza-leads/avanzar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lead_id: leadId,
+            current_step: 5,
+            status: "completado",
+            contrato_id: contratoId,
+          }),
+        });
+      } catch {
+        // Silencioso
+      }
     }
 
     setSubmitting(false);
@@ -1021,6 +1121,61 @@ export default function ReferralPage({ params }: Props) {
                 className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {submitting ? "Guardando..." : "Datos correctos"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Smart-Resume Modal ═══ */}
+      {resumeData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setResumeData(null)}
+        >
+          <div
+            className="bg-jungle-dark border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 mx-auto bg-blue-500/15 rounded-full flex items-center justify-center">
+                <ArrowRight className="w-7 h-7 text-blue-400" />
+              </div>
+              <h3 className="text-white font-bold text-lg">¿Continuar tu registro?</h3>
+              <p className="text-beige/60 text-sm leading-relaxed">
+                Detectamos que ya iniciaste tu proceso. Puedes continuar donde quedaste o empezar de nuevo con los mismos datos.
+              </p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-beige/40">Nombre</span>
+                <span className="text-white font-medium">{resumeData.nombre || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-beige/40">Cédula</span>
+                <span className="text-white font-medium">{resumeData.cedula || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-beige/40">Quedaste en</span>
+                <span className="text-oro font-bold">Paso {resumeData.current_step} de 4</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={handleResumeContinue}
+                className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <ArrowRight className="w-4 h-4" /> Continuar mi proceso
+              </button>
+              <button
+                type="button"
+                onClick={handleResumeRestart}
+                className="w-full text-beige/60 hover:text-white text-sm py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors font-medium"
+              >
+                Empezar de nuevo
               </button>
             </div>
           </div>
