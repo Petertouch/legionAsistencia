@@ -278,9 +278,18 @@ export default function ReferralPage({ params }: Props) {
   const updateExtra = (field: string, value: string) =>
     setExtra((f) => ({ ...f, [field]: value }));
 
-  // Step 1: Show confirmation modal
+  // Step 1: Si es la primera vez, muestra modal de confirmación.
+  // Si es edición (ya pasó el step 1 antes), guarda y vuelve al step 2 directo.
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
+    if (maxStep >= 2 && leadId) {
+      // Modo edición: ya tiene lead creado, solo guardar y avanzar
+      toast.success("Datos guardados");
+      setEditingStep1(false);
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setShowConfirm(true);
   };
 
@@ -846,11 +855,17 @@ export default function ReferralPage({ params }: Props) {
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  <FileText className="w-5 h-5" /> {submitting ? "Guardando..." : "Continuar al contrato"}
+                  {maxStep >= 2 ? (
+                    <><Check className="w-5 h-5" /> {submitting ? "Guardando..." : "Guardar cambios"}</>
+                  ) : (
+                    <><FileText className="w-5 h-5" /> {submitting ? "Guardando..." : "Continuar al contrato"}</>
+                  )}
                 </button>
-                <p className="text-beige/30 text-[10px] text-center">
-                  En el siguiente paso verás y firmarás el contrato de prestación de servicios
-                </p>
+                {maxStep < 2 && (
+                  <p className="text-beige/30 text-[10px] text-center">
+                    En el siguiente paso verás y firmarás el contrato de prestación de servicios
+                  </p>
+                )}
               </form>
             </div>
           </>
