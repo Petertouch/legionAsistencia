@@ -7,7 +7,7 @@ import { getComisionesPorTipo, getComisionForAliado } from "@/lib/config";
 import { toast } from "sonner";
 import {
   Copy, Users, Phone, DollarSign, Share2, LogOut, Award,
-  Heart, Shield, Sparkles, Clock, MessageCircle, X, Check,
+  Heart, Shield, Sparkles, Clock, MessageCircle, X, Check, RotateCcw,
 } from "lucide-react";
 
 interface Lanza {
@@ -400,7 +400,7 @@ function LanzaPanelContent() {
           )}
         />
 
-        {/* Abandonados (puedes intentar reanimar con WhatsApp) */}
+        {/* Abandonados (puedes intentar reanimar con WhatsApp o reactivar) */}
         {leadsByGroup.abandonados.length > 0 && (
           <LeadsSection
             icon={<Clock className="w-4 h-4 text-orange-600" />}
@@ -416,12 +416,18 @@ function LanzaPanelContent() {
                 >
                   <MessageCircle className="w-3 h-3" /> Recordar por WhatsApp
                 </button>
+                <button
+                  onClick={() => handleMarkLead(lead.id, "en_proceso")}
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-blue-200 flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" /> Reactivar
+                </button>
               </div>
             )}
           />
         )}
 
-        {/* Descartados (collapse default cuando hay muchos) */}
+        {/* Descartados (con opción de reactivar si cambiaron de opinión) */}
         {leadsByGroup.descartados.length > 0 && (
           <LeadsSection
             icon={<X className="w-4 h-4 text-gray-500" />}
@@ -429,6 +435,16 @@ function LanzaPanelContent() {
             subtitle="Cliente dijo no o ya no aplica"
             leads={leadsByGroup.descartados}
             accentColor="text-gray-600"
+            renderActions={(lead) => (
+              <div className="flex gap-2 mt-2.5">
+                <button
+                  onClick={() => handleMarkLead(lead.id, "en_proceso")}
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-blue-200 flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" /> Reactivar
+                </button>
+              </div>
+            )}
           />
         )}
 
