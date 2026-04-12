@@ -13,7 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lead_id, current_step, status, contrato_id } = body;
+    const { lead_id, current_step, status, contrato_id, datos_extra } = body;
 
     if (!lead_id) {
       return NextResponse.json({ error: "lead_id requerido" }, { status: 400 });
@@ -41,6 +41,13 @@ export async function POST(request: NextRequest) {
 
     if (status === "completado" && contrato_id) {
       updates.contrato_id = contrato_id;
+    }
+
+    // Datos extra del step 2 (telefono2, estado_civil, grado, fuerza, unidad,
+    // dirección, ciudad, departamento). Se guardan como JSONB para no tener
+    // que añadir columnas individuales y poder reanudarlo si abandona.
+    if (datos_extra && typeof datos_extra === "object") {
+      updates.datos_extra = datos_extra;
     }
 
     const { error } = await supabase

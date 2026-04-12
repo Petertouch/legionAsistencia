@@ -199,16 +199,16 @@ export default function ReferralPage({ params }: Props) {
 
   // Auto-resume: si la URL tiene ?lead=LEAD_ID (viene del panel del aliado),
   // cargamos los datos del lead desde la DB, pre-llenamos el form y saltamos
-  // directo al step 2 sin que el usuario tenga que llenar nada otra vez.
+  // al step donde quedó sin que el usuario tenga que llenar nada otra vez.
   useEffect(() => {
     if (!resumeLeadId) return;
     const supabase = createClient();
     supabase
       .from("lanza_leads")
-      .select("id, nombre, cedula, telefono, email, plan_interes")
+      .select("id, nombre, cedula, telefono, email, plan_interes, current_step, datos_extra")
       .eq("id", resumeLeadId)
       .single()
-      .then(({ data }: { data: { id: string; nombre: string; cedula: string; telefono: string; email: string; plan_interes: string | null } | null }) => {
+      .then(({ data }: { data: { id: string; nombre: string; cedula: string; telefono: string; email: string; plan_interes: string | null; current_step: number | null; datos_extra: Record<string, string | null> | null } | null }) => {
         if (!data) return;
         setForm({
           nombre: data.nombre || "",
@@ -217,13 +217,33 @@ export default function ReferralPage({ params }: Props) {
           email: data.email || "",
         });
         if (data.plan_interes) setPlan(data.plan_interes);
+
+        // Pre-cargar datos extra del step 2 si existen
+        if (data.datos_extra && typeof data.datos_extra === "object") {
+          const d = data.datos_extra;
+          setExtra((prev) => ({
+            telefono2: d.telefono2 || prev.telefono2,
+            estado_civil: d.estado_civil || prev.estado_civil,
+            grado: d.grado || prev.grado,
+            fuerza: d.fuerza || prev.fuerza,
+            unidad: d.unidad || prev.unidad,
+            direccion: d.direccion || prev.direccion,
+            ciudad: d.ciudad || prev.ciudad,
+            departamento: d.departamento || prev.departamento,
+          }));
+        }
+
         setLeadId(data.id);
-        setStep(2);
-        // Actualizar tracking
+        // Si quedó en step 3+ (ya había llenado el step 2), saltar a step 2
+        // igual porque firma/fotos requieren recaptura en este dispositivo.
+        // Si quedó en step 2 o menos, saltar a step 2.
+        const targetStep = Math.min(data.current_step || 2, 3);
+        setStep(targetStep);
+
         fetch("/api/lanza-leads/avanzar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lead_id: data.id, current_step: 2 }),
+          body: JSON.stringify({ lead_id: data.id, current_step: targetStep }),
         }).catch(() => {});
       });
   }, [resumeLeadId]);
@@ -349,12 +369,33 @@ export default function ReferralPage({ params }: Props) {
     }
   };
 
-  // Step 2 → 3: Move to signing
+  // Step 2 → 3: Move to signing. Guarda los datos extra del step 2 en el
+  // lead (JSONB) para poder reanudarlo si abandona aquí.
   const handleStep2 = (e: React.FormEvent) => {
     e.preventDefault();
     setSubStep(1);
     setStep(3);
-    trackStep(3);
+    // trackStep con datos extra para persistir el formulario del step 2
+    if (leadId) {
+      fetch("/api/lanza-leads/avanzar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: leadId,
+          current_step: 3,
+          datos_extra: {
+            telefono2: extra.telefono2 || null,
+            estado_civil: extra.estado_civil || null,
+            grado: extra.grado || null,
+            fuerza: extra.fuerza || null,
+            unidad: extra.unidad || null,
+            direccion: extra.direccion || null,
+            ciudad: extra.ciudad || null,
+            departamento: extra.departamento || null,
+          },
+        }),
+      }).catch(() => {});
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
