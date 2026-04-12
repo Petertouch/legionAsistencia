@@ -12,6 +12,19 @@ import {
   Users, Lock, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+
+interface Beneficiario {
+  id: string;
+  nombre: string;
+  parentesco: string;
+  cedula: string;
+  email: string | null;
+  telefono: string | null;
+  activo: boolean;
+  created_at: string;
+}
+
+const PARENTESCOS = ["Cónyuge", "Hijo(a)", "Padre", "Madre", "Hermano(a)"];
 import dynamic from "next/dynamic";
 
 const ClientContratoPage = dynamic(() => import("@/app/(client)/mi-caso/contrato/page"), { ssr: false });
@@ -28,9 +41,56 @@ export default function ClientDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [subTab, setSubTab] = useState<"resumen" | "contrato">("resumen");
 
+  // Familia
+  const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([]);
+  const [showFamiliaForm, setShowFamiliaForm] = useState(false);
+  const [familiaLoading, setFamiliaLoading] = useState(false);
+  const [familiaForm, setFamiliaForm] = useState({
+    nombre: "", parentesco: "Cónyuge", cedula: "", email: "", telefono: "",
+  });
+
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
+
+  // Cargar beneficiarios
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/client/beneficiarios?suscriptor_id=${session.suscriptor_id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setBeneficiarios(data as Beneficiario[]));
+  }, [session]);
+
   if (!mounted || !session) return null;
+
+  const handleAddFamiliar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFamiliaLoading(true);
+    try {
+      const res = await fetch("/api/client/beneficiarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suscriptor_id: session.suscriptor_id, ...familiaForm }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Error al agregar"); setFamiliaLoading(false); return; }
+      setBeneficiarios((prev) => [...prev, data as Beneficiario]);
+      setFamiliaForm({ nombre: "", parentesco: "Cónyuge", cedula: "", email: "", telefono: "" });
+      setShowFamiliaForm(false);
+      toast.success(session.estado_pago === "Al dia"
+        ? "Familiar agregado y activado"
+        : "Familiar pre-registrado. Se activará cuando tu cuenta sea aprobada.");
+    } catch { toast.error("Error de conexión"); }
+    setFamiliaLoading(false);
+  };
+
+  const handleRemoveFamiliar = async (id: string) => {
+    try {
+      const res = await fetch(`/api/client/beneficiarios?id=${id}&suscriptor_id=${session.suscriptor_id}`, { method: "DELETE" });
+      if (!res.ok) { toast.error("No se pudo eliminar"); return; }
+      setBeneficiarios((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Familiar eliminado");
+    } catch { toast.error("Error de conexión"); }
+  };
 
   const casos = MOCK_CASOS.filter((c) => c.suscriptor_id === session.suscriptor_id);
   const casosActivos = casos.filter((c) => c.etapa !== "Cerrado");
@@ -172,19 +232,23 @@ export default function ClientDashboardPage() {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-gray-900 font-bold text-sm flex items-center gap-2">
             <Users className="w-3.5 h-3.5 text-jungle-dark/50" /> Mi Familia
+            {beneficiarios.length > 0 && (
+              <span className="text-[10px] text-gray-400 font-normal">{beneficiarios.length} registrados</span>
+            )}
           </h2>
-          {session.estado_pago !== "Pendiente" && (
+          {!showFamiliaForm && (
             <button
               className="text-jungle-dark text-xs font-medium flex items-center gap-1 hover:underline"
-              onClick={() => toast("Próximamente podrás agregar familiares")}
+              onClick={() => setShowFamiliaForm(true)}
             >
               <Plus className="w-3 h-3" /> Agregar
             </button>
           )}
         </div>
 
-        {session.estado_pago === "Pendiente" ? (
-          <div className="p-6 text-center">
+        {/* Aviso de pre-aprobación */}
+        {session.estado_pago === "Pendiente" && beneficiarios.length === 0 && !showFamiliaForm && (
+          <div className="p-5 text-center">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Lock className="w-5 h-5 text-gray-400" />
             </div>
@@ -192,8 +256,17 @@ export default function ClientDashboardPage() {
             <p className="text-gray-400 text-xs mt-1">
               Una vez aprobado tu contrato, podrás agregar a tu cónyuge, hijos y padres dependientes para que también reciban cobertura legal.
             </p>
+            <button
+              onClick={() => setShowFamiliaForm(true)}
+              className="mt-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 mx-auto"
+            >
+              <Plus className="w-3.5 h-3.5" /> Pre-registrar familiar
+            </button>
           </div>
-        ) : (
+        )}
+
+        {/* Estado vacío cuando aprobado */}
+        {session.estado_pago !== "Pendiente" && beneficiarios.length === 0 && !showFamiliaForm && (
           <div className="p-5 text-center">
             <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
               <Users className="w-5 h-5 text-blue-400" />
@@ -203,12 +276,134 @@ export default function ClientDashboardPage() {
               Agrega a tu cónyuge, hijos o padres dependientes. Tu plan incluye cobertura familiar.
             </p>
             <button
-              onClick={() => toast("Próximamente podrás agregar familiares")}
+              onClick={() => setShowFamiliaForm(true)}
               className="mt-3 bg-jungle-dark text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-jungle transition-colors flex items-center gap-1.5 mx-auto"
             >
               <Plus className="w-3.5 h-3.5" /> Agregar familiar
             </button>
           </div>
+        )}
+
+        {/* Lista de beneficiarios */}
+        {beneficiarios.length > 0 && !showFamiliaForm && (
+          <div className="divide-y divide-gray-50">
+            {beneficiarios.map((b) => (
+              <div key={b.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-900 text-sm font-medium truncate">{b.nombre}</p>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border bg-gray-50 text-gray-500 border-gray-200">
+                      {b.parentesco}
+                    </span>
+                    {b.activo ? (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
+                        Pendiente
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400">
+                    <span>CC {b.cedula}</span>
+                    {b.telefono && <span>· {b.telefono}</span>}
+                    {b.email && <span>· {b.email}</span>}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRemoveFamiliar(b.id)}
+                  className="text-gray-300 hover:text-red-500 transition-colors p-1 flex-shrink-0"
+                  title="Eliminar familiar"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Formulario de agregar familiar */}
+        {showFamiliaForm && (
+          <form onSubmit={handleAddFamiliar} className="p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-gray-600 text-xs font-medium mb-1 block">Nombre completo *</label>
+                <input
+                  type="text" required value={familiaForm.nombre}
+                  onChange={(e) => setFamiliaForm((f) => ({ ...f, nombre: e.target.value }))}
+                  placeholder="Nombre y apellido"
+                  className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-gray-600 text-xs font-medium mb-1 block">Parentesco *</label>
+                <select
+                  value={familiaForm.parentesco} required
+                  onChange={(e) => setFamiliaForm((f) => ({ ...f, parentesco: e.target.value }))}
+                  className="w-full bg-gray-50 text-gray-900 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+                >
+                  {PARENTESCOS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-gray-600 text-xs font-medium mb-1 block">Cédula *</label>
+                <input
+                  type="text" required value={familiaForm.cedula} inputMode="numeric"
+                  onChange={(e) => setFamiliaForm((f) => ({ ...f, cedula: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="12345678"
+                  className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-gray-600 text-xs font-medium mb-1 block">Email</label>
+                <input
+                  type="email" value={familiaForm.email}
+                  onChange={(e) => setFamiliaForm((f) => ({ ...f, email: e.target.value }))}
+                  placeholder="correo@ejemplo.com"
+                  className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-gray-600 text-xs font-medium mb-1 block">Teléfono</label>
+                <input
+                  type="tel" value={familiaForm.telefono} inputMode="numeric"
+                  onChange={(e) => setFamiliaForm((f) => ({ ...f, telefono: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="3171234567"
+                  className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {session.estado_pago === "Pendiente" && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                <p className="text-yellow-700 text-[11px]">
+                  <strong>Pre-registro:</strong> tu familiar quedará registrado pero se activará cuando tu cuenta sea aprobada.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowFamiliaForm(false)}
+                className="px-4 py-2 text-gray-500 hover:text-gray-700 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={familiaLoading}
+                className="flex-1 bg-jungle-dark text-white text-xs font-semibold py-2 rounded-lg hover:bg-jungle transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {familiaLoading ? "Guardando..." : session.estado_pago === "Pendiente" ? "Pre-registrar familiar" : "Agregar familiar"}
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
