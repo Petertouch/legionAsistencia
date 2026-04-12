@@ -9,7 +9,7 @@ if (!process.env.SESSION_SECRET) {
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 
 // API routes that require auth
-const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos"];
+const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas"];
 
 // Admin page role restrictions (matches sidebar.tsx)
 // Routes not listed here are accessible to any authenticated user (e.g. /admin/dashboard)
@@ -151,5 +151,7 @@ export const config = {
     "/api/heygen/:path*",
     "/api/documentos/:path*",
     "/api/contratos/:path*",
+    "/api/config/:path*",
+    "/api/lanzas/:path*",
   ],
 };
