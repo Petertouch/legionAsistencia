@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
-import { createClient } from "@/lib/supabase/client";
-import { Shield } from "lucide-react";
+import { Shield, Heart, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ClientLoginPage() {
@@ -17,6 +16,7 @@ export default function ClientLoginPage() {
   const [clave, setClave] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showAliado, setShowAliado] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -31,39 +31,28 @@ export default function ClientLoginPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
-    const { data: suscriptor, error: dbError } = await supabase
-      .from("suscriptores")
-      .select("id, nombre, cedula, email, telefono, plan, estado_pago, rama, rango, clave")
-      .eq("cedula", cedula.trim())
-      .single();
+    try {
+      const res = await fetch("/api/client/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cedula: cedula.trim(), clave }),
+      });
 
-    if (dbError || !suscriptor) {
-      setError("Cédula no encontrada. Verifica el número.");
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error al iniciar sesión");
+        setLoading(false);
+        return;
+      }
+
+      const session = await res.json();
+      login(session);
+      toast.success(`Bienvenido, ${session.nombre}`);
+      router.push("/mi-caso/perfil");
+    } catch {
+      setError("Error de conexión");
       setLoading(false);
-      return;
     }
-
-    if (!suscriptor.clave || suscriptor.clave !== clave) {
-      setError("Contraseña incorrecta.");
-      setLoading(false);
-      return;
-    }
-
-    login({
-      suscriptor_id: suscriptor.id,
-      nombre: suscriptor.nombre,
-      cedula: suscriptor.cedula,
-      email: suscriptor.email || "",
-      telefono: suscriptor.telefono,
-      plan: suscriptor.plan,
-      estado_pago: suscriptor.estado_pago,
-      rama: suscriptor.rama || "",
-      rango: suscriptor.rango || "",
-    });
-
-    toast.success(`Bienvenido, ${suscriptor.nombre}`);
-    router.push("/mi-caso/perfil");
   };
 
   return (
@@ -122,7 +111,73 @@ export default function ClientLoginPage() {
         >
           ¿Olvidaste tu contraseña?
         </Link>
+
+        <div className="border-t border-gray-100 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowAliado(true)}
+            className="w-full text-center text-oro hover:text-oro-light text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Users className="w-4 h-4" /> Soy aliado
+          </button>
+        </div>
       </form>
+
+      {/* ═══ Modal tipo de aliado ═══ */}
+      {showAliado && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowAliado(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm p-6 space-y-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <h3 className="text-gray-900 font-bold text-lg">¿Qué tipo de aliado eres?</h3>
+              <p className="text-gray-500 text-sm mt-1">Selecciona tu perfil para ingresar</p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => router.push("/lanzas")}
+                className="w-full flex items-center gap-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl p-4 transition-colors text-left group"
+              >
+                <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0 transition-colors">
+                  <Shield className="w-6 h-6 text-blue-700" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-bold text-sm">Lanza</p>
+                  <p className="text-gray-500 text-xs">Militar o Policía activo/retirado</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/lanzas")}
+                className="w-full flex items-center gap-4 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-xl p-4 transition-colors text-left group"
+              >
+                <div className="w-12 h-12 bg-pink-100 group-hover:bg-pink-200 rounded-full flex items-center justify-center flex-shrink-0 transition-colors">
+                  <Heart className="w-6 h-6 text-pink-700" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-bold text-sm">Aliada</p>
+                  <p className="text-gray-500 text-xs">Esposa o familiar de militar</p>
+                </div>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAliado(false)}
+              className="w-full text-gray-400 hover:text-gray-600 text-sm py-2 transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
