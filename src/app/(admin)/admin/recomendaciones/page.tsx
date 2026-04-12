@@ -235,9 +235,15 @@ export default function RecomendacionesPage() {
             <Button
               size="sm"
               onClick={async () => {
-                const ok = await setComisionesPorTipo(comisiones);
-                if (ok) toast.success("Comisiones actualizadas");
-                else toast.error("Error al guardar");
+                try {
+                  const res = await fetch("/api/config", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: "comisiones_por_tipo", value: comisiones }),
+                  });
+                  if (res.ok) toast.success("Comisiones actualizadas");
+                  else { const d = await res.json().catch(() => ({})); toast.error(d.error || "Error al guardar"); }
+                } catch { toast.error("Error de conexión"); }
               }}
             >
               <Check className="w-4 h-4 mr-1" /> Guardar comisiones
