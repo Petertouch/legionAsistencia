@@ -103,7 +103,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { messages, clientContext, knowledge } = await request.json();
+    const body = await request.json();
+    const { messages, clientContext, knowledge } = body;
+
+    // Input validation
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "Mensajes requeridos" }, { status: 400 });
+    }
+    // Limit messages to last 20 and truncate each to 2000 chars
+    const safeMessages = messages.slice(-20).map((m: { role: string; content: string }) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: typeof m.content === "string" ? m.content.slice(0, 2000) : "",
+    }));
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
@@ -154,7 +165,7 @@ ${clientContext.casos.map((c: { id: string; titulo: string; area: string; etapa:
         model: "llama-3.3-70b-versatile",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...safeMessages,
         ],
         temperature: 0.7,
         max_tokens: 500,

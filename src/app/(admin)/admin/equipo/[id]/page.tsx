@@ -54,7 +54,7 @@ export default function MemberDetailPage({ params }: Props) {
   if (!member) {
     return (
       <div className="text-center py-12">
-        <p className="text-beige/40">Miembro no encontrado</p>
+        <p className="text-gray-400">Miembro no encontrado</p>
         <Link href="/admin/equipo" className="text-oro text-sm mt-2 inline-block hover:underline">← Volver</Link>
       </div>
     );
@@ -76,7 +76,7 @@ export default function MemberDetailPage({ params }: Props) {
   const est = ESTADO_CONFIG[member.estado];
 
   const handlePasswordChange = () => {
-    if (!newPassword.trim() || newPassword.length < 4) return;
+    if (!newPassword.trim() || newPassword.length < 8) return;
     changePassword(id, newPassword.trim());
     setNewPassword("");
     setPasswordChanged(true);
@@ -120,11 +120,11 @@ export default function MemberDetailPage({ params }: Props) {
     finally { setUploading(false); }
   };
 
-  const inputCls = "w-full bg-white/5 border border-white/10 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-oro/40";
+  const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-oro/40";
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <Link href={backHref} className="inline-flex items-center gap-1.5 text-beige/40 text-sm hover:text-white transition-colors">
+      <Link href={backHref} className="inline-flex items-center gap-1.5 text-gray-400 text-sm hover:text-gray-900 transition-colors">
         <ArrowLeft className="w-4 h-4" /> {backLabel}
       </Link>
 
@@ -132,7 +132,7 @@ export default function MemberDetailPage({ params }: Props) {
       <div className="flex items-start gap-4">
         {/* Avatar / Photo */}
         <div className="relative group flex-shrink-0">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden"
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-gray-900 font-bold text-xl overflow-hidden"
             style={{ backgroundColor: member.avatar_url ? "transparent" : member.color }}>
             {member.avatar_url ? (
               <img src={member.avatar_url} alt={member.nombre} className="w-full h-full object-cover" />
@@ -142,16 +142,16 @@ export default function MemberDetailPage({ params }: Props) {
           </div>
           {isProfesor && (
             <label className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              {uploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Upload className="w-5 h-5 text-white" />}
+              {uploading ? <Loader2 className="w-5 h-5 text-gray-900 animate-spin" /> : <Upload className="w-5 h-5 text-gray-900" />}
               <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoUpload} disabled={uploading} />
             </label>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-white text-xl font-bold">{member.nombre}</h1>
+            <h1 className="text-gray-900 text-xl font-bold">{member.nombre}</h1>
             <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
-              isProfesor ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"
+              isProfesor ? "text-purple-600 bg-purple-500/10 border-purple-500/20" : "text-blue-600 bg-blue-500/10 border-blue-200"
             }`}>
               {isProfesor ? "Profesor" : "Abogado"}
             </span>
@@ -161,9 +161,9 @@ export default function MemberDetailPage({ params }: Props) {
             </button>
           </div>
           {isProfesor ? (
-            <p className="text-purple-400/60 text-sm">{member.especialidad_academica || "Sin especialidad"} • Desde {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</p>
+            <p className="text-purple-600/60 text-sm">{member.especialidad_academica || "Sin especialidad"} • Desde {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</p>
           ) : (
-            <p className="text-beige/40 text-sm">{member.especialidad} • Desde {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</p>
+            <p className="text-gray-400 text-sm">{member.especialidad} • Desde {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</p>
           )}
         </div>
       </div>
@@ -174,31 +174,31 @@ export default function MemberDetailPage({ params }: Props) {
       {isProfesor && (
         <>
           {/* Bio */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-purple-400" /> Perfil Académico
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-purple-600" /> Perfil Académico
             </h3>
             {!editingInfo ? (
               <div>
                 <div className="mb-3">
-                  <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Especialidad</p>
-                  <p className="text-white text-sm">{member.especialidad_academica || "—"}</p>
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Especialidad</p>
+                  <p className="text-gray-900 text-sm">{member.especialidad_academica || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Biografía</p>
-                  <p className="text-beige/60 text-sm leading-relaxed whitespace-pre-line">{member.bio || "Sin biografía"}</p>
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Biografía</p>
+                  <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-line">{member.bio || "Sin biografía"}</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
                 <div>
-                  <label className="text-beige/40 text-[10px] block mb-1">Especialidad académica</label>
+                  <label className="text-gray-400 text-[10px] block mb-1">Especialidad académica</label>
                   <input type="text" value={editForm.especialidad_academica}
                     onChange={(e) => setEditForm({ ...editForm, especialidad_academica: e.target.value })}
                     className={inputCls} />
                 </div>
                 <div>
-                  <label className="text-beige/40 text-[10px] block mb-1">Biografía</label>
+                  <label className="text-gray-400 text-[10px] block mb-1">Biografía</label>
                   <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
                     rows={5} className={`${inputCls} resize-none`} />
                 </div>
@@ -207,11 +207,11 @@ export default function MemberDetailPage({ params }: Props) {
           </div>
 
           {/* Cursos asociados (placeholder) */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-purple-400" /> Cursos
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-purple-600" /> Cursos
             </h3>
-            <p className="text-beige/30 text-xs">Los cursos asignados a este profesor aparecerán aquí.</p>
+            <p className="text-gray-400 text-xs">Los cursos asignados a este profesor aparecerán aquí.</p>
           </div>
         </>
       )}
@@ -223,37 +223,37 @@ export default function MemberDetailPage({ params }: Props) {
         <>
           {/* Quick stats */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <Briefcase className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">{casosActivos.length}</p>
-              <p className="text-beige/30 text-[9px]">Activos</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+              <Briefcase className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+              <p className="text-gray-900 text-lg font-bold">{casosActivos.length}</p>
+              <p className="text-gray-400 text-[9px]">Activos</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <CheckCircle2 className="w-4 h-4 text-green-400 mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">{casosCerrados.length}</p>
-              <p className="text-beige/30 text-[9px]">Cerrados</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto mb-1" />
+              <p className="text-gray-900 text-lg font-bold">{casosCerrados.length}</p>
+              <p className="text-gray-400 text-[9px]">Cerrados</p>
             </div>
-            <div className={`bg-white/5 border rounded-xl p-3 text-center ${sobrecargado ? "border-red-500/30" : "border-white/10"}`}>
-              <AlertTriangle className={`w-4 h-4 mx-auto mb-1 ${sobrecargado ? "text-red-400" : "text-beige/30"}`} />
-              <p className={`text-lg font-bold ${sobrecargado ? "text-red-400" : "text-white"}`}>{cargaPct}%</p>
-              <p className="text-beige/30 text-[9px]">Carga</p>
+            <div className={`bg-gray-50 border rounded-xl p-3 text-center ${sobrecargado ? "border-red-500/30" : "border-gray-200"}`}>
+              <AlertTriangle className={`w-4 h-4 mx-auto mb-1 ${sobrecargado ? "text-red-600" : "text-gray-400"}`} />
+              <p className={`text-lg font-bold ${sobrecargado ? "text-red-600" : "text-gray-900"}`}>{cargaPct}%</p>
+              <p className="text-gray-400 text-[9px]">Carga</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
               <Clock className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-              <p className="text-white text-lg font-bold">{casosUrgentes.length}</p>
-              <p className="text-beige/30 text-[9px]">Urgentes</p>
+              <p className="text-gray-900 text-lg font-bold">{casosUrgentes.length}</p>
+              <p className="text-gray-400 text-[9px]">Urgentes</p>
             </div>
           </div>
 
           {/* Workload bar */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-beige/50 text-xs font-medium">Carga de trabajo</span>
-              <span className={`text-xs font-bold ${sobrecargado ? "text-red-400" : cargaPct > 75 ? "text-yellow-400" : "text-green-400"}`}>
+              <span className="text-gray-500 text-xs font-medium">Carga de trabajo</span>
+              <span className={`text-xs font-bold ${sobrecargado ? "text-red-600" : cargaPct > 75 ? "text-yellow-600" : "text-green-600"}`}>
                 {casosActivos.length} / {member.max_casos} casos
               </span>
             </div>
-            <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all duration-500" style={{
                 width: `${Math.min(cargaPct, 100)}%`,
                 backgroundColor: sobrecargado ? "#ef4444" : cargaPct > 75 ? "#eab308" : "#22c55e",
@@ -263,30 +263,30 @@ export default function MemberDetailPage({ params }: Props) {
 
           {/* Cases by area */}
           {casosActivos.length > 0 && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-beige/40" /> Casos activos por área
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-400" /> Casos activos por área
               </h3>
               <div className="space-y-2">
                 {Object.entries(casosPorArea).map(([area, count]) => (
                   <div key={area} className="flex items-center justify-between">
-                    <span className="text-beige/50 text-xs">{area}</span>
+                    <span className="text-gray-500 text-xs">{area}</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-oro/60 rounded-full" style={{ width: `${(count / casosActivos.length) * 100}%` }} />
                       </div>
-                      <span className="text-white text-xs font-medium w-4 text-right">{count}</span>
+                      <span className="text-gray-900 text-xs font-medium w-4 text-right">{count}</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 pt-3 border-t border-white/5 space-y-1">
+              <div className="mt-3 pt-3 border-t border-gray-100 space-y-1">
                 {casosActivos.map((c) => (
-                  <Link key={c.id} href={`/admin/casos/${c.id}`} className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-white/5 transition-colors">
-                    <span className="text-beige/60 text-xs truncate flex-1">{c.titulo}</span>
+                  <Link key={c.id} href={`/admin/casos/${c.id}`} className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span className="text-gray-500 text-xs truncate flex-1">{c.titulo}</span>
                     <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
                       <Badge size="xs">{c.prioridad}</Badge>
-                      <span className="text-beige/30 text-[9px]">{c.etapa}</span>
+                      <span className="text-gray-400 text-[9px]">{c.etapa}</span>
                     </div>
                   </Link>
                 ))}
@@ -295,9 +295,9 @@ export default function MemberDetailPage({ params }: Props) {
           )}
 
           {/* Areas habilitadas */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <Scale className="w-4 h-4 text-beige/40" /> Áreas del derecho habilitadas
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+              <Scale className="w-4 h-4 text-gray-400" /> Áreas del derecho habilitadas
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {ALL_AREAS.map((area) => {
@@ -306,23 +306,23 @@ export default function MemberDetailPage({ params }: Props) {
                 return (
                   <button key={area} onClick={() => toggleArea(id, area)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
-                      enabled ? AREA_COLORS[area] : "bg-white/3 border-white/5 text-beige/25"
+                      enabled ? AREA_COLORS[area] : "bg-gray-50 border-gray-100 text-gray-300"
                     }`}>
-                    <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${enabled ? "bg-white/20 border-white/30" : "border-white/10"}`}>
+                    <div className={`w-4 h-4 rounded-md border flex items-center justify-center flex-shrink-0 ${enabled ? "bg-gray-100 border-gray-300" : "border-gray-200"}`}>
                       {enabled && <CheckCircle2 className="w-3 h-3" />}
                     </div>
                     <span className="text-xs">{area}</span>
-                    {isEspecialidad && enabled && <span className="text-[8px] bg-oro/20 text-oro px-1 py-px rounded-full ml-auto">ESP</span>}
+                    {isEspecialidad && enabled && <span className="text-[8px] bg-amber-100 text-oro px-1 py-px rounded-full ml-auto">ESP</span>}
                   </button>
                 );
               })}
             </div>
-            <div className="mt-3 pt-3 border-t border-white/5">
-              <label className="text-beige/40 text-[10px] block mb-1.5">Especialidad principal</label>
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <label className="text-gray-400 text-[10px] block mb-1.5">Especialidad principal</label>
               <select value={member.especialidad} onChange={(e) => updateAbogado(id, { especialidad: e.target.value as CaseArea })}
                 className={`${inputCls} appearance-none`}>
                 {member.areas_habilitadas.map((area) => (
-                  <option key={area} value={area} className="bg-jungle-dark">{area}</option>
+                  <option key={area} value={area} className="bg-white">{area}</option>
                 ))}
               </select>
             </div>
@@ -335,10 +335,10 @@ export default function MemberDetailPage({ params }: Props) {
       {/* ══════════════════════════════════════ */}
 
       {/* Contact info */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white font-bold text-sm flex items-center gap-2">
-            <Shield className="w-4 h-4 text-beige/40" /> Información
+          <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4 text-gray-400" /> Información
           </h3>
           {!editingInfo ? (
             <Button size="sm" variant="ghost" onClick={startEditing}>Editar</Button>
@@ -351,48 +351,48 @@ export default function MemberDetailPage({ params }: Props) {
         </div>
         {!editingInfo ? (
           <div className="space-y-2.5">
-            <div className="flex items-center gap-2 text-sm"><Mail className="w-4 h-4 text-beige/30" /><span className="text-beige/60">{member.email}</span></div>
-            <div className="flex items-center gap-2 text-sm"><Phone className="w-4 h-4 text-beige/30" /><span className="text-beige/60">{member.telefono || "—"}</span></div>
-            <div className="flex items-center gap-2 text-sm"><Hash className="w-4 h-4 text-beige/30" /><span className="text-beige/60">CC {member.cedula || "—"}</span></div>
-            <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-beige/30" /><span className="text-beige/60">Ingreso: {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}</span></div>
+            <div className="flex items-center gap-2 text-sm"><Mail className="w-4 h-4 text-gray-400" /><span className="text-gray-500">{member.email}</span></div>
+            <div className="flex items-center gap-2 text-sm"><Phone className="w-4 h-4 text-gray-400" /><span className="text-gray-500">{member.telefono || "—"}</span></div>
+            <div className="flex items-center gap-2 text-sm"><Hash className="w-4 h-4 text-gray-400" /><span className="text-gray-500">CC {member.cedula || "—"}</span></div>
+            <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-gray-400" /><span className="text-gray-500">Ingreso: {new Date(member.fecha_ingreso).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}</span></div>
             {!isProfesor && (
-              <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-beige/30" /><span className="text-beige/60">Max casos: {member.max_casos}</span></div>
+              <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-gray-400" /><span className="text-gray-500">Max casos: {member.max_casos}</span></div>
             )}
-            {member.notas && <div className="mt-2 pt-2 border-t border-white/5"><p className="text-beige/40 text-xs leading-relaxed">{member.notas}</p></div>}
+            {member.notas && <div className="mt-2 pt-2 border-t border-gray-100"><p className="text-gray-400 text-xs leading-relaxed">{member.notas}</p></div>}
           </div>
         ) : (
           <div className="space-y-3">
-            <div><label className="text-beige/40 text-[10px] block mb-1">Email</label><input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className={inputCls} /></div>
-            <div><label className="text-beige/40 text-[10px] block mb-1">Teléfono</label><input type="tel" value={editForm.telefono} onChange={(e) => setEditForm({ ...editForm, telefono: e.target.value })} className={inputCls} /></div>
+            <div><label className="text-gray-400 text-[10px] block mb-1">Email</label><input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className={inputCls} /></div>
+            <div><label className="text-gray-400 text-[10px] block mb-1">Teléfono</label><input type="tel" value={editForm.telefono} onChange={(e) => setEditForm({ ...editForm, telefono: e.target.value })} className={inputCls} /></div>
             {!isProfesor && (
-              <div><label className="text-beige/40 text-[10px] block mb-1">Max casos simultáneos</label><input type="number" min={1} max={50} value={editForm.max_casos} onChange={(e) => setEditForm({ ...editForm, max_casos: parseInt(e.target.value) || 1 })} className={inputCls} /></div>
+              <div><label className="text-gray-400 text-[10px] block mb-1">Max casos simultáneos</label><input type="number" min={1} max={50} value={editForm.max_casos} onChange={(e) => setEditForm({ ...editForm, max_casos: parseInt(e.target.value) || 1 })} className={inputCls} /></div>
             )}
-            <div><label className="text-beige/40 text-[10px] block mb-1">Notas</label><textarea value={editForm.notas} onChange={(e) => setEditForm({ ...editForm, notas: e.target.value })} rows={2} className={`${inputCls} resize-none`} /></div>
+            <div><label className="text-gray-400 text-[10px] block mb-1">Notas</label><textarea value={editForm.notas} onChange={(e) => setEditForm({ ...editForm, notas: e.target.value })} rows={2} className={`${inputCls} resize-none`} /></div>
           </div>
         )}
       </div>
 
       {/* Password */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Key className="w-4 h-4 text-beige/40" /> Contraseña</h3>
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+        <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2"><Key className="w-4 h-4 text-gray-400" /> Contraseña</h3>
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-beige/40 text-xs">Actual:</span>
-          <span className="text-beige/60 text-sm font-mono">{showPassword ? member.password : "••••••••"}</span>
-          <button onClick={() => setShowPassword(!showPassword)} className="text-beige/30 hover:text-white transition-colors">
+          <span className="text-gray-400 text-xs">Actual:</span>
+          <span className="text-gray-500 text-sm font-mono">{showPassword ? member.password : "••••••••"}</span>
+          <button onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-900 transition-colors">
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
         <div className="flex gap-2">
           <input type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nueva contraseña (min 4)"
             className={`flex-1 ${inputCls} placeholder-beige/20`} />
-          <Button size="sm" variant="secondary" onClick={handlePasswordChange} disabled={newPassword.length < 4}>Cambiar</Button>
+          <Button size="sm" variant="secondary" onClick={handlePasswordChange} disabled={newPassword.length < 8}>Cambiar</Button>
         </div>
-        {passwordChanged && <p className="text-green-400 text-xs mt-2 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Actualizada</p>}
+        {passwordChanged && <p className="text-green-600 text-xs mt-2 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Actualizada</p>}
       </div>
 
       {/* Estado */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-        <h3 className="text-white font-bold text-sm mb-3">Estado</h3>
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+        <h3 className="text-gray-900 font-bold text-sm mb-3">Estado</h3>
         <div className="grid grid-cols-3 gap-2">
           {(["activo", "inactivo", "vacaciones"] as MemberEstado[]).map((e) => {
             const active = member.estado === e;
@@ -401,10 +401,10 @@ export default function MemberDetailPage({ params }: Props) {
               <button key={e} onClick={() => setEstado(id, e)}
                 className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all ${
                   active
-                    ? e === "activo" ? "bg-green-500/15 border-green-500/30 text-green-400"
-                    : e === "inactivo" ? "bg-red-500/15 border-red-500/30 text-red-400"
-                    : "bg-yellow-500/15 border-yellow-500/30 text-yellow-400"
-                    : "bg-white/3 border-white/5 text-beige/25 hover:bg-white/5"
+                    ? e === "activo" ? "bg-green-50 border-green-500/30 text-green-600"
+                    : e === "inactivo" ? "bg-red-100 border-red-500/30 text-red-600"
+                    : "bg-yellow-50 border-yellow-500/30 text-yellow-600"
+                    : "bg-gray-50 border-gray-100 text-gray-300 hover:bg-gray-50"
                 }`}>
                 <Icon className="w-5 h-5" />
                 <span className="text-xs font-medium capitalize">{ESTADO_CONFIG[e].label}</span>
@@ -415,17 +415,17 @@ export default function MemberDetailPage({ params }: Props) {
       </div>
 
       {/* Danger zone */}
-      <div className="bg-red-500/5 border border-red-500/15 rounded-xl p-4">
-        <h3 className="text-red-400 font-bold text-sm mb-2">Zona de peligro</h3>
+      <div className="bg-red-50 border border-red-500/15 rounded-xl p-4">
+        <h3 className="text-red-600 font-bold text-sm mb-2">Zona de peligro</h3>
         {!isProfesor && casosActivos.length > 0 ? (
-          <p className="text-beige/30 text-xs">No se puede eliminar — tiene {casosActivos.length} caso(s) activo(s).</p>
+          <p className="text-gray-400 text-xs">No se puede eliminar — tiene {casosActivos.length} caso(s) activo(s).</p>
         ) : !confirmDelete ? (
           <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="w-3 h-3" /> Eliminar {isProfesor ? "profesor" : "abogado"}
           </Button>
         ) : (
           <div className="flex items-center gap-2">
-            <p className="text-red-400 text-xs flex-1">¿Seguro? No se puede deshacer.</p>
+            <p className="text-red-600 text-xs flex-1">¿Seguro? No se puede deshacer.</p>
             <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>No</Button>
             <Button size="sm" variant="danger" onClick={handleDelete}>Sí, eliminar</Button>
           </div>

@@ -32,14 +32,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!hydrated || !user) {
     return (
-      <div className="min-h-screen bg-jungle-dark flex items-center justify-center">
+      <div className="min-h-screen bg-panel flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-jungle-dark">
+    <div className="min-h-screen bg-panel">
       <Sidebar />
       <Topbar />
       <main className={`p-4 md:p-6 pt-3 md:pt-4 pb-20 md:pb-6 transition-all duration-300 ml-0 ${collapsed ? "md:ml-16" : "md:ml-60"}`}>

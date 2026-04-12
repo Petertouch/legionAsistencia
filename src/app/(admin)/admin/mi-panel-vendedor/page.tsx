@@ -36,7 +36,7 @@ export default function MiPanelVendedorPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <BadgeDollarSign className="w-12 h-12 text-beige/15 mb-3" />
-        <p className="text-beige/40 text-sm">Cargando panel de vendedor...</p>
+        <p className="text-gray-400 text-sm">Cargando panel de vendedor...</p>
       </div>
     );
   }
@@ -64,18 +64,18 @@ export default function MiPanelVendedorPage() {
   };
 
   const statusColors: Record<string, string> = {
-    nuevo: "bg-blue-500/15 text-blue-400",
-    contactado: "bg-yellow-500/15 text-yellow-400",
-    convertido: "bg-green-500/15 text-green-400",
-    perdido: "bg-red-500/15 text-red-400",
+    nuevo: "bg-blue-50 text-blue-600",
+    contactado: "bg-yellow-50 text-yellow-600",
+    convertido: "bg-green-50 text-green-600",
+    perdido: "bg-red-100 text-red-600",
   };
 
   return (
     <div className="max-w-4xl space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-white text-xl font-bold">Hola, {vendedor.nombre.split(" ")[0]}</h1>
-        <p className="text-beige/40 text-sm mt-1">Tu panel de ventas y comisiones</p>
+        <h1 className="text-gray-900 text-xl font-bold">Hola, {vendedor.nombre.split(" ")[0]}</h1>
+        <p className="text-gray-400 text-sm mt-1">Tu panel de ventas y comisiones</p>
       </div>
 
       {/* Referral link — prominent */}
@@ -85,7 +85,7 @@ export default function MiPanelVendedorPage() {
           <p className="text-oro text-sm font-bold">Tu link de vendedor</p>
         </div>
         <div className="flex items-center gap-2 mb-3">
-          <code className="flex-1 bg-black/30 border border-white/10 text-oro text-sm px-4 py-3 rounded-lg truncate font-mono">{referralLink}</code>
+          <code className="flex-1 bg-black/30 border border-gray-200 text-oro text-sm px-4 py-3 rounded-lg truncate font-mono">{referralLink}</code>
           <Button size="sm" onClick={copyLink} className={copiedLink ? "bg-green-600 border-green-500" : ""}>
             <Copy className="w-4 h-4" /> {copiedLink ? "Copiado" : "Copiar"}
           </Button>
@@ -93,53 +93,53 @@ export default function MiPanelVendedorPage() {
             <Share2 className="w-4 h-4" /> Compartir
           </Button>
         </div>
-        <p className="text-beige/30 text-xs">Comparte este link por WhatsApp, redes sociales o en persona. Cada persona que se registre por tu link te genera <span className="text-oro font-bold">${(stats?.comisionUnit || 50000).toLocaleString()}</span> de comisión al cerrar.</p>
+        <p className="text-gray-400 text-xs">Comparte este link por WhatsApp, redes sociales o en persona. Cada persona que se registre por tu link te genera <span className="text-oro font-bold">${(stats?.comisionUnit || 50000).toLocaleString()}</span> de comisión al cerrar.</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Leads totales", value: stats?.myLeads.length || 0, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10" },
-          { label: "Cierres", value: stats?.convertidos.length || 0, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
-          { label: "Tasa conversión", value: `${stats?.tasa || 0}%`, icon: Clock, color: "text-purple-400", bg: "bg-purple-500/10" },
-          { label: "Comisión ganada", value: `$${(stats?.comisionTotal || 0).toLocaleString()}`, icon: CircleDollarSign, color: "text-oro", bg: "bg-oro/10" },
+          { label: "Leads totales", value: stats?.myLeads.length || 0, icon: Users, color: "text-blue-600", bg: "bg-blue-500/10" },
+          { label: "Cierres", value: stats?.convertidos.length || 0, icon: TrendingUp, color: "text-green-600", bg: "bg-green-500/10" },
+          { label: "Tasa conversión", value: `${stats?.tasa || 0}%`, icon: Clock, color: "text-purple-600", bg: "bg-purple-500/10" },
+          { label: "Comisión ganada", value: `$${(stats?.comisionTotal || 0).toLocaleString()}`, icon: CircleDollarSign, color: "text-oro", bg: "bg-amber-50" },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div key={stat.label} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className={`w-9 h-9 ${stat.bg} rounded-lg flex items-center justify-center mb-2`}>
               <stat.icon className={`w-4 h-4 ${stat.color}`} />
             </div>
-            <p className="text-white text-2xl font-bold">{stat.value}</p>
-            <p className="text-beige/40 text-xs mt-0.5">{stat.label}</p>
+            <p className="text-gray-900 text-2xl font-bold">{stat.value}</p>
+            <p className="text-gray-400 text-xs mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Leads history */}
-      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-white text-sm font-bold">Mis referidos ({stats?.myLeads.length || 0})</h2>
+      <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-gray-900 text-sm font-bold">Mis referidos ({stats?.myLeads.length || 0})</h2>
           <div className="flex items-center gap-3 text-xs">
-            <span className="text-blue-400">{stats?.nuevos.length || 0} nuevos</span>
-            <span className="text-yellow-400">{stats?.contactados.length || 0} en proceso</span>
-            <span className="text-green-400">{stats?.convertidos.length || 0} cerrados</span>
+            <span className="text-blue-600">{stats?.nuevos.length || 0} nuevos</span>
+            <span className="text-yellow-600">{stats?.contactados.length || 0} en proceso</span>
+            <span className="text-green-600">{stats?.convertidos.length || 0} cerrados</span>
           </div>
         </div>
         {(stats?.myLeads.length || 0) === 0 ? (
           <div className="p-12 text-center">
             <Users className="w-10 h-10 text-beige/15 mx-auto mb-3" />
-            <p className="text-beige/40 text-sm mb-1">Aún no tienes referidos</p>
-            <p className="text-beige/25 text-xs">Comparte tu link para empezar a generar comisiones</p>
+            <p className="text-gray-400 text-sm mb-1">Aún no tienes referidos</p>
+            <p className="text-gray-300 text-xs">Comparte tu link para empezar a generar comisiones</p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">
             {stats?.myLeads.sort((a, b) => b.created_at.localeCompare(a.created_at)).map((lead) => (
-              <div key={lead.id} className="px-4 py-3 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-beige/40 text-xs font-bold flex-shrink-0">
+              <div key={lead.id} className="px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 text-xs font-bold flex-shrink-0">
                   {lead.nombre.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{lead.nombre}</p>
-                  <p className="text-beige/30 text-xs">{lead.telefono} · {lead.plan_interes || "Sin plan"}</p>
+                  <p className="text-gray-900 text-sm font-medium truncate">{lead.nombre}</p>
+                  <p className="text-gray-400 text-xs">{lead.telefono} · {lead.plan_interes || "Sin plan"}</p>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColors[lead.status]}`}>
                   {lead.status}
@@ -147,7 +147,7 @@ export default function MiPanelVendedorPage() {
                 {lead.status === "convertido" && (
                   <span className="text-oro text-xs font-bold">+${(stats.comisionUnit).toLocaleString()}</span>
                 )}
-                <span className="text-beige/20 text-[10px]">{new Date(lead.created_at).toLocaleDateString("es-CO")}</span>
+                <span className="text-gray-300 text-[10px]">{new Date(lead.created_at).toLocaleDateString("es-CO")}</span>
               </div>
             ))}
           </div>

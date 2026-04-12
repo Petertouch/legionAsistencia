@@ -97,8 +97,8 @@ export default function NuevoCursoPage() {
   const canNext1 = title.trim().length > 0;
   const canCreate = title.trim().length > 0;
 
-  const inputCls = "w-full bg-white/5 border border-white/10 text-white text-sm px-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40";
-  const labelCls = "text-beige/50 text-xs font-medium mb-1.5 block";
+  const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40";
+  const labelCls = "text-gray-500 text-xs font-medium mb-1.5 block";
 
   const formatPrice = (p: string) => {
     const n = parseFloat(p) || 0;
@@ -111,12 +111,12 @@ export default function NuevoCursoPage() {
     <div className="max-w-xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/admin/cursos" className="p-2 rounded-lg text-beige/40 hover:text-white hover:bg-white/5 transition-colors">
+        <Link href="/admin/cursos" className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-white text-lg font-bold">Nuevo Curso</h1>
-          <p className="text-beige/40 text-xs">Paso {step} de 3</p>
+          <h1 className="text-gray-900 text-lg font-bold">Nuevo Curso</h1>
+          <p className="text-gray-400 text-xs">Paso {step} de 3</p>
         </div>
       </div>
 
@@ -130,19 +130,19 @@ export default function NuevoCursoPage() {
                 s.num === step
                   ? "bg-oro text-jungle-dark"
                   : s.num < step
-                  ? "bg-green-500/20 text-green-400 cursor-pointer hover:bg-green-500/30"
-                  : "bg-white/5 text-beige/25"
+                  ? "bg-green-500/20 text-green-600 cursor-pointer hover:bg-green-500/30"
+                  : "bg-gray-50 text-gray-300"
               }`}
             >
               {s.num < step ? <Check className="w-4 h-4" /> : s.num}
             </button>
             <span className={`text-xs font-medium hidden sm:block ${
-              s.num === step ? "text-white" : s.num < step ? "text-green-400" : "text-beige/25"
+              s.num === step ? "text-gray-900" : s.num < step ? "text-green-600" : "text-gray-300"
             }`}>
               {s.label}
             </span>
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-px ${s.num < step ? "bg-green-500/30" : "bg-white/10"}`} />
+              <div className={`flex-1 h-px ${s.num < step ? "bg-green-500/30" : "bg-gray-100"}`} />
             )}
           </div>
         ))}
@@ -152,24 +152,24 @@ export default function NuevoCursoPage() {
       {step === 1 && (
         <div className="space-y-4">
           {/* Thumbnail */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <label className={labelCls}>Portada del curso</label>
             {thumbnailUrl ? (
               <div className="relative rounded-lg overflow-hidden mt-1">
                 <img src={thumbnailUrl} alt="Portada" className="w-full h-40 object-cover" />
                 <button onClick={() => setThumbnailUrl("")}
-                  className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-colors">
+                  className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center text-gray-900 hover:bg-black/80 transition-colors">
                   <XIcon className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <label className={`flex flex-col items-center justify-center gap-2 py-8 mt-1 border-2 border-dashed border-white/10 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+              <label className={`flex flex-col items-center justify-center gap-2 py-8 mt-1 border-2 border-dashed border-gray-200 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group ${uploading ? "pointer-events-none opacity-60" : ""}`}>
                 {uploading ? (
                   <Loader2 className="w-6 h-6 text-oro animate-spin" />
                 ) : (
-                  <Upload className="w-6 h-6 text-beige/20 group-hover:text-oro transition-colors" />
+                  <Upload className="w-6 h-6 text-gray-300 group-hover:text-oro transition-colors" />
                 )}
-                <span className="text-beige/30 text-xs group-hover:text-beige/50 transition-colors">
+                <span className="text-gray-400 text-xs group-hover:text-gray-500 transition-colors">
                   {uploading ? "Subiendo..." : "Subir imagen de portada (opcional)"}
                 </span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailUpload} disabled={uploading} />
@@ -178,7 +178,7 @@ export default function NuevoCursoPage() {
           </div>
 
           {/* Title */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
             <div>
               <label className={labelCls}>Título del curso *</label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
@@ -194,19 +194,19 @@ export default function NuevoCursoPage() {
           </div>
 
           {/* Category + Price */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
             <div>
               <label className={labelCls}>Categoría</label>
               {!showNewCat ? (
                 <div className="flex gap-2">
                   <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={`${inputCls} appearance-none flex-1`}>
-                    <option value="" className="bg-jungle-dark">Sin categoría</option>
+                    <option value="" className="bg-white">Sin categoría</option>
                     {categories?.map((cat) => (
-                      <option key={cat.id} value={cat.id} className="bg-jungle-dark">{cat.name}</option>
+                      <option key={cat.id} value={cat.id} className="bg-white">{cat.name}</option>
                     ))}
                   </select>
                   <button onClick={() => setShowNewCat(true)}
-                    className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-beige/40 hover:text-oro hover:border-oro/30 transition-colors" title="Nueva categoría">
+                    className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-400 hover:text-oro hover:border-oro/30 transition-colors" title="Nueva categoría">
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
@@ -216,7 +216,7 @@ export default function NuevoCursoPage() {
                     placeholder="Nombre de la categoría" className={`${inputCls} flex-1`} autoFocus />
                   <Button size="sm" onClick={() => createCatMutation.mutate()} disabled={!newCategory.trim()}>Crear</Button>
                   <button onClick={() => { setShowNewCat(false); setNewCategory(""); }}
-                    className="p-2.5 text-beige/40 hover:text-white transition-colors">
+                    className="p-2.5 text-gray-400 hover:text-gray-900 transition-colors">
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
@@ -226,11 +226,11 @@ export default function NuevoCursoPage() {
             <div>
               <label className={labelCls}>Precio (COP)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} min="0" step="10000"
                   className={`${inputCls} pl-9`} />
               </div>
-              <p className="text-beige/25 text-xs mt-1">{formatPrice(price)}</p>
+              <p className="text-gray-300 text-xs mt-1">{formatPrice(price)}</p>
             </div>
           </div>
 
@@ -245,14 +245,14 @@ export default function NuevoCursoPage() {
       {/* ═══ STEP 2: Profesor ═══ */}
       {step === 2 && (
         <div className="space-y-4">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <label className={labelCls}>Asignar profesor</label>
-            <p className="text-beige/25 text-xs mb-3">Selecciona quién impartirá este curso (opcional)</p>
+            <p className="text-gray-300 text-xs mb-3">Selecciona quién impartirá este curso (opcional)</p>
 
             {profesores.length === 0 ? (
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                <User className="w-8 h-8 text-beige/10 mx-auto mb-2" />
-                <p className="text-beige/30 text-sm">No hay profesores registrados</p>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                <User className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                <p className="text-gray-400 text-sm">No hay profesores registrados</p>
                 <Link href="/admin/profesores/nuevo" className="text-oro text-xs font-medium hover:underline mt-2 inline-block">
                   Crear profesor
                 </Link>
@@ -264,16 +264,16 @@ export default function NuevoCursoPage() {
                   onClick={() => setProfesorId("")}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
                     !profesorId
-                      ? "bg-white/[0.07] border-oro/30"
-                      : "bg-white/[0.02] border-white/10 hover:bg-white/5"
+                      ? "bg-white border-oro/30"
+                      : "bg-gray-50 border-gray-200 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-beige/20" />
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-gray-300" />
                   </div>
                   <div>
-                    <p className={`text-sm font-medium ${!profesorId ? "text-white" : "text-beige/40"}`}>Sin profesor asignado</p>
-                    <p className="text-beige/25 text-xs">Se puede asignar después</p>
+                    <p className={`text-sm font-medium ${!profesorId ? "text-gray-900" : "text-gray-400"}`}>Sin profesor asignado</p>
+                    <p className="text-gray-300 text-xs">Se puede asignar después</p>
                   </div>
                   {!profesorId && <Check className="w-4 h-4 text-oro ml-auto" />}
                 </button>
@@ -288,7 +288,7 @@ export default function NuevoCursoPage() {
                       className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
                         selected
                           ? "bg-purple-500/10 border-purple-500/30"
-                          : "bg-white/[0.02] border-white/10 hover:bg-white/5"
+                          : "bg-gray-50 border-gray-200 hover:bg-gray-50"
                       }`}
                     >
                       <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden"
@@ -296,16 +296,16 @@ export default function NuevoCursoPage() {
                         {p.avatar_url ? (
                           <img src={p.avatar_url} alt={p.nombre} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-full h-full flex items-center justify-center text-gray-900 font-bold text-sm">
                             {p.nombre.split(" ").pop()?.[0] || "?"}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-medium truncate ${selected ? "text-white" : "text-beige/60"}`}>{p.nombre}</p>
-                        <p className="text-beige/30 text-xs truncate">{p.especialidad_academica || p.email}</p>
+                        <p className={`text-sm font-medium truncate ${selected ? "text-gray-900" : "text-gray-500"}`}>{p.nombre}</p>
+                        <p className="text-gray-400 text-xs truncate">{p.especialidad_academica || p.email}</p>
                       </div>
-                      {selected && <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />}
+                      {selected && <Check className="w-4 h-4 text-purple-600 flex-shrink-0" />}
                     </button>
                   );
                 })}
@@ -327,45 +327,45 @@ export default function NuevoCursoPage() {
       {/* ═══ STEP 3: Confirmar ═══ */}
       {step === 3 && (
         <div className="space-y-4">
-          <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
             {/* Preview header */}
             {thumbnailUrl ? (
               <img src={thumbnailUrl} alt="Portada" className="w-full h-36 object-cover" />
             ) : (
               <div className="w-full h-24 bg-gradient-to-r from-purple-500/20 to-oro/20 flex items-center justify-center">
-                <GraduationCap className="w-10 h-10 text-white/20" />
+                <GraduationCap className="w-10 h-10 text-gray-900/20" />
               </div>
             )}
 
             <div className="p-5 space-y-4">
               <div>
-                <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Título</p>
-                <h2 className="text-white text-lg font-bold">{title}</h2>
+                <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Título</p>
+                <h2 className="text-gray-900 text-lg font-bold">{title}</h2>
               </div>
 
               {description && (
                 <div>
-                  <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Descripción</p>
-                  <p className="text-beige/60 text-sm leading-relaxed">{description}</p>
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Descripción</p>
+                  <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Precio</p>
-                  <p className={`text-sm font-bold ${parseFloat(price) === 0 ? "text-green-400" : "text-oro"}`}>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Precio</p>
+                  <p className={`text-sm font-bold ${parseFloat(price) === 0 ? "text-green-600" : "text-oro"}`}>
                     {formatPrice(price)}
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-1">Categoría</p>
-                  <p className="text-white text-sm font-medium">{selectedCat?.name || "Sin categoría"}</p>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1">Categoría</p>
+                  <p className="text-gray-900 text-sm font-medium">{selectedCat?.name || "Sin categoría"}</p>
                 </div>
               </div>
 
               {/* Profesor preview */}
-              <div className="bg-white/5 rounded-lg p-3">
-                <p className="text-beige/30 text-[10px] uppercase tracking-wider mb-2">Profesor</p>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-2">Profesor</p>
                 {selectedProfesor ? (
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden"
@@ -373,18 +373,18 @@ export default function NuevoCursoPage() {
                       {selectedProfesor.avatar_url ? (
                         <img src={selectedProfesor.avatar_url} alt={selectedProfesor.nombre} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-full h-full flex items-center justify-center text-gray-900 font-bold text-sm">
                           {selectedProfesor.nombre.split(" ").pop()?.[0] || "?"}
                         </div>
                       )}
                     </div>
                     <div>
-                      <p className="text-white text-sm font-medium">{selectedProfesor.nombre}</p>
-                      <p className="text-beige/40 text-xs">{selectedProfesor.especialidad_academica}</p>
+                      <p className="text-gray-900 text-sm font-medium">{selectedProfesor.nombre}</p>
+                      <p className="text-gray-400 text-xs">{selectedProfesor.especialidad_academica}</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-beige/40 text-sm">Sin profesor asignado</p>
+                  <p className="text-gray-400 text-sm">Sin profesor asignado</p>
                 )}
               </div>
             </div>

@@ -41,8 +41,8 @@ function ResetClaveForm() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 4) {
-      setError("La contraseña debe tener al menos 4 caracteres");
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
       return;
     }
     if (password !== confirm) {
@@ -101,7 +101,7 @@ function ResetClaveForm() {
                 type="password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                placeholder="Mínimo 4 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 required
                 className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
               />

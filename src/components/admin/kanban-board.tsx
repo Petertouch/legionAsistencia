@@ -67,7 +67,7 @@ export default function KanbanBoard({ area, abogadoFilter }: KanbanBoardProps) {
     return (
       <div className="flex gap-3 overflow-x-auto pb-4">
         {pipeline.stages.map((s) => (
-          <div key={s.name} className="min-w-[260px] w-[260px] bg-white/5 rounded-xl h-48 animate-pulse flex-shrink-0" />
+          <div key={s.name} className="min-w-[260px] w-[260px] bg-gray-50 rounded-xl h-48 animate-pulse flex-shrink-0" />
         ))}
       </div>
     );
@@ -88,14 +88,14 @@ export default function KanbanBoard({ area, abogadoFilter }: KanbanBoardProps) {
             className={`min-w-[260px] w-[260px] flex-shrink-0 rounded-xl border transition-colors ${
               dragOverStage === stage.name
                 ? "border-oro/40 bg-oro/5"
-                : "border-white/5 bg-white/[0.02]"
+                : "border-gray-100 bg-gray-50"
             } ${isCerrado ? "opacity-60" : ""}`}
           >
             {/* Column header */}
             <div className="px-3 pt-3 pb-2 flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${stage.color}`} />
-              <span className="text-white text-xs font-medium">{stage.name}</span>
-              <span className="text-beige/30 text-[10px] bg-white/5 px-1.5 py-px rounded-full">
+              <span className="text-gray-900 text-xs font-medium">{stage.name}</span>
+              <span className="text-gray-400 text-[10px] bg-gray-50 px-1.5 py-px rounded-full">
                 {cases.length}
               </span>
             </div>
@@ -103,7 +103,7 @@ export default function KanbanBoard({ area, abogadoFilter }: KanbanBoardProps) {
             {/* Cards */}
             <div className={`px-2 pb-2 space-y-2 ${isCerrado ? "max-h-40 overflow-y-auto" : "min-h-[100px]"}`}>
               {cases.length === 0 ? (
-                <div className="text-beige/20 text-xs text-center py-6">Sin casos</div>
+                <div className="text-gray-300 text-xs text-center py-6">Sin casos</div>
               ) : (
                 cases.map((caso) => (
                   <CaseCard

@@ -2,15 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMail } from "@/lib/mail";
+import { revokeAllUserSessions } from "@/lib/sessions";
+import bcrypt from "bcryptjs";
 
-const SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || "legion-fallback-secret-change-me-in-prod"
-);
+// Track used reset tokens (single-use)
+const usedResetTokens = new Set<string>();
+
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET environment variable is required");
+}
+const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://legionjuridica.com";
 
+// Rate limiting: 3 reset requests per 15 minutes per IP
+const resetAttempts = new Map<string, number[]>();
+const MAX_RESET_ATTEMPTS = 3;
+const RESET_WINDOW_MS = 15 * 60 * 1000;
+
+function isResetRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const attempts = (resetAttempts.get(ip) || []).filter((t) => now - t < RESET_WINDOW_MS);
+  resetAttempts.set(ip, attempts);
+  if (attempts.length >= MAX_RESET_ATTEMPTS) return true;
+  attempts.push(now);
+  resetAttempts.set(ip, attempts);
+  return false;
+}
+
 // ── POST: Solicitar reset (envía email con link) ──
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isResetRateLimited(ip)) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Espera 15 minutos." }, { status: 429 });
+  }
+
   try {
     const { identifier, type } = await request.json();
     // type: "cliente" (busca por cédula) o "admin" (busca por email)
@@ -34,8 +60,8 @@ export async function POST(request: NextRequest) {
         .single();
 
       // También verificar admin hardcodeado
-      const adminEmail = process.env.ADMIN_EMAIL || "a@a.com";
-      if (identifier.toLowerCase().trim() === adminEmail) {
+      const adminEmail = process.env.ADMIN_EMAIL ?? null;
+      if (adminEmail && identifier.toLowerCase().trim() === adminEmail) {
         // No revelamos si existe o no
         email = adminEmail;
         nombre = "Admin";
@@ -119,42 +145,57 @@ export async function PUT(request: NextRequest) {
   try {
     const { token, newPassword } = await request.json();
 
-    if (!token || !newPassword || newPassword.length < 4) {
-      return NextResponse.json({ error: "Contraseña debe tener al menos 4 caracteres" }, { status: 400 });
+    if (!token || !newPassword || newPassword.length < 8) {
+      return NextResponse.json({ error: "Contraseña debe tener al menos 8 caracteres" }, { status: 400 });
     }
 
     // Verificar token
     let payload;
+    let tokenJti: string | undefined;
     try {
       const result = await jwtVerify(token, SECRET);
-      payload = result.payload as { userId: string; type: string; email: string };
+      payload = result.payload as { userId: string; type: string; email: string; jti?: string };
+      tokenJti = result.payload.jti;
     } catch {
       return NextResponse.json({ error: "Enlace expirado o inválido. Solicita uno nuevo." }, { status: 401 });
+    }
+
+    // Single-use check
+    const tokenId = tokenJti || `${payload.userId}-${payload.type}`;
+    if (usedResetTokens.has(tokenId)) {
+      return NextResponse.json({ error: "Este enlace ya fue utilizado. Solicita uno nuevo." }, { status: 401 });
     }
 
     const supabase = createAdminClient();
 
     if (payload.type === "admin") {
-      // Actualizar en equipo
       if (payload.userId === "admin-1") {
-        // Admin hardcodeado — no se puede cambiar desde aquí
         return NextResponse.json({ error: "Contacta al administrador del sistema para cambiar esta contraseña" }, { status: 400 });
       }
+      const hashed = await bcrypt.hash(newPassword, 12);
       const { error } = await supabase
         .from("equipo")
-        .update({ password: newPassword })
+        .update({ password: hashed })
         .eq("id", payload.userId);
 
       if (error) throw error;
+
+      // Revoke all existing sessions for this user
+      await revokeAllUserSessions(payload.userId).catch(() => {});
     } else {
-      // Actualizar clave del suscriptor
+      const hashed = await bcrypt.hash(newPassword, 12);
       const { error } = await supabase
         .from("suscriptores")
-        .update({ clave: newPassword })
+        .update({ clave: hashed })
         .eq("id", payload.userId);
 
       if (error) throw error;
     }
+
+    // Mark token as used
+    usedResetTokens.add(tokenId);
+    // Auto-cleanup after 1 hour
+    setTimeout(() => usedResetTokens.delete(tokenId), 60 * 60 * 1000);
 
     return NextResponse.json({ ok: true, message: "Contraseña actualizada" });
   } catch (err) {

@@ -29,12 +29,12 @@ export default function ScriptPreview({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-purple-400 text-xs font-semibold uppercase tracking-wider">Previsualizar guion</span>
+          <span className="text-purple-600 text-xs font-semibold uppercase tracking-wider">Previsualizar guion</span>
         </div>
-        <h2 className="text-white text-lg font-bold">{lessonTitle}</h2>
-        <p className="text-beige/40 text-sm mt-1">
+        <h2 className="text-gray-900 text-lg font-bold">{lessonTitle}</h2>
+        <p className="text-gray-400 text-sm mt-1">
           {blocksWithText.length} {blocksWithText.length === 1 ? "escena" : "escenas"} · {totalWords} palabras · ~{totalMin > 0 ? `${totalMin} min ` : ""}{totalSec}s de video
         </p>
       </div>
@@ -48,16 +48,16 @@ export default function ScriptPreview({
           : null;
 
         return (
-          <div key={block.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div key={block.id} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
             {/* Scene header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
-              <span className="text-beige/50 text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">
                 Escena {idx + 1} de {blocksWithText.length}
               </span>
               <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
                 assignedSlide
-                  ? "bg-purple-500/15 text-purple-400"
-                  : "bg-white/5 text-beige/30"
+                  ? "bg-purple-500/15 text-purple-600"
+                  : "bg-gray-50 text-gray-400"
               }`}>
                 {assignedSlide ? `Diapositiva ${block.slide_number}` : "Avatar solo"}
               </span>
@@ -66,7 +66,7 @@ export default function ScriptPreview({
             {/* Slide preview (large) */}
             <div className="px-5 pt-4">
               {assignedSlide ? (
-                <div className="rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                <div className="rounded-lg overflow-hidden border border-gray-200 bg-black/30">
                   <img
                     src={assignedSlide.dataUrl}
                     alt={`Diapositiva ${block.slide_number}`}
@@ -74,10 +74,10 @@ export default function ScriptPreview({
                   />
                 </div>
               ) : (
-                <div className="rounded-lg border border-white/5 bg-[#0F1923] flex items-center justify-center py-12">
+                <div className="rounded-lg border border-gray-100 bg-[#0F1923] flex items-center justify-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <User className="w-12 h-12 text-beige/15" />
-                    <span className="text-beige/20 text-sm">Avatar solo — fondo oscuro</span>
+                    <span className="text-gray-300 text-sm">Avatar solo — fondo oscuro</span>
                   </div>
                 </div>
               )}
@@ -85,15 +85,15 @@ export default function ScriptPreview({
 
             {/* Script text (large, readable) */}
             <div className="px-5 py-4">
-              <p className="text-white text-base leading-relaxed whitespace-pre-wrap">
+              <p className="text-gray-900 text-base leading-relaxed whitespace-pre-wrap">
                 {block.text}
               </p>
             </div>
 
             {/* Scene footer */}
-            <div className="px-5 py-2.5 border-t border-white/5 flex items-center justify-between">
-              <span className="text-beige/25 text-xs">{wordCount} palabras</span>
-              <span className="text-beige/25 text-xs flex items-center gap-1">
+            <div className="px-5 py-2.5 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-gray-300 text-xs">{wordCount} palabras</span>
+              <span className="text-gray-300 text-xs flex items-center gap-1">
                 <Clock className="w-3 h-3" /> ~{seconds}s
               </span>
             </div>
@@ -102,25 +102,25 @@ export default function ScriptPreview({
       })}
 
       {/* Total time + action buttons */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-4">
         {/* Total time summary */}
         <div className="flex items-center justify-center gap-3 py-2">
           <Clock className="w-5 h-5 text-oro" />
           <div className="text-center">
-            <p className="text-white text-xl font-bold">
+            <p className="text-gray-900 text-xl font-bold">
               {totalMin > 0 ? `${totalMin} min ` : ""}{totalSec}s
             </p>
-            <p className="text-beige/40 text-xs">
+            <p className="text-gray-400 text-xs">
               Duración estimada del video · {blocksWithText.length} escenas · {totalWords} palabras
             </p>
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/10">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-200">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-beige/50 hover:text-white text-sm transition-colors"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 text-sm transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Volver a editar
           </button>

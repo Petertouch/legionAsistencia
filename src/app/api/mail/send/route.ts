@@ -4,7 +4,7 @@ import { sendMail, renderTemplate } from "@/lib/mail";
 export async function POST(request: NextRequest) {
   // Auth check (inyectado por middleware)
   const userRole = request.headers.get("x-user-role");
-  if (!userRole || !["admin", "abogado"].includes(userRole)) {
+  if (userRole !== "admin") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

@@ -70,7 +70,7 @@ function ConsultaSection() {
     if (!reg.nombre.trim() || !reg.cedula.trim() || !reg.email.trim() || !reg.clave.trim()) {
       setRegError("Completa todos los campos obligatorios"); return;
     }
-    if (reg.clave.length < 4) { setRegError("La clave debe tener al menos 4 caracteres"); return; }
+    if (reg.clave.length < 8) { setRegError("La clave debe tener al menos 8 caracteres"); return; }
 
     // Check if cedula already exists
     const existing = MOCK_SUSCRIPTORES.find((s) => s.cedula === reg.cedula.trim());

@@ -45,11 +45,11 @@ export default function NuevoCasoPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/casos" className="text-beige/40 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-        <h2 className="text-white text-xl font-bold">Nuevo Caso</h2>
+        <Link href="/admin/casos" className="text-gray-400 hover:text-gray-900 transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+        <h2 className="text-gray-900 text-xl font-bold">Nuevo Caso</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-5">
         <Input label="Título del caso" name="titulo" placeholder="Descargos falta en servicio..." required />
 
         <Select
@@ -69,19 +69,19 @@ export default function NuevoCasoPage() {
         />
 
         {/* Pipeline preview */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-          <p className="text-beige/50 text-xs mb-2">Pipeline: {pipeline.stages.length} etapas</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <p className="text-gray-500 text-xs mb-2">Pipeline: {pipeline.stages.length} etapas</p>
           <div className="flex flex-wrap gap-1.5">
             {pipeline.stages.map((stage, i) => (
               <div key={stage.name} className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${
-                i === 0 ? "bg-oro/20 text-oro border border-oro/30" : "bg-white/5 text-beige/30"
+                i === 0 ? "bg-amber-100 text-oro border border-oro/30" : "bg-gray-50 text-gray-400"
               }`}>
                 {i === 0 && <Check className="w-3 h-3" />}
                 {stage.name}
               </div>
             ))}
           </div>
-          <p className="text-beige/30 text-[10px] mt-2">El caso iniciara en &ldquo;{pipeline.stages[0].name}&rdquo;</p>
+          <p className="text-gray-400 text-[10px] mt-2">El caso iniciara en &ldquo;{pipeline.stages[0].name}&rdquo;</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -99,9 +99,9 @@ export default function NuevoCasoPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-beige/80">Descripción</label>
+          <label className="block text-sm font-medium text-gray-600">Descripción</label>
           <textarea name="descripcion" rows={4} placeholder="Describa el caso..." required
-            className="w-full bg-white/5 border border-white/10 text-white placeholder-beige/30 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-oro/50 focus:ring-1 focus:ring-oro/20 transition-colors resize-none" />
+            className="w-full bg-white border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-oro/50 focus:ring-1 focus:ring-oro/20 transition-colors resize-none" />
         </div>
 
         <Input label="Fecha limite (deadline)" name="fecha_limite" type="date" />

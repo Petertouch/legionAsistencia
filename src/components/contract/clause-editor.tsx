@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronUp, ChevronDown, Trash2, Plus, GripVertical } from "lucide-react";
+import { useRef } from "react";
+import { ChevronUp, ChevronDown, Trash2, Plus, GripVertical, Bold } from "lucide-react";
 
 export interface Clausula {
   titulo: string;
@@ -14,10 +15,29 @@ interface ClauseEditorProps {
 }
 
 export default function ClauseEditor({ clausulas, onChange, sectionLabel }: ClauseEditorProps) {
+  const textareaRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+
   const update = (index: number, field: keyof Clausula, value: string) => {
     const updated = [...clausulas];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
+  };
+
+  const wrapBold = (index: number) => {
+    const ta = textareaRefs.current[index];
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = ta.value.slice(0, start);
+    const selected = ta.value.slice(start, end) || "texto";
+    const after = ta.value.slice(end);
+    const newValue = `${before}**${selected}**${after}`;
+    update(index, "contenido", newValue);
+    // Restore selection inside the bold markers
+    setTimeout(() => {
+      ta.focus();
+      ta.setSelectionRange(start + 2, start + 2 + selected.length);
+    }, 0);
   };
 
   const moveUp = (index: number) => {
@@ -45,14 +65,14 @@ export default function ClauseEditor({ clausulas, onChange, sectionLabel }: Clau
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-bold text-sm">{sectionLabel}</h3>
-        <span className="text-beige/30 text-xs">{clausulas.length} cláusulas</span>
+        <h3 className="text-gray-900 font-bold text-sm">{sectionLabel}</h3>
+        <span className="text-gray-400 text-xs">{clausulas.length} cláusulas</span>
       </div>
 
       {clausulas.map((c, i) => (
         <div
           key={i}
-          className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 group hover:border-white/20 transition-colors"
+          className="bg-white border border-gray-200 rounded-xl p-4 space-y-2 group hover:border-gray-300 transition-colors shadow-sm"
         >
           <div className="flex items-start gap-2">
             <div className="flex flex-col gap-0.5 pt-1 flex-shrink-0">
@@ -60,16 +80,16 @@ export default function ClauseEditor({ clausulas, onChange, sectionLabel }: Clau
                 type="button"
                 onClick={() => moveUp(i)}
                 disabled={i === 0}
-                className="p-0.5 text-beige/30 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronUp className="w-4 h-4" />
               </button>
-              <GripVertical className="w-4 h-4 text-beige/15 mx-auto" />
+              <GripVertical className="w-4 h-4 text-gray-300 mx-auto" />
               <button
                 type="button"
                 onClick={() => moveDown(i)}
                 disabled={i >= clausulas.length - 1}
-                className="p-0.5 text-beige/30 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -80,14 +100,28 @@ export default function ClauseEditor({ clausulas, onChange, sectionLabel }: Clau
                 type="text"
                 value={c.titulo}
                 onChange={(e) => update(i, "titulo", e.target.value)}
-                className="w-full bg-white/5 text-oro font-bold text-xs px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                className="w-full bg-gray-50 text-oro font-bold text-xs px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none"
                 placeholder="Título de la cláusula"
               />
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => wrapBold(i)}
+                  title="Negrilla (selecciona texto y haz click)"
+                  className="px-2 py-1 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <Bold className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-gray-400 text-[10px]">
+                  Usa <code className="bg-gray-100 px-1 rounded">**texto**</code> para negrilla · Enter para nueva línea
+                </span>
+              </div>
               <textarea
+                ref={(el) => { textareaRefs.current[i] = el; }}
                 value={c.contenido}
                 onChange={(e) => update(i, "contenido", e.target.value)}
-                rows={3}
-                className="w-full bg-white/5 text-beige/70 text-xs px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none resize-y leading-relaxed"
+                rows={4}
+                className="w-full bg-gray-50 text-gray-700 text-xs px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none resize-y leading-relaxed font-mono"
                 placeholder="Contenido de la cláusula..."
               />
             </div>
@@ -95,7 +129,7 @@ export default function ClauseEditor({ clausulas, onChange, sectionLabel }: Clau
             <button
               type="button"
               onClick={() => remove(i)}
-              className="p-1.5 text-beige/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+              className="p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -106,7 +140,7 @@ export default function ClauseEditor({ clausulas, onChange, sectionLabel }: Clau
       <button
         type="button"
         onClick={add}
-        className="w-full border-2 border-dashed border-white/10 hover:border-oro/30 rounded-xl py-3 flex items-center justify-center gap-2 text-beige/40 hover:text-oro text-xs font-medium transition-colors"
+        className="w-full border-2 border-dashed border-gray-200 hover:border-oro/40 rounded-xl py-3 flex items-center justify-center gap-2 text-gray-500 hover:text-oro text-xs font-medium transition-colors"
       >
         <Plus className="w-4 h-4" /> Agregar cláusula
       </button>

@@ -18,8 +18,8 @@ export default function StageChecklist({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-white text-sm font-bold">Tareas — {stage.name}</h4>
-        <span className="text-beige/40 text-xs">{done}/{stage.checklist.length} completadas</span>
+        <h4 className="text-gray-900 text-sm font-bold">Tareas — {stage.name}</h4>
+        <span className="text-gray-400 text-xs">{done}/{stage.checklist.length} completadas</span>
       </div>
       <div className="space-y-1.5">
         {stage.checklist.map((item) => {
@@ -29,17 +29,17 @@ export default function StageChecklist({
               key={item.key}
               onClick={() => onToggle?.(item.key, !checked)}
               className={`flex items-start gap-2.5 w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                checked ? "bg-green-500/5 hover:bg-green-500/10" : "bg-white/5 hover:bg-white/10"
+                checked ? "bg-green-500/5 hover:bg-green-500/10" : "bg-gray-50 hover:bg-gray-100"
               }`}
             >
               {checked ? (
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
               ) : (
-                <Circle className="w-4 h-4 text-beige/30 mt-0.5 flex-shrink-0" />
+                <Circle className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
               )}
-              <span className={`text-sm ${checked ? "text-green-400/80 line-through" : "text-beige/70"}`}>
+              <span className={`text-sm ${checked ? "text-green-600/80 line-through" : "text-gray-600"}`}>
                 {item.label}
-                {item.required && !checked && <span className="text-red-400 ml-1">*</span>}
+                {item.required && !checked && <span className="text-red-600 ml-1">*</span>}
               </span>
             </button>
           );

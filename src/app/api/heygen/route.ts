@@ -245,6 +245,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "heygen_video_url requerido" }, { status: 400 });
     }
 
+    // SSRF protection: only allow HeyGen domains
+    try {
+      const url = new URL(heygen_video_url);
+      const allowed = ["heygen.com", "api.heygen.com", "files.heygen.ai", "resource.heygen.com"];
+      if (!allowed.some((d) => url.hostname === d || url.hostname.endsWith(`.${d}`))) {
+        return NextResponse.json({ error: "URL no permitida — solo dominios HeyGen" }, { status: 400 });
+      }
+      if (url.protocol !== "https:") {
+        return NextResponse.json({ error: "Solo HTTPS permitido" }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: "URL inválida" }, { status: 400 });
+    }
+
     // 1. Download video from HeyGen
     const videoRes = await fetch(heygen_video_url);
     if (!videoRes.ok) {

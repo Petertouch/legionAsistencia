@@ -22,8 +22,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const inputCls = "w-full bg-white/5 border border-white/10 text-white text-sm px-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40";
-const labelCls = "text-beige/60 text-xs font-medium mb-1.5 block";
+const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40";
+const labelCls = "text-gray-500 text-xs font-medium mb-1.5 block";
 
 export default function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -327,10 +327,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/admin/cursos" className="p-2 rounded-lg text-beige/40 hover:text-white hover:bg-white/5 transition-colors">
+          <Link href="/admin/cursos" className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-white text-lg font-bold truncate">{course.title}</h1>
+          <h1 className="text-gray-900 text-lg font-bold truncate">{course.title}</h1>
         </div>
         <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
           <Save className="w-4 h-4" /> Guardar
@@ -338,7 +338,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* ── Course Info ── */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 space-y-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 md:p-6 space-y-4">
         <div>
           <label className={labelCls}>Título</label>
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
@@ -359,9 +359,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <div>
             <label className={labelCls}>Estado</label>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${inputCls} appearance-none`}>
-              <option value="DRAFT" className="bg-jungle-dark">Borrador</option>
-              <option value="PUBLISHED" className="bg-jungle-dark">Publicado</option>
-              <option value="DISABLED" className="bg-jungle-dark">Deshabilitado</option>
+              <option value="DRAFT" className="bg-white">Borrador</option>
+              <option value="PUBLISHED" className="bg-white">Publicado</option>
+              <option value="DISABLED" className="bg-white">Deshabilitado</option>
             </select>
           </div>
           <div>
@@ -369,18 +369,18 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             {!showNewCat ? (
               <div className="flex gap-1">
                 <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={`${inputCls} appearance-none flex-1`}>
-                  <option value="" className="bg-jungle-dark">—</option>
+                  <option value="" className="bg-white">—</option>
                   {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id} className="bg-jungle-dark">{cat.name}</option>
+                    <option key={cat.id} value={cat.id} className="bg-white">{cat.name}</option>
                   ))}
                 </select>
-                <button onClick={() => setShowNewCat(true)} className="p-2 text-beige/40 hover:text-oro transition-colors"><Plus className="w-4 h-4" /></button>
+                <button onClick={() => setShowNewCat(true)} className="p-2 text-gray-400 hover:text-oro transition-colors"><Plus className="w-4 h-4" /></button>
               </div>
             ) : (
               <div className="flex gap-1">
                 <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Nueva" className={`${inputCls} flex-1`} />
                 <Button size="sm" onClick={() => createCatMutation.mutate()} disabled={!newCategory.trim()}>OK</Button>
-                <button onClick={() => setShowNewCat(false)} className="text-beige/40 hover:text-white text-xs px-1">✕</button>
+                <button onClick={() => setShowNewCat(false)} className="text-gray-400 hover:text-gray-900 text-xs px-1">✕</button>
               </div>
             )}
           </div>
@@ -392,33 +392,33 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         <div>
           <label className={labelCls}>Profesor</label>
           {profesores.length === 0 ? (
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between">
-              <p className="text-beige/30 text-xs">No hay profesores registrados</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+              <p className="text-gray-400 text-xs">No hay profesores registrados</p>
               <Link href="/admin/profesores/nuevo" className="text-oro text-xs font-medium hover:underline">Crear profesor</Link>
             </div>
           ) : (
             <div className="space-y-2">
               <select value={profesorId} onChange={(e) => setProfesorId(e.target.value)} className={`${inputCls} appearance-none`}>
-                <option value="" className="bg-jungle-dark">Sin profesor asignado</option>
+                <option value="" className="bg-white">Sin profesor asignado</option>
                 {profesores.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-jungle-dark">{p.nombre} — {p.especialidad_academica}</option>
+                  <option key={p.id} value={p.id} className="bg-white">{p.nombre} — {p.especialidad_academica}</option>
                 ))}
               </select>
               {selectedProfesor && (
-                <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3">
+                <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden"
                     style={{ backgroundColor: selectedProfesor.avatar_url ? "transparent" : selectedProfesor.color }}>
                     {selectedProfesor.avatar_url ? (
                       <img src={selectedProfesor.avatar_url} alt={selectedProfesor.nombre} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-full h-full flex items-center justify-center text-gray-900 font-bold text-sm">
                         {selectedProfesor.nombre.split(" ").pop()?.[0] || "?"}
                       </div>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{selectedProfesor.nombre}</p>
-                    <p className="text-beige/40 text-xs truncate">{selectedProfesor.especialidad_academica}</p>
+                    <p className="text-gray-900 text-sm font-medium truncate">{selectedProfesor.nombre}</p>
+                    <p className="text-gray-400 text-xs truncate">{selectedProfesor.especialidad_academica}</p>
                   </div>
                 </div>
               )}
@@ -430,23 +430,23 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       {/* ── Modules & Lessons ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-sm font-bold">Módulos y lecciones</h2>
+          <h2 className="text-gray-900 text-sm font-bold">Módulos y lecciones</h2>
         </div>
 
         {modules?.map((mod) => (
-          <div key={mod.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div key={mod.id} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
             {/* Module header */}
             <div
-              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => setExpandedModule(expandedModule === mod.id ? null : mod.id)}
             >
-              <GripVertical className="w-4 h-4 text-beige/20 flex-shrink-0" />
-              {expandedModule === mod.id ? <ChevronDown className="w-4 h-4 text-beige/40" /> : <ChevronRight className="w-4 h-4 text-beige/40" />}
-              <span className="text-white text-sm font-medium flex-1">{mod.title}</span>
-              <span className="text-beige/40 text-xs">{mod.lessons?.length || 0} lecciones</span>
+              <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              {expandedModule === mod.id ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+              <span className="text-gray-900 text-sm font-medium flex-1">{mod.title}</span>
+              <span className="text-gray-400 text-xs">{mod.lessons?.length || 0} lecciones</span>
               <button
                 onClick={(e) => { e.stopPropagation(); if (confirm("¿Eliminar módulo y sus lecciones?")) deleteModuleMutation.mutate(mod.id); }}
-                className="p-1.5 text-beige/30 hover:text-red-400 transition-colors"
+                className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -454,27 +454,27 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
             {/* Lessons */}
             {expandedModule === mod.id && (
-              <div className="border-t border-white/10">
+              <div className="border-t border-gray-200">
                 {mod.lessons?.map((lesson) => (
-                  <div key={lesson.id} className="border-b border-white/5 last:border-0">
+                  <div key={lesson.id} className="border-b border-gray-100 last:border-0">
                     {/* Collapsed view */}
                     {inlineEditId !== lesson.id ? (
-                      <div className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                      <div className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-gray-50 transition-colors group cursor-pointer"
                         onClick={() => openEditLesson(lesson, mod.id)}>
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {lesson.video_url ? <Video className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" /> : <FileText className="w-3.5 h-3.5 text-beige/30 flex-shrink-0" />}
-                          <span className="text-beige/70 text-sm truncate">{lesson.title}</span>
-                          {lesson.is_free && <span className="text-[9px] font-bold text-green-400 bg-green-500/15 px-1.5 py-0.5 rounded-full">GRATIS</span>}
-                          {lesson.quiz && <span className="text-[9px] font-bold text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><HelpCircle className="w-2.5 h-2.5" />QUIZ</span>}
+                          {lesson.video_url ? <Video className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" /> : <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />}
+                          <span className="text-gray-600 text-sm truncate">{lesson.title}</span>
+                          {lesson.is_free && <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">GRATIS</span>}
+                          {lesson.quiz && <span className="text-[9px] font-bold text-purple-600 bg-purple-500/15 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><HelpCircle className="w-2.5 h-2.5" />QUIZ</span>}
                         </div>
-                        {lesson.duration > 0 && <span className="text-beige/30 text-xs">{lesson.duration}min</span>}
+                        {lesson.duration > 0 && <span className="text-gray-400 text-xs">{lesson.duration}min</span>}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {!lesson.quiz && (
-                            <button onClick={(e) => { e.stopPropagation(); openNewQuiz(lesson); }} className="p-1.5 text-beige/30 hover:text-purple-400 transition-colors" title="Agregar quiz">
+                            <button onClick={(e) => { e.stopPropagation(); openNewQuiz(lesson); }} className="p-1.5 text-gray-400 hover:text-purple-600 transition-colors" title="Agregar quiz">
                               <HelpCircle className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          <button onClick={(e) => { e.stopPropagation(); if (confirm("¿Eliminar lección?")) deleteLessonMutation.mutate(lesson.id); }} className="p-1.5 text-beige/30 hover:text-red-400 transition-colors" title="Eliminar">
+                          <button onClick={(e) => { e.stopPropagation(); if (confirm("¿Eliminar lección?")) deleteLessonMutation.mutate(lesson.id); }} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors" title="Eliminar">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -495,7 +495,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             <div className="flex items-center gap-2 mb-2">
                               <button
                                 onClick={() => setShowHeyGen(false)}
-                                className="text-beige/40 hover:text-white text-xs flex items-center gap-1 transition-colors"
+                                className="text-gray-400 hover:text-gray-900 text-xs flex items-center gap-1 transition-colors"
                               >
                                 ← Volver al preview
                               </button>
@@ -512,7 +512,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                               }}
                             />
                             <div className="flex items-center gap-2 pt-2">
-                              <button onClick={() => { setPreviewMode(false); setShowHeyGen(false); }} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Volver a editar</button>
+                              <button onClick={() => { setPreviewMode(false); setShowHeyGen(false); }} className="text-gray-400 text-xs hover:text-gray-900 transition-colors px-3 py-1.5">Volver a editar</button>
                               <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
                                 <Save className="w-3.5 h-3.5" /> Guardar lección
                               </Button>
@@ -547,7 +547,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         </div>
 
                         {/* Guión del profesor — Block editor */}
-                        <div className="border-t border-white/10 pt-3 mt-1">
+                        <div className="border-t border-gray-200 pt-3 mt-1">
                           <ScriptBlockEditor
                             blocks={lessonForm.script_blocks}
                             onChange={(blocks) => setLessonForm({ ...lessonForm, script_blocks: blocks })}
@@ -560,17 +560,17 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         </div>
 
                         <div className="flex items-center justify-between pt-1">
-                          <label className="flex items-center gap-2 text-sm text-beige/60 cursor-pointer">
+                          <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
                             <input type="checkbox" checked={lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} className="accent-oro" />
                             Lección gratuita (preview)
                           </label>
                           <div className="flex items-center gap-2">
                             {lessonForm.script_blocks.filter((b) => b.text.trim()).length > 0 && (
-                              <Button size="sm" variant="ghost" onClick={() => setPreviewMode(true)} className="text-purple-400 hover:text-purple-300 border-purple-500/30">
+                              <Button size="sm" variant="ghost" onClick={() => setPreviewMode(true)} className="text-purple-600 hover:text-purple-300 border-purple-500/30">
                                 <Eye className="w-3.5 h-3.5" /> Previsualizar guión
                               </Button>
                             )}
-                            <button onClick={cancelInlineEdit} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Cancelar</button>
+                            <button onClick={cancelInlineEdit} className="text-gray-400 text-xs hover:text-gray-900 transition-colors px-3 py-1.5">Cancelar</button>
                             <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
                               <Save className="w-3.5 h-3.5" /> {saveLessonMutation.isPending ? "Guardando..." : "Guardar"}
                             </Button>
@@ -583,22 +583,22 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
                 {/* Quiz questions inline (if expanded module has quizzes) */}
                 {mod.lessons?.filter((l) => l.quiz && l.quiz.questions && l.quiz.questions.length > 0).map((lesson) => (
-                  <div key={`quiz-${lesson.id}`} className="px-4 py-2 pl-16 border-t border-white/5 bg-purple-500/[0.03]">
+                  <div key={`quiz-${lesson.id}`} className="px-4 py-2 pl-16 border-t border-gray-100 bg-purple-50">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-purple-400 text-xs font-medium">{lesson.quiz!.title} — {lesson.quiz!.questions!.length} preguntas (min {lesson.quiz!.passing_score}%)</span>
+                      <span className="text-purple-600 text-xs font-medium">{lesson.quiz!.title} — {lesson.quiz!.questions!.length} preguntas (min {lesson.quiz!.passing_score}%)</span>
                       <div className="flex gap-1">
-                        <button onClick={() => openQuestionModal(lesson.quiz!)} className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors">+ Pregunta</button>
-                        <button onClick={() => { if (confirm("¿Eliminar quiz completo?")) deleteQuizMutation.mutate(lesson.quiz!.id); }} className="text-[10px] text-red-400/60 hover:text-red-400 transition-colors ml-2">Eliminar quiz</button>
+                        <button onClick={() => openQuestionModal(lesson.quiz!)} className="text-[10px] text-purple-600 hover:text-purple-300 transition-colors">+ Pregunta</button>
+                        <button onClick={() => { if (confirm("¿Eliminar quiz completo?")) deleteQuizMutation.mutate(lesson.quiz!.id); }} className="text-[10px] text-red-600/60 hover:text-red-600 transition-colors ml-2">Eliminar quiz</button>
                       </div>
                     </div>
                     {lesson.quiz!.questions!.map((q, qi) => (
                       <div key={q.id} className="flex items-start gap-2 py-1 text-xs group/q">
-                        <span className="text-beige/30 mt-0.5">{qi + 1}.</span>
-                        <span className="text-beige/50 flex-1">{q.question}</span>
-                        <span className="text-green-400/60">{q.options[q.correct_option_index]}</span>
+                        <span className="text-gray-400 mt-0.5">{qi + 1}.</span>
+                        <span className="text-gray-500 flex-1">{q.question}</span>
+                        <span className="text-green-600/60">{q.options[q.correct_option_index]}</span>
                         <div className="flex gap-1 opacity-0 group-hover/q:opacity-100 transition-opacity">
-                          <button onClick={() => openQuestionModal(lesson.quiz!, q)} className="text-beige/30 hover:text-oro transition-colors">edit</button>
-                          <button onClick={() => { if (confirm("¿Eliminar pregunta?")) deleteQuestionMutation.mutate(q.id); }} className="text-beige/30 hover:text-red-400 transition-colors">del</button>
+                          <button onClick={() => openQuestionModal(lesson.quiz!, q)} className="text-gray-400 hover:text-oro transition-colors">edit</button>
+                          <button onClick={() => { if (confirm("¿Eliminar pregunta?")) deleteQuestionMutation.mutate(q.id); }} className="text-gray-400 hover:text-red-600 transition-colors">del</button>
                         </div>
                       </div>
                     ))}
@@ -632,7 +632,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
 
                     {/* Guión del profesor — Block editor */}
-                    <div className="border-t border-white/10 pt-3 mt-1">
+                    <div className="border-t border-gray-200 pt-3 mt-1">
                       <ScriptBlockEditor
                         blocks={lessonForm.script_blocks}
                         onChange={(blocks) => setLessonForm({ ...lessonForm, script_blocks: blocks })}
@@ -658,12 +658,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     )}
 
                     <div className="flex items-center justify-between pt-1">
-                      <label className="flex items-center gap-2 text-sm text-beige/60 cursor-pointer">
+                      <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
                         <input type="checkbox" checked={lessonForm.is_free} onChange={(e) => setLessonForm({ ...lessonForm, is_free: e.target.checked })} className="accent-oro" />
                         Lección gratuita (preview)
                       </label>
                       <div className="flex items-center gap-2">
-                        <button onClick={cancelInlineEdit} className="text-beige/40 text-xs hover:text-white transition-colors px-3 py-1.5">Cancelar</button>
+                        <button onClick={cancelInlineEdit} className="text-gray-400 text-xs hover:text-gray-900 transition-colors px-3 py-1.5">Cancelar</button>
                         <Button size="sm" onClick={saveAndClose} disabled={!lessonForm.title.trim() || saveLessonMutation.isPending}>
                           <Plus className="w-3.5 h-3.5" /> {saveLessonMutation.isPending ? "Creando..." : "Crear lección"}
                         </Button>
@@ -673,7 +673,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 ) : (
                   <button
                     onClick={() => openNewLesson(mod.id)}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 pl-12 text-beige/40 hover:text-oro text-xs hover:bg-white/[0.03] transition-colors"
+                    className="flex items-center gap-2 w-full px-4 py-2.5 pl-12 text-gray-400 hover:text-oro text-xs hover:bg-gray-50 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> Agregar lección
                   </button>
@@ -769,7 +769,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 />
               </div>
             ))}
-            <p className="text-beige/30 text-xs">Selecciona el radio de la respuesta correcta</p>
+            <p className="text-gray-400 text-xs">Selecciona el radio de la respuesta correcta</p>
           </div>
         </div>
       </Modal>

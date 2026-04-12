@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { getComisionLanza } from "@/lib/config";
 import { toast } from "sonner";
 import { UserPlus, Check } from "lucide-react";
@@ -12,13 +11,6 @@ function formatMoney(n: number) {
 }
 
 const RAMAS = ["Ejército", "Policía", "Armada", "Fuerza Aérea", "Civil", "Otro"];
-
-function generateCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
 
 export default function LanzaRegistroPage() {
   const router = useRouter();
@@ -44,45 +36,30 @@ export default function LanzaRegistroPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const supabase = createClient();
 
-    // Check duplicate cedula
-    const { data: existing } = await supabase
-      .from("lanzas")
-      .select("id")
-      .eq("cedula", form.cedula.trim())
-      .single();
+    try {
+      const res = await fetch("/api/aliados/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, tipo: "lanza" }),
+      });
 
-    if (existing) {
-      toast.error("Ya existe un Lanza con esa cédula. Ingresa desde el portal.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Error al registrar");
+        setSubmitting(false);
+        return;
+      }
+
+      setCode(data.code);
+      setSuccess(true);
       setSubmitting(false);
-      return;
-    }
-
-    const newCode = generateCode();
-    const { error } = await supabase.from("lanzas").insert({
-      code: newCode,
-      nombre: form.nombre.trim(),
-      cedula: form.cedula.trim(),
-      telefono: form.telefono.trim(),
-      email: form.email.trim(),
-      ciudad: form.ciudad.trim(),
-      rama: form.rama,
-      rango: form.rango.trim(),
-      suscriptor_id: null,
-      status: "activo",
-    });
-
-    if (error) {
-      toast.error("Error al registrar. Intenta de nuevo.");
+      toast.success("¡Registro exitoso!");
+    } catch {
+      toast.error("Error de conexión");
       setSubmitting(false);
-      return;
     }
-
-    setCode(newCode);
-    setSuccess(true);
-    setSubmitting(false);
-    toast.success("¡Registro exitoso!");
   };
 
   if (success) {

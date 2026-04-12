@@ -306,8 +306,8 @@ function BlockEditor({ block, onChange }: { block: EmailBlock; onChange: (b: Ema
   const update = (field: string, value: string) => {
     onChange({ ...block, props: { ...block.props, [field]: value } });
   };
-  const inputCls = "w-full bg-white/5 border border-white/10 text-white text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-oro/40";
-  const labelCls = "text-beige/40 text-[10px] uppercase tracking-wider mb-1 block";
+  const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-oro/40";
+  const labelCls = "text-gray-400 text-[10px] uppercase tracking-wider mb-1 block";
 
   return (
     <div className="space-y-2.5">
@@ -580,10 +580,10 @@ export default function MailBuilder() {
           <select
             value={selectedTemplate}
             onChange={(e) => loadFromTemplate(e.target.value)}
-            className="bg-white/5 border border-white/10 text-white text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-oro/40 max-w-[220px]"
+            className="bg-gray-50 border border-gray-200 text-gray-900 text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-oro/40 max-w-[220px]"
           >
             {templates.map((t) => (
-              <option key={t.id} value={t.id} className="bg-jungle-dark">{t.nombre}</option>
+              <option key={t.id} value={t.id} className="bg-white">{t.nombre}</option>
             ))}
           </select>
         </div>
@@ -591,7 +591,7 @@ export default function MailBuilder() {
           <button
             onClick={() => { setShowPreview(!showPreview); setShowCode(false); }}
             className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-              showPreview ? "bg-oro/15 text-oro border-oro/30" : "text-beige/40 border-white/10 hover:text-white"
+              showPreview ? "bg-amber-100 text-oro border-oro/30" : "text-gray-400 border-gray-200 hover:text-gray-900"
             }`}
           >
             <Eye className="w-3.5 h-3.5" /> Preview
@@ -599,7 +599,7 @@ export default function MailBuilder() {
           <button
             onClick={() => { setShowCode(!showCode); setShowPreview(false); }}
             className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-              showCode ? "bg-oro/15 text-oro border-oro/30" : "text-beige/40 border-white/10 hover:text-white"
+              showCode ? "bg-amber-100 text-oro border-oro/30" : "text-gray-400 border-gray-200 hover:text-gray-900"
             }`}
           >
             <Code className="w-3.5 h-3.5" /> HTML
@@ -612,34 +612,34 @@ export default function MailBuilder() {
 
       {/* Preview / Code */}
       {showPreview && (
-        <div className="bg-[#111] border border-white/10 rounded-xl p-6 overflow-auto">
+        <div className="bg-[#111] border border-gray-200 rounded-xl p-6 overflow-auto">
           <div dangerouslySetInnerHTML={{ __html: fullHtml }} />
         </div>
       )}
       {showCode && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 overflow-auto max-h-[300px]">
-          <pre className="text-xs text-beige/60 font-mono whitespace-pre-wrap break-all">{fullHtml}</pre>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 overflow-auto max-h-[300px]">
+          <pre className="text-xs text-gray-500 font-mono whitespace-pre-wrap break-all">{fullHtml}</pre>
         </div>
       )}
 
       {/* Builder: 3-column layout */}
       <div className="grid grid-cols-12 gap-3" style={{ minHeight: "500px" }}>
         {/* Left: Block catalog */}
-        <div className="col-span-3 bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
-          <p className="text-beige/40 text-[10px] uppercase tracking-wider font-medium mb-2">Bloques</p>
+        <div className="col-span-3 bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
+          <p className="text-gray-400 text-[10px] uppercase tracking-wider font-medium mb-2">Bloques</p>
           {BLOCK_CATALOG.map(({ type, label, icon: Icon, description }) => (
             <div
               key={type}
               draggable
               onDragStart={(e) => handleCatalogDragStart(e, type)}
-              className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 cursor-grab hover:bg-white/[0.07] hover:border-white/20 transition-colors active:cursor-grabbing"
+              className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gray-50 border border-gray-200 cursor-grab hover:bg-white hover:border-gray-200 transition-colors active:cursor-grabbing"
             >
-              <div className="w-7 h-7 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded bg-gray-50 flex items-center justify-center flex-shrink-0">
                 <Icon className="w-3.5 h-3.5 text-oro/70" />
               </div>
               <div className="min-w-0">
-                <p className="text-white text-xs font-medium">{label}</p>
-                <p className="text-beige/30 text-[10px] truncate">{description}</p>
+                <p className="text-gray-900 text-xs font-medium">{label}</p>
+                <p className="text-gray-400 text-[10px] truncate">{description}</p>
               </div>
             </div>
           ))}
@@ -647,15 +647,15 @@ export default function MailBuilder() {
 
         {/* Center: Canvas */}
         <div
-          className="col-span-6 bg-white/5 border border-white/10 rounded-xl p-4 overflow-y-auto"
+          className="col-span-6 bg-gray-50 border border-gray-200 rounded-xl p-4 overflow-y-auto"
           onDragOver={handleCanvasDragOver}
           onDrop={handleCanvasDrop}
         >
           {blocks.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-16">
               <Plus className="w-8 h-8 text-beige/15 mb-3" />
-              <p className="text-beige/30 text-sm">Arrastra bloques aquí</p>
-              <p className="text-beige/20 text-xs mt-1">o haz click en + para agregar</p>
+              <p className="text-gray-400 text-sm">Arrastra bloques aquí</p>
+              <p className="text-gray-300 text-xs mt-1">o haz click en + para agregar</p>
             </div>
           ) : (
             <div className="space-y-0">
@@ -684,29 +684,29 @@ export default function MailBuilder() {
                           ? "opacity-30"
                           : isSelected
                           ? "border-oro/40 bg-white/[0.05]"
-                          : "border-transparent hover:border-white/20 bg-transparent"
+                          : "border-transparent hover:border-gray-200 bg-transparent"
                       }`}
                     >
                       {/* Block toolbar (visible on hover or selected) */}
-                      <div className={`absolute -top-2.5 right-2 flex items-center gap-0.5 bg-jungle-dark border border-white/15 rounded-md px-0.5 py-0.5 z-10 ${
+                      <div className={`absolute -top-2.5 right-2 flex items-center gap-0.5 bg-white border border-gray-200 rounded-md px-0.5 py-0.5 z-10 ${
                         isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                       } transition-opacity`}>
-                        <button onClick={(e) => { e.stopPropagation(); moveBlock(index, -1); }} className="p-0.5 text-beige/40 hover:text-white" title="Subir">
+                        <button onClick={(e) => { e.stopPropagation(); moveBlock(index, -1); }} className="p-0.5 text-gray-400 hover:text-gray-900" title="Subir">
                           <ChevronUp className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); moveBlock(index, 1); }} className="p-0.5 text-beige/40 hover:text-white" title="Bajar">
+                        <button onClick={(e) => { e.stopPropagation(); moveBlock(index, 1); }} className="p-0.5 text-gray-400 hover:text-gray-900" title="Bajar">
                           <ChevronDown className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }} className="p-0.5 text-beige/40 hover:text-red-400" title="Eliminar">
+                        <button onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }} className="p-0.5 text-gray-400 hover:text-red-600" title="Eliminar">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       {/* Grip + type label */}
                       <div className="flex items-center gap-1.5 px-2 pt-2 pb-1">
-                        <GripVertical className="w-3 h-3 text-beige/20 cursor-grab" />
-                        <BlockIcon className="w-3 h-3 text-beige/25" />
-                        <span className="text-beige/25 text-[9px] uppercase tracking-wider">
+                        <GripVertical className="w-3 h-3 text-gray-300 cursor-grab" />
+                        <BlockIcon className="w-3 h-3 text-gray-300" />
+                        <span className="text-gray-300 text-[9px] uppercase tracking-wider">
                           {BLOCK_CATALOG.find((c) => c.type === block.type)?.label}
                         </span>
                       </div>
@@ -724,7 +724,7 @@ export default function MailBuilder() {
                     <div className="flex justify-center py-1 opacity-0 group-hover:opacity-100 hover:!opacity-100 transition-opacity">
                       <button
                         onClick={() => addBlockAt("text", index)}
-                        className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-beige/30 hover:text-oro hover:border-oro/30 transition-colors"
+                        className="w-5 h-5 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-oro hover:border-oro/30 transition-colors"
                         title="Agregar bloque"
                       >
                         <Plus className="w-3 h-3" />
@@ -738,12 +738,12 @@ export default function MailBuilder() {
         </div>
 
         {/* Right: Properties panel */}
-        <div className="col-span-3 bg-white/5 border border-white/10 rounded-xl p-3">
+        <div className="col-span-3 bg-gray-50 border border-gray-200 rounded-xl p-3">
           {currentBlock ? (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-beige/40 text-[10px] uppercase tracking-wider font-medium">Propiedades</p>
-                <span className="text-oro/50 text-[10px] font-mono">
+                <p className="text-gray-400 text-[10px] uppercase tracking-wider font-medium">Propiedades</p>
+                <span className="text-amber-600/50 text-[10px] font-mono">
                   {BLOCK_CATALOG.find((c) => c.type === currentBlock.type)?.label}
                 </span>
               </div>
@@ -755,8 +755,8 @@ export default function MailBuilder() {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center py-16">
               <MousePointerClick className="w-6 h-6 text-beige/15 mb-2" />
-              <p className="text-beige/30 text-xs">Selecciona un bloque</p>
-              <p className="text-beige/20 text-[10px] mt-1">para editar sus propiedades</p>
+              <p className="text-gray-400 text-xs">Selecciona un bloque</p>
+              <p className="text-gray-300 text-[10px] mt-1">para editar sus propiedades</p>
             </div>
           )}
         </div>

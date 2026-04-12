@@ -1,362 +1,262 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { useIdentityStore, type ValidationStatus } from "@/lib/stores/identity-store";
-import { createClient } from "@/lib/supabase/client";
+// Uses API routes instead of direct Supabase client for security
 import Link from "next/link";
 import {
-  ArrowLeft, ShieldCheck, ShieldAlert, XCircle, Loader2, ScanFace,
-  CheckCircle, AlertTriangle, RefreshCw, Camera, CreditCard,
+  ArrowLeft, ShieldCheck, XCircle, Clock, Camera, CreditCard,
+  CheckCircle, AlertTriangle, Loader2, ScanFace, ZoomIn, User, FileText,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
 
-export default function ValidacionDetallePage({ params }: { params: Promise<{ id: string }> }) {
+interface ContratoDetalle {
+  id: string;
+  nombre: string;
+  cedula: string;
+  email: string;
+  telefono: string;
+  plan: string;
+  ciudad: string;
+  fuerza: string;
+  grado: string;
+  foto_data: string | null;
+  cedula_frente_data: string | null;
+  cedula_reverso_data: string | null;
+  firma_data: string | null;
+  created_at: string;
+  identidad_status: string;
+  identidad_notas: string | null;
+}
+
+export default function AprobacionDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const validation = useIdentityStore((s) => s.validations.find((v) => v.id === id));
-  const updateValidation = useIdentityStore((s) => s.updateValidation);
-  const config = useIdentityStore((s) => s.config);
-
-  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
-  const [cedulaUrl, setCedulaUrl] = useState<string | null>(null);
-  const [cedulaReversoUrl, setCedulaReversoUrl] = useState<string | null>(null);
+  const [contrato, setContrato] = useState<ContratoDetalle | null>(null);
   const [loading, setLoading] = useState(true);
-  const [revalidating, setRevalidating] = useState(false);
-  const [notas, setNotas] = useState(validation?.notas || "");
+  const [notas, setNotas] = useState("");
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Load photos from contract
-  useEffect(() => {
-    if (!validation) return;
-    loadPhotos();
-  }, [validation?.contrato_id]);
+  useEffect(() => { loadContrato(); }, [id]);
 
-  async function loadPhotos() {
-    if (!validation) return;
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("contratos")
-      .select("foto_data, cedula_frente_data, cedula_reverso_data")
-      .eq("id", validation.contrato_id)
-      .single();
-
-    if (data) {
-      setSelfieUrl(data.foto_data || null);
-      setCedulaUrl(data.cedula_frente_data || null);
-      setCedulaReversoUrl(data.cedula_reverso_data || null);
+  async function loadContrato() {
+    const res = await fetch(`/api/contratos/identidad?id=${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setContrato({ ...data, identidad_status: data.identidad_status || "pendiente" } as ContratoDetalle);
+      setNotas(data.identidad_notas || "");
     }
     setLoading(false);
   }
 
-  // Re-run validation
-  async function revalidate() {
-    if (!selfieUrl || !cedulaUrl || !validation) return;
-    setRevalidating(true);
-
-    try {
-      const { compareFaces, extractCedulaText, compareData } = await import("@/lib/identity-engine");
-
-      // Face comparison
-      const faceResult = await compareFaces(selfieUrl, cedulaUrl);
-
-      // OCR
-      let ocrNombre: string | null = null;
-      let ocrCedula: string | null = null;
-      let datosMatch: boolean | null = null;
-      try {
-        const ocrResult = await extractCedulaText(cedulaUrl);
-        ocrNombre = ocrResult.nombre;
-        ocrCedula = ocrResult.cedula;
-        const dataComp = compareData(ocrNombre, ocrCedula, validation.nombre, validation.cedula);
-        datosMatch = dataComp.nombreMatch || dataComp.cedulaMatch;
-      } catch { /* OCR optional */ }
-
-      // Determine status
-      let status: ValidationStatus = "revision";
-      if (faceResult.score >= config.umbral_facial && faceResult.selfieDetected && faceResult.cedulaDetected && !validation.duplicado_cedula) {
-        status = config.auto_aprobar ? "verificado" : "revision";
-      }
-
-      updateValidation(validation.id, {
-        facial_score: faceResult.score,
-        calidad_selfie: faceResult.selfieDetected,
-        calidad_cedula: faceResult.cedulaDetected,
-        datos_match: datosMatch,
-        ocr_nombre: ocrNombre,
-        ocr_cedula: ocrCedula,
-        status,
-      });
-
-      toast.success("Validación actualizada");
-    } catch (err) {
-      toast.error("Error ejecutando validación");
-    }
-
-    setRevalidating(false);
+  async function updateStatus(status: "aprobado" | "rechazado" | "pendiente") {
+    if (!contrato) return;
+    setSaving(true);
+    await fetch("/api/contratos/identidad", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: contrato.id, identidad_status: status, identidad_notas: notas || null }),
+    });
+    setContrato({ ...contrato, identidad_status: status, identidad_notas: notas });
+    setSaving(false);
+    const messages = { aprobado: "Identidad aprobada", rechazado: "Identidad rechazada", pendiente: "Marcado como pendiente" };
+    toast.success(messages[status]);
   }
 
-  function approve() {
-    if (!validation) return;
-    updateValidation(validation.id, { status: "verificado", revisado_por: "admin", notas });
-    toast.success("Identidad verificada");
-  }
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-oro animate-spin" /></div>;
+  if (!contrato) return <div className="text-center py-20"><p className="text-gray-400">Contrato no encontrado</p><Link href="/admin/validacion-identidad" className="text-oro text-sm hover:underline">Volver</Link></div>;
 
-  function reject() {
-    if (!validation) return;
-    updateValidation(validation.id, { status: "rechazado", revisado_por: "admin", notas });
-    toast.success("Identidad rechazada");
-  }
-
-  if (!validation) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-beige/40 text-sm">Validación no encontrada</p>
-        <Link href="/admin/validacion-identidad" className="text-oro text-sm mt-2 hover:underline">Volver</Link>
-      </div>
-    );
-  }
-
-  const scoreColor = (s: number | null) => {
-    if (s === null) return "text-beige/20";
-    if (s >= 80) return "text-green-400";
-    if (s >= 60) return "text-yellow-400";
-    return "text-red-400";
-  };
-
-  const scoreBg = (s: number | null) => {
-    if (s === null) return "bg-white/10";
-    if (s >= 80) return "bg-green-500/15";
-    if (s >= 60) return "bg-yellow-500/15";
-    return "bg-red-500/15";
-  };
+  const status = contrato.identidad_status;
+  const statusConfig = {
+    aprobado: { color: "text-green-600", bg: "bg-green-50", icon: ShieldCheck, label: "Aprobado" },
+    rechazado: { color: "text-red-600", bg: "bg-red-100", icon: XCircle, label: "Rechazado" },
+    pendiente: { color: "text-yellow-600", bg: "bg-yellow-50", icon: Clock, label: "Pendiente de aprobación" },
+  }[status] || { color: "text-yellow-600", bg: "bg-yellow-50", icon: Clock, label: "Pendiente" };
 
   return (
     <div className="max-w-5xl space-y-6">
+      {/* Zoom modal */}
+      {zoomedImage && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setZoomedImage(null)}>
+          <img src={zoomedImage} alt="Zoom" className="max-w-full max-h-full object-contain rounded-lg" />
+          <button className="absolute top-4 right-4 text-gray-900/60 hover:text-gray-900 text-sm">Cerrar</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/admin/validacion-identidad" className="p-2 rounded-lg text-beige/40 hover:text-white hover:bg-white/5 transition-colors">
+        <Link href="/admin/validacion-identidad" className="p-2 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-white text-xl font-bold">{validation.nombre}</h1>
-          <p className="text-beige/40 text-sm">CC {validation.cedula} · {validation.email}</p>
+          <h1 className="text-gray-900 text-xl font-bold">Revisar identidad</h1>
+          <p className="text-gray-400 text-sm">{contrato.nombre} · CC {contrato.cedula}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {validation.status === "verificado" && <ShieldCheck className="w-6 h-6 text-green-400" />}
-          {validation.status === "revision" && <ShieldAlert className="w-6 h-6 text-yellow-400" />}
-          {validation.status === "rechazado" && <XCircle className="w-6 h-6 text-red-400" />}
-          <span className={`text-sm font-bold capitalize ${
-            validation.status === "verificado" ? "text-green-400" : validation.status === "rechazado" ? "text-red-400" : validation.status === "revision" ? "text-yellow-400" : "text-beige/40"
-          }`}>
-            {validation.status}
-          </span>
+        <span className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 ${statusConfig.bg} ${statusConfig.color}`}>
+          <statusConfig.icon className="w-3.5 h-3.5" />
+          {statusConfig.label}
+        </span>
+      </div>
+
+      {/* Client info card */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <User className="w-4 h-4 text-gray-400" />
+          <h2 className="text-gray-900 text-sm font-bold">Datos del cliente</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div><p className="text-gray-400 text-xs">Nombre</p><p className="text-gray-900 font-medium">{contrato.nombre}</p></div>
+          <div><p className="text-gray-400 text-xs">Cédula</p><p className="text-gray-900 font-mono">{contrato.cedula}</p></div>
+          <div><p className="text-gray-400 text-xs">Email</p><p className="text-gray-900">{contrato.email}</p></div>
+          <div><p className="text-gray-400 text-xs">Teléfono</p><p className="text-gray-900">{contrato.telefono}</p></div>
+          <div><p className="text-gray-400 text-xs">Plan</p><p className="text-gray-900">{contrato.plan || "—"}</p></div>
+          <div><p className="text-gray-400 text-xs">Ciudad</p><p className="text-gray-900">{contrato.ciudad || "—"}</p></div>
+          <div><p className="text-gray-400 text-xs">Fuerza</p><p className="text-gray-900">{contrato.fuerza || "—"}</p></div>
+          <div><p className="text-gray-400 text-xs">Grado</p><p className="text-gray-900">{contrato.grado || "—"}</p></div>
         </div>
       </div>
 
-      {/* Facial comparison — side by side */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white text-sm font-bold flex items-center gap-2">
-            <ScanFace className="w-4 h-4 text-oro" /> Comparación facial
-          </h2>
-          <Button size="sm" variant="ghost" onClick={revalidate} disabled={revalidating || !selfieUrl || !cedulaUrl}>
-            {revalidating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            {revalidating ? "Procesando..." : "Re-validar"}
-          </Button>
+      {/* ══ PHOTOS — Main review area ══ */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <ScanFace className="w-4 h-4 text-oro" />
+          <h2 className="text-gray-900 text-sm font-bold">Verificación de identidad</h2>
+          <span className="text-gray-300 text-xs ml-auto">Click en cualquier foto para ampliar</span>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 text-oro animate-spin" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Selfie */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Camera className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-gray-900 text-xs font-bold">Selfie del cliente</span>
+            </div>
+            {contrato.foto_data ? (
+              <button onClick={() => setZoomedImage(contrato.foto_data)} className="relative w-full group">
+                <img src={contrato.foto_data} alt="Selfie" className="w-full aspect-[3/4] object-cover rounded-xl border border-gray-200 group-hover:border-oro/30 transition-colors" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-colors flex items-center justify-center">
+                  <ZoomIn className="w-6 h-6 text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            ) : (
+              <div className="w-full aspect-[3/4] rounded-xl border border-dashed border-red-500/30 bg-red-50 flex flex-col items-center justify-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-red-600/50" />
+                <span className="text-red-600/50 text-xs">Sin selfie</span>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Selfie */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-beige/50 text-xs">
-                <Camera className="w-3.5 h-3.5" /> Selfie del cliente
-              </div>
-              {selfieUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/30 aspect-[3/4]">
-                  <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-2 left-2">
-                    {validation.calidad_selfie === true ? (
-                      <span className="bg-green-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Cara detectada</span>
-                    ) : validation.calidad_selfie === false ? (
-                      <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> No detectada</span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] aspect-[3/4] flex items-center justify-center">
-                  <p className="text-beige/20 text-xs">Sin selfie</p>
-                </div>
-              )}
-            </div>
 
-            {/* Score center */}
-            <div className="flex flex-col items-center justify-center">
-              <div className={`w-28 h-28 rounded-full ${scoreBg(validation.facial_score)} flex items-center justify-center mb-3`}>
-                {validation.facial_score !== null ? (
-                  <span className={`text-4xl font-black ${scoreColor(validation.facial_score)}`}>{validation.facial_score}%</span>
-                ) : (
-                  <span className="text-beige/20 text-sm">Sin score</span>
-                )}
-              </div>
-              <p className="text-white text-sm font-bold mb-1">
-                {validation.facial_score !== null
-                  ? validation.facial_score >= 80 ? "Match alto" : validation.facial_score >= 60 ? "Match parcial" : "Match bajo"
-                  : "Sin validar"}
-              </p>
-              <p className="text-beige/30 text-xs text-center">
-                Umbral mínimo: {config.umbral_facial}%
-              </p>
-
-              {/* Score bar */}
-              {validation.facial_score !== null && (
-                <div className="w-full max-w-[200px] mt-3">
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        validation.facial_score >= 80 ? "bg-green-400" : validation.facial_score >= 60 ? "bg-yellow-400" : "bg-red-400"
-                      }`}
-                      style={{ width: `${validation.facial_score}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1 text-[9px] text-beige/20">
-                    <span>0%</span>
-                    <span className="text-oro">Umbral {config.umbral_facial}%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-              )}
+          {/* Cédula frente */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-3.5 h-3.5 text-purple-600" />
+              <span className="text-gray-900 text-xs font-bold">Cédula — Frente</span>
             </div>
-
-            {/* Cédula */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-beige/50 text-xs">
-                <CreditCard className="w-3.5 h-3.5" /> Foto de cédula
+            {contrato.cedula_frente_data ? (
+              <button onClick={() => setZoomedImage(contrato.cedula_frente_data)} className="relative w-full group">
+                <img src={contrato.cedula_frente_data} alt="Cédula frente" className="w-full aspect-[3/4] object-contain bg-black/30 rounded-xl border border-gray-200 group-hover:border-oro/30 transition-colors" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-colors flex items-center justify-center">
+                  <ZoomIn className="w-6 h-6 text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            ) : (
+              <div className="w-full aspect-[3/4] rounded-xl border border-dashed border-yellow-500/30 bg-yellow-500/5 flex flex-col items-center justify-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-yellow-600/50" />
+                <span className="text-yellow-600/50 text-xs">Sin foto de cédula frente</span>
               </div>
-              {cedulaUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/30 aspect-[3/4]">
-                  <img src={cedulaUrl} alt="Cédula frente" className="w-full h-full object-contain bg-black/50" />
-                  <div className="absolute bottom-2 left-2">
-                    {validation.calidad_cedula === true ? (
-                      <span className="bg-green-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Cara detectada</span>
-                    ) : validation.calidad_cedula === false ? (
-                      <span className="bg-red-500/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> No detectada</span>
-                    ) : null}
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] aspect-[3/4] flex items-center justify-center">
-                  <p className="text-beige/20 text-xs">Sin foto cédula</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Cédula reverso */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-gray-900 text-xs font-bold">Cédula — Reverso</span>
+            </div>
+            {contrato.cedula_reverso_data ? (
+              <button onClick={() => setZoomedImage(contrato.cedula_reverso_data)} className="relative w-full group">
+                <img src={contrato.cedula_reverso_data} alt="Cédula reverso" className="w-full aspect-[3/4] object-contain bg-black/30 rounded-xl border border-gray-200 group-hover:border-oro/30 transition-colors" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-colors flex items-center justify-center">
+                  <ZoomIn className="w-6 h-6 text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            ) : (
+              <div className="w-full aspect-[3/4] rounded-xl border border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2">
+                <CreditCard className="w-6 h-6 text-beige/15" />
+                <span className="text-gray-300 text-xs">Sin foto reverso</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Checklist visual */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-gray-200">
+          {[
+            { label: "Selfie clara", ok: !!contrato.foto_data },
+            { label: "Cédula frente", ok: !!contrato.cedula_frente_data },
+            { label: "Cédula reverso", ok: !!contrato.cedula_reverso_data },
+            { label: "Cara visible", ok: !!contrato.foto_data },
+          ].map((check) => (
+            <div key={check.label} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${check.ok ? "bg-green-500/5" : "bg-red-50"}`}>
+              {check.ok ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600/50" />}
+              <span className={`text-xs ${check.ok ? "text-green-600" : "text-red-600/50"}`}>{check.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Validation checks grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          {
-            label: "Comparación facial",
-            value: validation.facial_score !== null ? `${validation.facial_score}%` : "Pendiente",
-            ok: validation.facial_score !== null && validation.facial_score >= config.umbral_facial,
-            pending: validation.facial_score === null,
-          },
-          {
-            label: "Datos OCR",
-            value: validation.datos_match === true ? "Coinciden" : validation.datos_match === false ? "No coinciden" : "Pendiente",
-            ok: validation.datos_match === true,
-            pending: validation.datos_match === null,
-          },
-          {
-            label: "Calidad fotos",
-            value: validation.calidad_selfie && validation.calidad_cedula ? "Aprobada" : !validation.calidad_selfie ? "Selfie mal" : !validation.calidad_cedula ? "Cédula mal" : "Pendiente",
-            ok: validation.calidad_selfie === true && validation.calidad_cedula === true,
-            pending: validation.calidad_selfie === null,
-          },
-          {
-            label: "Duplicados",
-            value: validation.duplicado_cedula ? "Cédula duplicada" : validation.duplicado_cara ? "Cara duplicada" : "Sin duplicados",
-            ok: !validation.duplicado_cedula && !validation.duplicado_cara,
-            pending: false,
-          },
-        ].map((check) => (
-          <div key={check.label} className={`border rounded-xl p-4 ${check.pending ? "bg-white/5 border-white/10" : check.ok ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-            <div className="flex items-center gap-2 mb-1">
-              {check.pending ? <span className="w-4 h-4 text-beige/30">—</span> : check.ok ? <CheckCircle className="w-4 h-4 text-green-400" /> : <AlertTriangle className="w-4 h-4 text-red-400" />}
-              <span className="text-beige/50 text-xs">{check.label}</span>
-            </div>
-            <p className={`text-sm font-bold ${check.pending ? "text-beige/30" : check.ok ? "text-green-400" : "text-red-400"}`}>{check.value}</p>
+      {/* Firma */}
+      {contrato.firma_data && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-4 h-4 text-gray-400" />
+            <h2 className="text-gray-900 text-sm font-bold">Firma del contrato</h2>
           </div>
-        ))}
-      </div>
-
-      {/* OCR Details */}
-      {(validation.ocr_nombre || validation.ocr_cedula) && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-          <h3 className="text-white text-sm font-bold mb-3">Datos extraídos por OCR</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-beige/40 text-xs mb-1">Nombre digitado</p>
-              <p className="text-white">{validation.nombre}</p>
-            </div>
-            <div>
-              <p className="text-beige/40 text-xs mb-1">Nombre en cédula (OCR)</p>
-              <p className={validation.datos_match ? "text-green-400" : "text-yellow-400"}>{validation.ocr_nombre || "No detectado"}</p>
-            </div>
-            <div>
-              <p className="text-beige/40 text-xs mb-1">Cédula digitada</p>
-              <p className="text-white font-mono">{validation.cedula}</p>
-            </div>
-            <div>
-              <p className="text-beige/40 text-xs mb-1">Cédula en documento (OCR)</p>
-              <p className={validation.ocr_cedula === validation.cedula ? "text-green-400 font-mono" : "text-yellow-400 font-mono"}>{validation.ocr_cedula || "No detectado"}</p>
-            </div>
+          <div className="bg-white rounded-lg p-2 max-w-xs">
+            <img src={contrato.firma_data} alt="Firma" className="w-full" />
           </div>
         </div>
       )}
 
-      {/* Cédula reverso */}
-      {cedulaReversoUrl && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-          <h3 className="text-white text-sm font-bold mb-3 flex items-center gap-2"><CreditCard className="w-4 h-4 text-beige/40" /> Cédula reverso</h3>
-          <div className="max-w-sm">
-            <img src={cedulaReversoUrl} alt="Cédula reverso" className="w-full rounded-lg border border-white/10 object-contain bg-black/30" />
-          </div>
-        </div>
-      )}
+      {/* ══ APPROVAL SECTION ══ */}
+      <div className={`border rounded-xl p-5 space-y-4 ${
+        status === "aprobado" ? "bg-green-500/5 border-green-200" :
+        status === "rechazado" ? "bg-red-50 border-red-200" :
+        "bg-yellow-500/5 border-yellow-200"
+      }`}>
+        <h2 className="text-gray-900 text-sm font-bold">Decisión</h2>
 
-      {/* Admin actions */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
-        <h3 className="text-white text-sm font-bold">Decisión del administrador</h3>
         <div>
-          <label className="text-beige/60 text-xs font-medium mb-1.5 block">Notas</label>
+          <label className="text-gray-500 text-xs font-medium mb-1.5 block">Notas (opcional)</label>
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={2}
-            className="w-full bg-white/5 border border-white/10 text-white text-sm px-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40 resize-none"
-            placeholder="Notas sobre la verificación..."
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40 resize-none"
+            placeholder="Ej: Foto borrosa, pedir nueva selfie..."
           />
         </div>
-        <div className="flex items-center gap-3">
-          <Button onClick={approve} className="bg-green-600 hover:bg-green-700 border-green-500">
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={() => updateStatus("aprobado")} disabled={saving} className="bg-green-600 hover:bg-green-700 border-green-500">
             <ShieldCheck className="w-4 h-4" /> Aprobar identidad
           </Button>
-          <Button onClick={reject} className="bg-red-600 hover:bg-red-700 border-red-500">
+          <Button onClick={() => updateStatus("rechazado")} disabled={saving} className="bg-red-600 hover:bg-red-700 border-red-500">
             <XCircle className="w-4 h-4" /> Rechazar
           </Button>
-          <Button variant="ghost" onClick={() => {
-            updateValidation(validation.id, { status: "pendiente", notas });
-            toast.info("Marcado como pendiente — se puede pedir nueva foto al cliente");
-          }}>
-            Pedir nueva foto
-          </Button>
+          {status !== "pendiente" && (
+            <Button variant="ghost" onClick={() => updateStatus("pendiente")} disabled={saving}>
+              <Clock className="w-4 h-4" /> Volver a pendiente
+            </Button>
+          )}
         </div>
+
+        {status === "aprobado" && (
+          <p className="text-green-600/60 text-xs flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Identidad verificada y aprobada</p>
+        )}
+        {status === "rechazado" && (
+          <p className="text-red-600/60 text-xs flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> Identidad rechazada — el cliente debe enviar nuevas fotos</p>
+        )}
       </div>
     </div>
   );

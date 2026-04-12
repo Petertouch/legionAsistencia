@@ -12,6 +12,12 @@ export async function PATCH(
   }
 
   const { id } = await params;
+
+  // Validate UUID format
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
+
   const updates = await request.json();
 
   // Solo permitir campos seguros

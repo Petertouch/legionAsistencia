@@ -28,10 +28,10 @@ const DOC_TIPO_LABEL: Record<DocumentoContrato["tipo"], string> = {
 };
 
 const DOC_TIPO_COLORS: Record<DocumentoContrato["tipo"], string> = {
-  contrato: "bg-oro/10 text-oro",
-  anexo: "bg-blue-500/10 text-blue-400",
-  identificacion: "bg-green-500/10 text-green-400",
-  otro: "bg-white/10 text-beige/60",
+  contrato: "bg-amber-50 text-oro",
+  anexo: "bg-blue-500/10 text-blue-600",
+  identificacion: "bg-green-500/10 text-green-600",
+  otro: "bg-gray-100 text-gray-500",
 };
 
 export default function SuscriptorDetailPage() {
@@ -93,30 +93,30 @@ export default function SuscriptorDetailPage() {
     addDocMutation.mutate(file);
   };
 
-  if (!suscriptor) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-xl" />)}</div>;
+  if (!suscriptor) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-50 rounded-xl" />)}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/suscriptores" className="text-beige/40 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+        <Link href="/admin/suscriptores" className="text-gray-400 hover:text-gray-900 transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
         <div className="flex-1">
-          <h2 className="text-white text-xl font-bold">{suscriptor.nombre}</h2>
-          <p className="text-beige/50 text-sm">{suscriptor.rango} — {suscriptor.rama}</p>
+          <h2 className="text-gray-900 text-xl font-bold">{suscriptor.nombre}</h2>
+          <p className="text-gray-500 text-sm">{suscriptor.rango} — {suscriptor.rama}</p>
         </div>
         <Badge>{suscriptor.plan}</Badge>
         <Badge>{suscriptor.estado_pago}</Badge>
       </div>
 
       {suscriptor.estado_pago === "Pendiente" && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-center justify-between gap-4">
+        <div className="bg-yellow-500/10 border border-yellow-200 rounded-xl p-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-yellow-400 font-bold text-sm">Suscriptor pendiente de aprobación</p>
-            <p className="text-yellow-400/60 text-xs mt-0.5">Este suscriptor firmó su contrato pero aún no ha sido aprobado.</p>
+            <p className="text-yellow-600 font-bold text-sm">Suscriptor pendiente de aprobación</p>
+            <p className="text-yellow-600/60 text-xs mt-0.5">Este suscriptor firmó su contrato pero aún no ha sido aprobado.</p>
           </div>
           <button
             onClick={handleAprobar}
             disabled={approving}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0 disabled:opacity-50"
+            className="bg-green-600 hover:bg-green-700 text-gray-900 font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0 disabled:opacity-50"
           >
             {approving ? "Aprobando..." : "Aprobar"}
           </button>
@@ -124,16 +124,16 @@ export default function SuscriptorDetailPage() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Teléfono</p><p className="text-white text-sm">{suscriptor.telefono}</p></div></Card>
-        <Card className="flex items-center gap-3"><Mail className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Email</p><p className="text-white text-sm">{suscriptor.email}</p></div></Card>
-        <Card className="flex items-center gap-3"><MapPin className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Rama / Rango</p><p className="text-white text-sm">{suscriptor.rama} — {suscriptor.rango}</p></div></Card>
-        <Card className="flex items-center gap-3"><Calendar className="w-4 h-4 text-oro" /><div><p className="text-beige/40 text-xs">Suscrito desde</p><p className="text-white text-sm">{new Date(suscriptor.fecha_inicio).toLocaleDateString("es-CO")}</p></div></Card>
+        <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Teléfono</p><p className="text-gray-900 text-sm">{suscriptor.telefono}</p></div></Card>
+        <Card className="flex items-center gap-3"><Mail className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Email</p><p className="text-gray-900 text-sm">{suscriptor.email}</p></div></Card>
+        <Card className="flex items-center gap-3"><MapPin className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Rama / Rango</p><p className="text-gray-900 text-sm">{suscriptor.rama} — {suscriptor.rango}</p></div></Card>
+        <Card className="flex items-center gap-3"><Calendar className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Suscrito desde</p><p className="text-gray-900 text-sm">{new Date(suscriptor.fecha_inicio).toLocaleDateString("es-CO")}</p></div></Card>
       </div>
 
       {/* Documentos del contrato */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-sm flex items-center gap-2">
+          <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2">
             <FileText className="w-4 h-4 text-oro" /> Documentos del contrato ({documentos?.length || 0})
           </h3>
           <Button size="sm" variant="secondary" onClick={() => setShowUpload(!showUpload)}>
@@ -143,24 +143,24 @@ export default function SuscriptorDetailPage() {
 
         {/* Upload form */}
         {showUpload && (
-          <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4 space-y-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Nombre del documento</label>
+                <label className="text-gray-500 text-xs font-medium mb-1 block">Nombre del documento</label>
                 <input
                   type="text"
                   value={docForm.nombre}
                   onChange={(e) => setDocForm((f) => ({ ...f, nombre: e.target.value }))}
                   placeholder="Ej: Contrato de prestación de servicios"
-                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Tipo</label>
+                <label className="text-gray-500 text-xs font-medium mb-1 block">Tipo</label>
                 <select
                   value={docForm.tipo}
                   onChange={(e) => setDocForm((f) => ({ ...f, tipo: e.target.value as DocumentoContrato["tipo"] }))}
-                  className="w-full bg-white/5 text-beige/70 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                  className="w-full bg-gray-50 text-gray-600 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
                 >
                   <option value="contrato">Contrato</option>
                   <option value="anexo">Anexo</option>
@@ -169,9 +169,9 @@ export default function SuscriptorDetailPage() {
                 </select>
               </div>
             </div>
-            <label className="flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed border-white/10 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group">
-              <Upload className="w-6 h-6 text-beige/30 group-hover:text-oro transition-colors" />
-              <span className="text-beige/40 text-xs group-hover:text-beige/60 transition-colors">
+            <label className="flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed border-gray-200 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group">
+              <Upload className="w-6 h-6 text-gray-400 group-hover:text-oro transition-colors" />
+              <span className="text-gray-400 text-xs group-hover:text-gray-500 transition-colors">
                 Click para seleccionar archivo (PDF, Word, imagen)
               </span>
               <input
@@ -188,24 +188,24 @@ export default function SuscriptorDetailPage() {
         {!documentos || documentos.length === 0 ? (
           <div className="text-center py-8">
             <File className="w-8 h-8 text-beige/15 mx-auto mb-2" />
-            <p className="text-beige/40 text-sm">Sin documentos</p>
-            <p className="text-beige/25 text-xs mt-1">Sube contratos, anexos o identificaciones del suscriptor</p>
+            <p className="text-gray-400 text-sm">Sin documentos</p>
+            <p className="text-gray-300 text-xs mt-1">Sube contratos, anexos o identificaciones del suscriptor</p>
           </div>
         ) : (
           <div className="space-y-2">
             {documentos.map((doc) => (
-              <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/[0.07] transition-colors group">
-                <div className="p-2 rounded-lg bg-white/5 flex-shrink-0">
-                  <FileText className="w-4 h-4 text-beige/50" />
+              <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-white transition-colors group">
+                <div className="p-2 rounded-lg bg-gray-50 flex-shrink-0">
+                  <FileText className="w-4 h-4 text-gray-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{doc.nombre}</p>
+                  <p className="text-gray-900 text-sm font-medium truncate">{doc.nombre}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${DOC_TIPO_COLORS[doc.tipo]}`}>
                       {DOC_TIPO_LABEL[doc.tipo]}
                     </span>
-                    <span className="text-beige/30 text-[10px]">{doc.tamano}</span>
-                    <span className="text-beige/30 text-[10px]">
+                    <span className="text-gray-400 text-[10px]">{doc.tamano}</span>
+                    <span className="text-gray-400 text-[10px]">
                       {new Date(doc.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}
                     </span>
                   </div>
@@ -215,14 +215,14 @@ export default function SuscriptorDetailPage() {
                     href={doc.archivo_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-beige/40 hover:text-oro transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-oro transition-colors"
                     title="Descargar"
                   >
                     <Download className="w-4 h-4" />
                   </a>
                   <button
                     onClick={() => deleteDocMutation.mutate(doc.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-beige/40 hover:text-red-400 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -236,23 +236,23 @@ export default function SuscriptorDetailPage() {
 
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-sm flex items-center gap-2"><Scale className="w-4 h-4 text-oro" /> Casos ({casos?.length || 0})</h3>
+          <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2"><Scale className="w-4 h-4 text-oro" /> Casos ({casos?.length || 0})</h3>
           <Link href={`/admin/casos/nuevo?suscriptor=${id}`}><Button size="sm" variant="secondary">+ Nuevo caso</Button></Link>
         </div>
         {casos?.length === 0 ? (
-          <p className="text-beige/40 text-sm">Sin casos registrados</p>
+          <p className="text-gray-400 text-sm">Sin casos registrados</p>
         ) : (
           <div className="space-y-2">
             {casos?.map((c) => (
               <Link key={c.id} href={`/admin/casos/${c.id}`}
-                className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                 <div>
-                  <p className="text-white text-sm">{c.titulo}</p>
-                  <p className="text-beige/40 text-xs">{c.area} — {c.etapa}</p>
+                  <p className="text-gray-900 text-sm">{c.titulo}</p>
+                  <p className="text-gray-400 text-xs">{c.area} — {c.etapa}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge>{c.prioridad}</Badge>
-                  <span className="text-beige/30 text-xs">{c.abogado}</span>
+                  <span className="text-gray-400 text-xs">{c.abogado}</span>
                 </div>
               </Link>
             ))}
@@ -261,17 +261,17 @@ export default function SuscriptorDetailPage() {
       </Card>
 
       <Card>
-        <h3 className="text-white font-bold text-sm mb-4">Seguimiento</h3>
+        <h3 className="text-gray-900 font-bold text-sm mb-4">Seguimiento</h3>
         {seguimientos?.length === 0 ? (
-          <p className="text-beige/40 text-sm">Sin actividad registrada</p>
+          <p className="text-gray-400 text-sm">Sin actividad registrada</p>
         ) : (
           <div className="space-y-3">
             {seguimientos?.map((seg) => (
               <div key={seg.id} className="flex items-start gap-3">
-                <div className="p-1.5 rounded-lg bg-white/5 text-beige/50">{TIPO_ICONS[seg.tipo]}</div>
+                <div className="p-1.5 rounded-lg bg-gray-50 text-gray-500">{TIPO_ICONS[seg.tipo]}</div>
                 <div>
-                  <p className="text-beige/80 text-sm">{seg.descripcion}</p>
-                  <p className="text-beige/30 text-xs mt-0.5">
+                  <p className="text-gray-600 text-sm">{seg.descripcion}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">
                     {new Date(seg.fecha).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     {seg.caso_area && ` — ${seg.caso_area}`}
                   </p>

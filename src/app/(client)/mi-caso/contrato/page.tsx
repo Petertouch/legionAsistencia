@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
-import { createClient } from "@/lib/supabase/client";
+// Uses API route instead of direct Supabase client
 import ContractView from "@/components/contract/contract-view";
 import type { ContractData } from "@/components/contract/contract-view";
 import { FileText, Download, Printer } from "lucide-react";
@@ -50,15 +50,9 @@ export default function ClientContratoPage() {
 
   useEffect(() => {
     if (!session) return;
-    const supabase = createClient();
-    supabase
-      .from("contratos")
-      .select("*")
-      .eq("cedula", session.cedula)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
-      .then(({ data }: { data: ContratoRow | null }) => {
+    fetch(`/api/client/contrato?cedula=${encodeURIComponent(session.cedula)}`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
         setContrato(data as ContratoRow | null);
         setLoading(false);
       });

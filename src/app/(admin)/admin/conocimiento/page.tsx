@@ -85,10 +85,10 @@ export default function ConocimientoPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-white text-lg md:text-xl font-bold flex items-center gap-2">
+          <h2 className="text-gray-900 text-lg md:text-xl font-bold flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-oro" /> Base de Conocimiento
           </h2>
-          <p className="text-beige/40 text-xs md:text-sm mt-0.5">
+          <p className="text-gray-400 text-xs md:text-sm mt-0.5">
             {items.length} preguntas • {activeCount} activas — Alimentan la IA del chatbot
           </p>
         </div>
@@ -100,21 +100,21 @@ export default function ConocimientoPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Buscar preguntas o respuestas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/5 text-white placeholder-beige/30 text-sm pl-9 pr-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+            className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
           />
         </div>
         <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <select
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
-            className="bg-white/5 text-beige/70 text-sm pl-9 pr-8 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+            className="bg-gray-50 text-gray-600 text-sm pl-9 pr-8 py-2.5 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
           >
             <option value="">Todas las categorías</option>
             {categories.map((c) => (
@@ -127,23 +127,23 @@ export default function ConocimientoPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-jungle-dark border border-white/10 rounded-xl w-full max-w-lg p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white border border-gray-200 rounded-xl w-full max-w-lg p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-bold text-base">
+              <h3 className="text-gray-900 font-bold text-base">
                 {editing ? "Editar pregunta" : "Nueva pregunta"}
               </h3>
-              <button onClick={() => setShowForm(false)} className="text-beige/40 hover:text-white p-1">
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-900 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
-              <label className="text-beige/60 text-xs font-medium mb-1.5 block">Categoria</label>
+              <label className="text-gray-500 text-xs font-medium mb-1.5 block">Categoria</label>
               <div className="flex gap-2">
                 <select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  className="flex-1 bg-white/5 text-white text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                  className="flex-1 bg-gray-50 text-gray-900 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
                 >
                   {categories.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -155,13 +155,13 @@ export default function ConocimientoPage() {
                     placeholder="Nueva..."
                     value={newCat}
                     onChange={(e) => setNewCat(e.target.value)}
-                    className="w-24 bg-white/5 text-white placeholder-beige/30 text-sm px-2 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    className="w-24 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-2 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleAddCategory}
                     disabled={!newCat.trim()}
-                    className="bg-white/10 text-beige/60 px-2 rounded-lg hover:bg-white/20 disabled:opacity-30 transition-colors"
+                    className="bg-gray-100 text-gray-500 px-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -170,24 +170,24 @@ export default function ConocimientoPage() {
             </div>
 
             <div>
-              <label className="text-beige/60 text-xs font-medium mb-1.5 block">Pregunta</label>
+              <label className="text-gray-500 text-xs font-medium mb-1.5 block">Pregunta</label>
               <input
                 type="text"
                 value={pregunta}
                 onChange={(e) => setPregunta(e.target.value)}
                 placeholder="Ej: ¿Qué hago si me llega una citación?"
-                className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-3 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-beige/60 text-xs font-medium mb-1.5 block">Respuesta</label>
+              <label className="text-gray-500 text-xs font-medium mb-1.5 block">Respuesta</label>
               <textarea
                 value={respuesta}
                 onChange={(e) => setRespuesta(e.target.value)}
                 placeholder="Escribe la respuesta que la IA debe dar..."
                 rows={5}
-                className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-3 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none resize-none"
+                className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none resize-none"
               />
             </div>
 
@@ -202,8 +202,8 @@ export default function ConocimientoPage() {
       {/* Content */}
       {Object.keys(grouped).length === 0 ? (
         <div className="text-center py-12">
-          <BookOpen className="w-10 h-10 text-beige/20 mx-auto mb-3" />
-          <p className="text-beige/40 text-sm">No hay preguntas{search || catFilter ? " con ese filtro" : ""}</p>
+          <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No hay preguntas{search || catFilter ? " con ese filtro" : ""}</p>
         </div>
       ) : (
         Object.entries(grouped).map(([cat, catItems]) => (
@@ -213,20 +213,20 @@ export default function ConocimientoPage() {
               {catItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`bg-white/5 border rounded-xl p-3.5 md:p-4 transition-all ${
-                    item.activo ? "border-white/10" : "border-white/5 opacity-50"
+                  className={`bg-gray-50 border rounded-xl p-3.5 md:p-4 transition-all ${
+                    item.activo ? "border-gray-200" : "border-gray-100 opacity-50"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium mb-1.5">{item.pregunta}</p>
-                      <p className="text-beige/50 text-xs leading-relaxed line-clamp-3">{item.respuesta}</p>
+                      <p className="text-gray-900 text-sm font-medium mb-1.5">{item.pregunta}</p>
+                      <p className="text-gray-500 text-xs leading-relaxed line-clamp-3">{item.respuesta}</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         onClick={() => toggleItem(item.id)}
                         className={`p-1.5 rounded-lg transition-colors ${
-                          item.activo ? "text-green-400 hover:bg-green-500/10" : "text-beige/30 hover:bg-white/5"
+                          item.activo ? "text-green-600 hover:bg-green-500/10" : "text-gray-400 hover:bg-gray-50"
                         }`}
                         title={item.activo ? "Desactivar" : "Activar"}
                       >
@@ -234,14 +234,14 @@ export default function ConocimientoPage() {
                       </button>
                       <button
                         onClick={() => openEdit(item)}
-                        className="p-1.5 text-beige/30 hover:text-oro hover:bg-oro/10 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-oro hover:bg-amber-50 rounded-lg transition-colors"
                         title="Editar"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-beige/30 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />

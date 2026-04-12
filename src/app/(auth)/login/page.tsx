@@ -6,14 +6,11 @@ import Link from "next/link";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { useTeamStore } from "@/lib/stores/team-store";
 import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
-  // Subscribe to force hydration before submit
-  const _members = useTeamStore((s) => s.abogados);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,40 +40,24 @@ export default function LoginPage() {
       // Error de red — continuar con login local
     }
 
-    // ── 2. Verificar miembros del team store (profesores, abogados locales) ──
-    const currentMembers = useTeamStore.getState().abogados;
-    const member = currentMembers.find(
-      (m) => m.email.toLowerCase() === emailNorm && m.password === password
-    );
+    // ── 2. Intentar create-session (valida contra tabla equipo server-side) ──
+    try {
+      const res = await fetch("/api/auth/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailNorm, password }),
+      });
 
-    if (member) {
-      try {
-        const res = await fetch("/api/auth/create-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: member.id,
-            nombre: member.nombre,
-            email: member.email,
-            role: member.role || "abogado",
-          }),
-        });
-
-        if (res.ok) {
-          login({
-            id: member.id,
-            nombre: member.nombre,
-            email: member.email,
-            role: (member.role || "abogado") as any,
-          });
-          toast.success(`Bienvenido, ${member.nombre}`);
-          router.push("/admin/dashboard");
-          setLoading(false);
-          return;
-        }
-      } catch {
-        // fall through
+      if (res.ok) {
+        const data = await res.json();
+        login(data.user);
+        toast.success(`Bienvenido, ${data.user.nombre}`);
+        router.push("/admin/dashboard");
+        setLoading(false);
+        return;
       }
+    } catch {
+      // fall through
     }
 
     toast.error("Email o contraseña incorrectos");
@@ -84,10 +65,10 @@ export default function LoginPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 space-y-4 md:space-y-5 w-full max-w-sm mx-4 md:mx-0">
+    <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-200 rounded-2xl p-5 md:p-8 space-y-4 md:space-y-5 w-full max-w-sm mx-4 md:mx-0">
       <div className="text-center mb-2">
-        <h2 className="text-white font-bold text-lg">Iniciar Sesión</h2>
-        <p className="text-beige/50 text-sm mt-1">Equipo Legión Jurídica</p>
+        <h2 className="text-gray-900 font-bold text-lg">Iniciar Sesión</h2>
+        <p className="text-gray-500 text-sm mt-1">Equipo Legión Jurídica</p>
       </div>
 
       <Input
@@ -115,7 +96,7 @@ export default function LoginPage() {
 
       <Link
         href="/recuperar"
-        className="block text-center text-beige/30 text-xs hover:text-oro transition-colors"
+        className="block text-center text-gray-400 text-xs hover:text-oro transition-colors"
       >
         ¿Olvidaste tu contraseña?
       </Link>

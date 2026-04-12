@@ -11,19 +11,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-beige/80">
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700">
             {label}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
-          className={`w-full bg-white/5 border border-white/10 text-white placeholder-beige/30 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-oro/50 focus:ring-1 focus:ring-oro/20 transition-colors ${
-            error ? "border-red-500/50" : ""
+          className={`w-full bg-white border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-oro/70 focus:ring-1 focus:ring-oro/30 transition-colors ${
+            error ? "border-red-400" : ""
           } ${className}`}
           {...props}
         />
-        {error && <p className="text-red-400 text-xs">{error}</p>}
+        {error && <p className="text-red-600 text-xs">{error}</p>}
       </div>
     );
   }

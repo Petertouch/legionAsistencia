@@ -52,7 +52,7 @@ export default function EquipoPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
           <UsersRound className="w-5 h-5 text-oro" />
-          <span className="text-beige/50 text-xs md:text-sm">
+          <span className="text-gray-500 text-xs md:text-sm">
             {soloAbogados.length} abogados
           </span>
         </div>
@@ -63,26 +63,26 @@ export default function EquipoPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 md:gap-3">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-beige/40 mb-1">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-gray-400 mb-1">
             <Briefcase className="w-3.5 h-3.5" />
             <span className="text-[10px]">Activos</span>
           </div>
-          <p className="text-white text-lg font-bold">{abogadosActivos.length}</p>
+          <p className="text-gray-900 text-lg font-bold">{abogadosActivos.length}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-beige/40 mb-1">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-gray-400 mb-1">
             <TrendingUp className="w-3.5 h-3.5" />
             <span className="text-[10px]">Prom. carga</span>
           </div>
-          <p className="text-white text-lg font-bold">{promedioCargar} <span className="text-beige/40 text-xs font-normal">casos</span></p>
+          <p className="text-gray-900 text-lg font-bold">{promedioCargar} <span className="text-gray-400 text-xs font-normal">casos</span></p>
         </div>
-        <div className={`bg-white/5 border rounded-xl p-3 ${abogadoSobrecargado ? "border-red-500/30" : "border-white/10"}`}>
-          <div className="flex items-center gap-1.5 text-beige/40 mb-1">
-            <AlertTriangle className={`w-3.5 h-3.5 ${abogadoSobrecargado ? "text-red-400" : ""}`} />
+        <div className={`bg-gray-50 border rounded-xl p-3 ${abogadoSobrecargado ? "border-red-500/30" : "border-gray-200"}`}>
+          <div className="flex items-center gap-1.5 text-gray-400 mb-1">
+            <AlertTriangle className={`w-3.5 h-3.5 ${abogadoSobrecargado ? "text-red-600" : ""}`} />
             <span className="text-[10px]">Sobrecarga</span>
           </div>
-          <p className={`text-lg font-bold ${abogadoSobrecargado ? "text-red-400" : "text-green-400"}`}>
+          <p className={`text-lg font-bold ${abogadoSobrecargado ? "text-red-600" : "text-green-600"}`}>
             {abogadoSobrecargado ? "Si" : "No"}
           </p>
         </div>
@@ -91,16 +91,16 @@ export default function EquipoPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar miembro..."
-            className="w-full bg-white/5 border border-white/10 text-white text-sm pl-10 pr-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40" />
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm pl-10 pr-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40" />
         </div>
         <select value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)}
-          className="bg-white/5 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
-          <option value="" className="bg-jungle-dark">Estado</option>
-          <option value="activo" className="bg-jungle-dark">Activo</option>
-          <option value="inactivo" className="bg-jungle-dark">Inactivo</option>
-          <option value="vacaciones" className="bg-jungle-dark">Vacaciones</option>
+          className="bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+          <option value="" className="bg-white">Estado</option>
+          <option value="activo" className="bg-white">Activo</option>
+          <option value="inactivo" className="bg-white">Inactivo</option>
+          <option value="vacaciones" className="bg-white">Vacaciones</option>
         </select>
       </div>
 
@@ -115,29 +115,29 @@ export default function EquipoPage() {
 
           return (
             <Link key={member.id} href={`/admin/equipo/${member.id}`}>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/8 hover:border-oro/20 transition-all group">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:bg-white/8 hover:border-oro/20 transition-all group">
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm flex-shrink-0"
                     style={{ backgroundColor: member.color }}>
                     {member.nombre.split(" ").pop()?.[0] || "?"}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="text-white font-semibold text-sm truncate">{member.nombre}</h3>
+                      <h3 className="text-gray-900 font-semibold text-sm truncate">{member.nombre}</h3>
                       <Badge size="xs" variant={est.variant}>{est.label}</Badge>
-                      {member.estado === "vacaciones" && <Palmtree className="w-3 h-3 text-yellow-400" />}
+                      {member.estado === "vacaciones" && <Palmtree className="w-3 h-3 text-yellow-600" />}
                     </div>
-                    <p className="text-beige/40 text-xs truncate">{member.email}</p>
+                    <p className="text-gray-400 text-xs truncate">{member.email}</p>
 
                     {/* Areas + workload */}
                         <div className="flex flex-wrap gap-1 mt-2">
                           {member.areas_habilitadas.map((area) => (
                             <span key={area} className={`text-[9px] px-1.5 py-0.5 rounded-full border ${
                               area === member.especialidad
-                                ? "bg-oro/15 text-oro border-oro/30 font-medium"
-                                : "bg-white/5 text-beige/50 border-white/10"
+                                ? "bg-amber-100 text-oro border-oro/30 font-medium"
+                                : "bg-gray-50 text-gray-500 border-gray-200"
                             }`}>
                               {area === member.especialidad && <Scale className="w-2 h-2 inline mr-0.5 -mt-px" />}
                               {area}
@@ -145,22 +145,22 @@ export default function EquipoPage() {
                           ))}
                         </div>
                         <div className="mt-2 flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all" style={{
                               width: `${Math.min(cargaPct, 100)}%`,
                               backgroundColor: sobrecargado ? "#ef4444" : cargaPct > 75 ? "#eab308" : "#22c55e",
                             }} />
                           </div>
-                          <span className={`text-[10px] font-medium ${sobrecargado ? "text-red-400" : "text-beige/40"}`}>
+                          <span className={`text-[10px] font-medium ${sobrecargado ? "text-red-600" : "text-gray-400"}`}>
                             {casosAb.length}/{member.max_casos}
                           </span>
                           {casosCerrados.length > 0 && (
-                            <span className="text-[10px] text-beige/30">• {casosCerrados.length} cerrados</span>
+                            <span className="text-[10px] text-gray-400">• {casosCerrados.length} cerrados</span>
                           )}
                         </div>
                   </div>
 
-                  <ChevronRight className="w-4 h-4 text-beige/20 group-hover:text-oro transition-colors flex-shrink-0 mt-2" />
+                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-oro transition-colors flex-shrink-0 mt-2" />
                 </div>
               </div>
             </Link>
@@ -169,7 +169,7 @@ export default function EquipoPage() {
 
         {filtered.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-beige/30 text-sm">No se encontraron miembros</p>
+            <p className="text-gray-400 text-sm">No se encontraron miembros</p>
           </div>
         )}
       </div>

@@ -37,11 +37,11 @@ export default function NuevoLeadPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/leads" className="text-beige/40 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-        <h2 className="text-white text-xl font-bold">Nuevo Lead</h2>
+        <Link href="/admin/leads" className="text-gray-400 hover:text-gray-900 transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+        <h2 className="text-gray-900 text-xl font-bold">Nuevo Lead</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-5">
         <Input label="Nombre" name="nombre" placeholder="Juan Perez" required />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Telefono" name="telefono" type="tel" placeholder="3176689580" />

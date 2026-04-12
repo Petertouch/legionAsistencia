@@ -532,23 +532,23 @@ export default function Home() {
                     {hasAlianza ? (
                       <>
                         <div className="flex items-baseline gap-1">
-                          <span className={`text-xl sm:text-2xl font-bold line-through decoration-red-500 decoration-2 ${popular ? "text-jungle/40" : "text-beige/30"}`}>
+                          <span className={`text-xl sm:text-2xl font-bold line-through decoration-red-500 decoration-2 ${popular ? "text-jungle-dark/60" : "text-beige/40"}`}>
                             ${plan.precio}
                           </span>
-                          <span className={`text-xs ${popular ? "text-jungle/40" : "text-beige/30"}`}>/mes</span>
+                          <span className={`text-xs ${popular ? "text-jungle-dark/60" : "text-beige/40"}`}>/mes</span>
                         </div>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-3xl sm:text-5xl font-black">${plan.precio_alianza}</span>
-                          <span className={`text-xs sm:text-sm ${popular ? "text-jungle/50" : "text-beige/40"}`}>/mes</span>
+                          <span className={`text-3xl sm:text-5xl font-black ${popular ? "text-jungle-dark" : "text-white"}`}>${plan.precio_alianza}</span>
+                          <span className={`text-xs sm:text-sm ${popular ? "text-jungle-dark/80" : "text-beige/60"}`}>/mes</span>
                         </div>
-                        <p className={`text-[10px] sm:text-xs mt-1 font-semibold ${popular ? "text-jungle/70" : "text-green-400"}`}>
+                        <p className={`text-[10px] sm:text-xs mt-1 font-bold ${popular ? "text-jungle-dark" : "text-green-400"}`}>
                           Precio por alianza
                         </p>
                       </>
                     ) : (
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl sm:text-5xl font-black">${plan.precio}</span>
-                        <span className={`text-xs sm:text-sm ${popular ? "text-jungle/50" : "text-beige/40"}`}>/mes</span>
+                        <span className={`text-3xl sm:text-5xl font-black ${popular ? "text-jungle-dark" : "text-white"}`}>${plan.precio}</span>
+                        <span className={`text-xs sm:text-sm ${popular ? "text-jungle-dark/80" : "text-beige/60"}`}>/mes</span>
                       </div>
                     )}
                   </div>

@@ -33,15 +33,15 @@ export default function PipelineTabs({
             onClick={() => onSelect(area)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
               active
-                ? "bg-oro/15 text-oro border border-oro/30"
-                : "text-beige/50 hover:text-white hover:bg-white/5 border border-transparent"
+                ? "bg-amber-100 text-oro border border-oro/30"
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent"
             }`}
           >
             {AREA_ICONS[area]}
             <span className="hidden sm:inline">{area}</span>
             {count > 0 && (
               <span className={`px-1.5 py-px rounded-full text-[10px] ${
-                active ? "bg-oro/20 text-oro" : "bg-white/10 text-beige/40"
+                active ? "bg-amber-100 text-oro" : "bg-gray-100 text-gray-400"
               }`}>
                 {count}
               </span>

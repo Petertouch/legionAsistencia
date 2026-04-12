@@ -46,7 +46,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Contrato Clientes",
     items: [
       { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
-      { href: "/admin/validacion-identidad", label: "Validación de identidad", icon: Users, roles: ["admin"] },
+      { href: "/admin/validacion-identidad", label: "Aprobación de identidad", icon: Users, roles: ["admin"] },
     ],
   },
   {
@@ -69,7 +69,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "Marketing",
     items: [
-      { href: "/admin/recomendaciones", label: "Lanzas", icon: Gift, roles: ["admin"] },
+      { href: "/admin/recomendaciones", label: "Aliados", icon: Gift, roles: ["admin"] },
       { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
     ],
   },
@@ -110,7 +110,7 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen bg-jungle-dark border-r border-white/10 flex flex-col z-50 transition-all duration-300
+          fixed left-0 top-0 h-screen bg-panel-dark border-r border-white/10 flex flex-col z-50 transition-all duration-300
           ${collapsed ? "w-16" : "w-60"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0

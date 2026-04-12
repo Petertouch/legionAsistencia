@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/button";
 
-const inputCls = "w-full bg-white/5 border border-white/10 text-white text-sm px-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40";
+const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40";
 
 interface ScriptBlockEditorProps {
   blocks: ScriptBlock[];
@@ -130,7 +130,7 @@ export default function ScriptBlockEditor({
           Guión del profesor
         </label>
         {totalWords > 0 && (
-          <span className="text-beige/30 text-[10px]">
+          <span className="text-gray-400 text-[10px]">
             {blocks.length} {blocks.length === 1 ? "bloque" : "bloques"} · {totalWords} palabras · ~{totalTime} min
           </span>
         )}
@@ -139,7 +139,7 @@ export default function ScriptBlockEditor({
       {/* ── PDF Upload Zone ── */}
       <div
         className={`border border-dashed rounded-lg p-3 transition-colors ${
-          dragOverPdf ? "border-oro bg-oro/5" : "border-white/10 bg-white/[0.02]"
+          dragOverPdf ? "border-oro bg-oro/5" : "border-gray-200 bg-gray-50"
         }`}
         onDragOver={(e) => { e.preventDefault(); setDragOverPdf(true); }}
         onDragLeave={() => setDragOverPdf(false)}
@@ -148,16 +148,16 @@ export default function ScriptBlockEditor({
         {extracting ? (
           <div className="flex items-center justify-center gap-2 py-2">
             <Loader2 className="w-4 h-4 text-oro animate-spin" />
-            <span className="text-beige/50 text-xs">Extrayendo diapositivas...</span>
+            <span className="text-gray-500 text-xs">Extrayendo diapositivas...</span>
           </div>
         ) : slides.length > 0 ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-beige/60 text-xs flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-red-400" />
+              <span className="text-gray-500 text-xs flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-red-600" />
                 Presentación · {slides.length} diapositivas
               </span>
-              <button onClick={removePdf} className="text-beige/30 hover:text-red-400 transition-colors p-1" title="Quitar presentación">
+              <button onClick={removePdf} className="text-gray-400 hover:text-red-600 transition-colors p-1" title="Quitar presentación">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -172,9 +172,9 @@ export default function ScriptBlockEditor({
                   <img
                     src={slide.dataUrl}
                     alt={`Diap. ${slide.pageNumber}`}
-                    className="h-24 w-auto rounded border border-white/10 object-cover"
+                    className="h-24 w-auto rounded border border-gray-200 object-cover"
                   />
-                  <span className="absolute bottom-1 right-1 text-[10px] bg-black/80 text-white px-1.5 py-0.5 rounded font-bold">
+                  <span className="absolute bottom-1 right-1 text-[10px] bg-black/80 text-gray-900 px-1.5 py-0.5 rounded font-bold">
                     {slide.pageNumber}
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export default function ScriptBlockEditor({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center justify-center gap-2 w-full py-2 text-beige/40 hover:text-oro transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2 text-gray-400 hover:text-oro transition-colors"
           >
             <FileUp className="w-4 h-4" />
             <span className="text-xs">Arrastra un PDF o haz clic para subir la presentación</span>
@@ -211,23 +211,23 @@ export default function ScriptBlockEditor({
           return (
             <div
               key={block.id}
-              className="bg-white/[0.03] border border-white/10 rounded-lg p-3 space-y-2"
+              className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2"
             >
               {/* Block header */}
               <div className="flex items-center justify-between">
-                <span className="text-beige/40 text-[10px] font-semibold uppercase tracking-wider">
+                <span className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">
                   Bloque {idx + 1}
                 </span>
                 <div className="flex items-center gap-1">
                   {wordCount > 0 && (
-                    <span className="text-beige/20 text-[10px] mr-2">
+                    <span className="text-gray-300 text-[10px] mr-2">
                       {wordCount} pal · ~{Math.ceil(wordCount / 150 * 60)}s
                     </span>
                   )}
                   <button
                     onClick={() => moveBlock(block.id, "up")}
                     disabled={idx === 0}
-                    className="p-1 text-beige/30 hover:text-white disabled:opacity-20 transition-colors"
+                    className="p-1 text-gray-400 hover:text-gray-900 disabled:opacity-20 transition-colors"
                     title="Mover arriba"
                   >
                     <ChevronUp className="w-3.5 h-3.5" />
@@ -235,14 +235,14 @@ export default function ScriptBlockEditor({
                   <button
                     onClick={() => moveBlock(block.id, "down")}
                     disabled={idx === blocks.length - 1}
-                    className="p-1 text-beige/30 hover:text-white disabled:opacity-20 transition-colors"
+                    className="p-1 text-gray-400 hover:text-gray-900 disabled:opacity-20 transition-colors"
                     title="Mover abajo"
                   >
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => removeBlock(block.id)}
-                    className="p-1 text-beige/30 hover:text-red-400 transition-colors"
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                     title="Eliminar bloque"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -272,18 +272,18 @@ export default function ScriptBlockEditor({
                             slide_number: e.target.value ? parseInt(e.target.value) : null,
                           })
                         }
-                        className="w-full bg-white/5 border border-white/10 text-white text-[10px] px-2 py-1.5 rounded focus:outline-none focus:border-oro/40 appearance-none"
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-[10px] px-2 py-1.5 rounded focus:outline-none focus:border-oro/40 appearance-none"
                       >
-                        <option value="" className="bg-jungle-dark">Sin diapositiva</option>
+                        <option value="" className="bg-white">Sin diapositiva</option>
                         {slides.map((s) => (
-                          <option key={s.pageNumber} value={s.pageNumber} className="bg-jungle-dark">
+                          <option key={s.pageNumber} value={s.pageNumber} className="bg-white">
                             Diap. {s.pageNumber}
                           </option>
                         ))}
                       </select>
                       {/* Preview — large */}
                       {assignedSlide ? (
-                        <div className="rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                        <div className="rounded-lg overflow-hidden border border-gray-200 bg-black/30">
                           <img
                             src={assignedSlide.dataUrl}
                             alt={`Diap. ${block.slide_number}`}
@@ -291,14 +291,14 @@ export default function ScriptBlockEditor({
                           />
                         </div>
                       ) : (
-                        <div className="w-full aspect-video rounded-lg border border-white/5 bg-white/[0.02] flex flex-col items-center justify-center gap-2">
-                          <User className="w-8 h-8 text-beige/20" />
-                          <span className="text-beige/20 text-xs">Avatar solo — sin diapositiva</span>
+                        <div className="w-full aspect-video rounded-lg border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2">
+                          <User className="w-8 h-8 text-gray-300" />
+                          <span className="text-gray-300 text-xs">Avatar solo — sin diapositiva</span>
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="w-full aspect-video rounded-lg border border-dashed border-white/10 bg-white/[0.02] flex flex-col items-center justify-center gap-2">
+                    <div className="w-full aspect-video rounded-lg border border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2">
                       <ImageIcon className="w-8 h-8 text-beige/15" />
                       <span className="text-beige/15 text-xs text-center px-2">
                         Sube un PDF para asignar diapositivas
@@ -316,14 +316,14 @@ export default function ScriptBlockEditor({
       <button
         type="button"
         onClick={addBlock}
-        className="flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-white/10 rounded-lg text-beige/40 hover:text-oro hover:border-oro/30 transition-colors text-xs"
+        className="flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-oro hover:border-oro/30 transition-colors text-xs"
       >
         <Plus className="w-3.5 h-3.5" /> Agregar bloque
       </button>
 
       {/* ── Summary ── */}
       {blocks.length > 0 && (
-        <div className="flex items-center justify-between text-[10px] text-beige/25 pt-1">
+        <div className="flex items-center justify-between text-[10px] text-gray-300 pt-1">
           <span>
             {blocks.length} {blocks.length === 1 ? "escena" : "escenas"} · {totalWords} palabras · ~{totalTime} min de video
           </span>

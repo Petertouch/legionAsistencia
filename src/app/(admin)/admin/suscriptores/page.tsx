@@ -133,20 +133,20 @@ export default function SuscriptoresPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-white text-lg font-bold">Suscriptores</h1>
+        <h1 className="text-gray-900 text-lg font-bold">Suscriptores</h1>
         <Link href="/admin/suscriptores/nuevo">
           <Button size="sm"><Plus className="w-4 h-4" /> Nuevo</Button>
         </Link>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+      <div className="flex gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200">
         <button
           onClick={() => setTab("nuevos")}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
             activeTab === "nuevos"
-              ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-              : "text-beige/50 hover:text-white hover:bg-white/5 border border-transparent"
+              ? "bg-yellow-500/20 text-yellow-600 border border-yellow-500/30"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent"
           }`}
         >
           <UserPlus className="w-4 h-4" />
@@ -155,7 +155,7 @@ export default function SuscriptoresPage() {
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
               activeTab === "nuevos"
                 ? "bg-yellow-500/30 text-yellow-300"
-                : "bg-yellow-500/20 text-yellow-400"
+                : "bg-yellow-500/20 text-yellow-600"
             }`}>
               {nuevosCount}
             </span>
@@ -165,13 +165,13 @@ export default function SuscriptoresPage() {
           onClick={() => setTab("suscriptores")}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
             activeTab === "suscriptores"
-              ? "bg-green-500/15 text-green-400 border border-green-500/20"
-              : "text-beige/50 hover:text-white hover:bg-white/5 border border-transparent"
+              ? "bg-green-50 text-green-600 border border-green-200"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent"
           }`}
         >
           <Users className="w-4 h-4" />
           Suscriptores
-          <span className="text-xs text-beige/30">{suscriptoresActivos.length}</span>
+          <span className="text-xs text-gray-400">{suscriptoresActivos.length}</span>
         </button>
       </div>
 
@@ -185,12 +185,12 @@ export default function SuscriptoresPage() {
               <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
                 <CheckCircle className="w-7 h-7 text-green-500/50" />
               </div>
-              <p className="text-white font-medium">Todo al día</p>
-              <p className="text-beige/40 text-sm mt-1">No hay inscripciones pendientes de revisión</p>
+              <p className="text-gray-900 font-medium">Todo al día</p>
+              <p className="text-gray-400 text-sm mt-1">No hay inscripciones pendientes de revisión</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-beige/40 text-xs px-1">
+              <p className="text-gray-400 text-xs px-1">
                 {nuevosCount} {nuevosCount === 1 ? "persona se inscribió" : "personas se inscribieron"} y {nuevosCount === 1 ? "espera" : "esperan"} tu aprobación
               </p>
 
@@ -200,35 +200,35 @@ export default function SuscriptoresPage() {
                 return (
                   <div
                     key={s.id}
-                    className={`bg-white/5 border border-white/10 rounded-xl overflow-hidden transition-all ${
+                    className={`bg-gray-50 border border-gray-200 rounded-xl overflow-hidden transition-all ${
                       isLoading ? "opacity-60 pointer-events-none" : ""
                     }`}
                   >
                     {/* Card content */}
                     <Link
                       href={`/admin/suscriptores/${s.id}`}
-                      className="block p-4 hover:bg-white/[0.03] transition-colors"
+                      className="block p-4 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-full bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
-                            <UserPlus className="w-5 h-5 text-yellow-400" />
+                          <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center flex-shrink-0">
+                            <UserPlus className="w-5 h-5 text-yellow-600" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-white font-medium truncate">{s.nombre}</p>
-                            <p className="text-beige/40 text-xs mt-0.5">
+                            <p className="text-gray-900 font-medium truncate">{s.nombre}</p>
+                            <p className="text-gray-400 text-xs mt-0.5">
                               {s.rango} — {s.rama}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge size="xs">{s.plan}</Badge>
-                          <ChevronRight className="w-4 h-4 text-beige/20" />
+                          <ChevronRight className="w-4 h-4 text-gray-300" />
                         </div>
                       </div>
 
                       {/* Details row */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 ml-[52px] text-xs text-beige/50">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 ml-[52px] text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Shield className="w-3 h-3" /> {s.cedula}
                         </span>
@@ -251,20 +251,20 @@ export default function SuscriptoresPage() {
                     </Link>
 
                     {/* Action bar */}
-                    <div className="flex border-t border-white/10">
+                    <div className="flex border-t border-gray-200">
                       <button
                         onClick={() => handleAprobar(s.id, s.nombre, s.email, s.plan)}
                         disabled={isLoading}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-green-600 hover:bg-green-500/10 transition-colors disabled:opacity-40"
                       >
                         <CheckCircle className="w-4 h-4" />
                         {isLoading && loadingAction === "aprobar" ? "Aprobando..." : "Admitir"}
                       </button>
-                      <div className="w-px bg-white/10" />
+                      <div className="w-px bg-gray-100" />
                       <button
                         onClick={() => handleRechazar(s.id, s.nombre, s.email)}
                         disabled={isLoading}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-beige/40 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                       >
                         <XCircle className="w-4 h-4" />
                         {isLoading && loadingAction === "rechazar" ? "Rechazando..." : "Rechazar"}
@@ -286,34 +286,34 @@ export default function SuscriptoresPage() {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar por nombre, cédula o teléfono..."
-                className="w-full bg-white/5 border border-white/10 text-white text-sm pl-10 pr-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40"
+                className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm pl-10 pr-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={planFilter}
                 onChange={(e) => setPlanFilter(e.target.value)}
-                className="flex-1 sm:flex-none bg-white/5 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none"
+                className="flex-1 sm:flex-none bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none"
               >
-                <option value="" className="bg-jungle-dark">Plan</option>
-                <option value="Base" className="bg-jungle-dark">Base</option>
-                <option value="Plus" className="bg-jungle-dark">Plus</option>
-                <option value="Elite" className="bg-jungle-dark">Elite</option>
+                <option value="" className="bg-white">Plan</option>
+                <option value="Base" className="bg-white">Base</option>
+                <option value="Plus" className="bg-white">Plus</option>
+                <option value="Elite" className="bg-white">Elite</option>
               </select>
               <select
                 value={pagoFilter}
                 onChange={(e) => setPagoFilter(e.target.value)}
-                className="flex-1 sm:flex-none bg-white/5 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none"
+                className="flex-1 sm:flex-none bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none"
               >
-                <option value="" className="bg-jungle-dark">Estado</option>
-                <option value="Al dia" className="bg-jungle-dark">Al dia</option>
-                <option value="Vencido" className="bg-jungle-dark">Vencido</option>
+                <option value="" className="bg-white">Estado</option>
+                <option value="Al dia" className="bg-white">Al dia</option>
+                <option value="Vencido" className="bg-white">Vencido</option>
               </select>
             </div>
           </div>
@@ -321,16 +321,16 @@ export default function SuscriptoresPage() {
           {/* Mobile Cards */}
           <div className="md:hidden space-y-2">
             {suscriptoresActivos.map((s) => (
-              <div key={s.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+              <div key={s.id} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                 <Link
                   href={`/admin/suscriptores/${s.id}`}
-                  className="block p-3.5 hover:bg-white/[0.07] transition-colors active:bg-white/10"
+                  className="block p-3.5 hover:bg-white transition-colors active:bg-gray-100"
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-white text-sm font-medium truncate flex-1">{s.nombre}</p>
+                    <p className="text-gray-900 text-sm font-medium truncate flex-1">{s.nombre}</p>
                     <Badge size="xs">{s.estado_pago}</Badge>
                   </div>
-                  <div className="flex items-center gap-3 text-beige/50 text-xs">
+                  <div className="flex items-center gap-3 text-gray-500 text-xs">
                     <span>{s.rango}</span>
                     <span>·</span>
                     <span>{s.rama}</span>
@@ -340,23 +340,23 @@ export default function SuscriptoresPage() {
                 <button
                   onClick={() => handleDevolverAPendiente(s.id, s.nombre)}
                   disabled={loadingId === s.id}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-beige/40 hover:text-yellow-400 hover:bg-yellow-500/10 border-t border-white/10 transition-colors disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-gray-400 hover:text-yellow-600 hover:bg-yellow-500/10 border-t border-gray-200 transition-colors disabled:opacity-40"
                 >
                   <Undo2 className="w-3.5 h-3.5" /> Devolver a Nuevos Inscritos
                 </button>
               </div>
             ))}
             {suscriptoresActivos.length === 0 && (
-              <p className="text-center text-beige/40 text-sm py-8">Sin resultados</p>
+              <p className="text-center text-gray-400 text-sm py-8">Sin resultados</p>
             )}
           </div>
 
           {/* Desktop Table */}
-          <div className="hidden md:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div className="hidden md:block bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-beige/50 text-xs uppercase tracking-wider">
+                  <tr className="border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
                     <th className="text-left px-4 py-3 font-medium">Nombre</th>
                     <th className="text-left px-4 py-3 font-medium">Teléfono</th>
                     <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Rama</th>
@@ -368,24 +368,24 @@ export default function SuscriptoresPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {suscriptoresActivos.map((s) => (
-                    <tr key={s.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link href={`/admin/suscriptores/${s.id}`} className="text-white hover:text-oro transition-colors font-medium">
+                        <Link href={`/admin/suscriptores/${s.id}`} className="text-gray-900 hover:text-oro transition-colors font-medium">
                           {s.nombre}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-beige/60">{s.telefono}</td>
-                      <td className="px-4 py-3 text-beige/60 hidden lg:table-cell">{s.rama}</td>
+                      <td className="px-4 py-3 text-gray-500">{s.telefono}</td>
+                      <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{s.rama}</td>
                       <td className="px-4 py-3"><Badge>{s.plan}</Badge></td>
                       <td className="px-4 py-3"><Badge>{s.estado_pago}</Badge></td>
-                      <td className="px-4 py-3 text-beige/40 hidden lg:table-cell">
+                      <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                         {formatDate(s.fecha_inicio)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => handleDevolverAPendiente(s.id, s.nombre)}
                           disabled={loadingId === s.id}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg text-beige/40 hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors disabled:opacity-40"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg text-gray-400 hover:text-yellow-600 hover:bg-yellow-500/10 transition-colors disabled:opacity-40"
                           title="Devolver a Nuevos Inscritos"
                         >
                           <Undo2 className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ export default function SuscriptoresPage() {
                   ))}
                   {suscriptoresActivos.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="text-center text-beige/40 text-sm py-8">
+                      <td colSpan={7} className="text-center text-gray-400 text-sm py-8">
                         Sin resultados
                       </td>
                     </tr>

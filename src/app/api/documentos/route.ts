@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+function getRole(request: NextRequest): string | null {
+  return request.headers.get("x-user-role");
+}
+
 // GET: list documents by caso_id
 export async function GET(request: NextRequest) {
+  const role = getRole(request);
+  if (!role || !["admin", "abogado"].includes(role)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
   const casoId = request.nextUrl.searchParams.get("caso_id");
   const suscriptorId = request.nextUrl.searchParams.get("suscriptor_id");
 
@@ -17,8 +26,12 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(data || []);
 }
 
-// POST: create document (admin via middleware, client via body auth)
+// POST: create document
 export async function POST(request: NextRequest) {
+  const role = getRole(request);
+  if (!role || !["admin", "abogado"].includes(role)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
 
   const body = await request.json();
   const { suscriptor_id, caso_id, nombre, tipo, archivo_url, tamano, subido_por } = body;
@@ -38,8 +51,13 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(data);
 }
 
-// DELETE: remove document by id
+// DELETE: remove document by id (admin only)
 export async function DELETE(request: NextRequest) {
+  const role = getRole(request);
+  if (role !== "admin") {
+    return NextResponse.json({ error: "Solo admin puede eliminar documentos" }, { status: 403 });
+  }
+
   const docId = request.nextUrl.searchParams.get("id");
   if (!docId) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 

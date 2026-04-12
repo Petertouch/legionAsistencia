@@ -26,12 +26,12 @@ export default function RecuperarAdminPage() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       {sent ? (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
           <div className="w-14 h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-7 h-7 text-green-400" />
+            <CheckCircle className="w-7 h-7 text-green-600" />
           </div>
-          <h2 className="text-white font-bold text-lg">Revisa tu email</h2>
-          <p className="text-beige/50 text-sm leading-relaxed">
+          <h2 className="text-gray-900 font-bold text-lg">Revisa tu email</h2>
+          <p className="text-gray-500 text-sm leading-relaxed">
             Si el email está registrado, recibirás un enlace para restablecer tu contraseña.
           </p>
           <Link href="/login" className="inline-block text-sm font-medium text-oro hover:underline">
@@ -39,21 +39,21 @@ export default function RecuperarAdminPage() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 space-y-4 w-full max-w-sm mx-4 md:mx-0">
+        <form onSubmit={handleSubmit} className="bg-gray-50 border border-gray-200 rounded-2xl p-5 md:p-8 space-y-4 w-full max-w-sm mx-4 md:mx-0">
           <div className="text-center mb-2">
-            <h2 className="text-white font-bold text-lg">Recuperar contraseña</h2>
-            <p className="text-beige/50 text-sm mt-1">Ingresa tu email del panel</p>
+            <h2 className="text-gray-900 font-bold text-lg">Recuperar contraseña</h2>
+            <p className="text-gray-500 text-sm mt-1">Ingresa tu email del panel</p>
           </div>
 
           <div>
-            <label className="text-beige/60 text-xs font-medium mb-1 block">Email</label>
+            <label className="text-gray-500 text-xs font-medium mb-1 block">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@ejemplo.com"
               required
-              className="w-full bg-white/5 border border-white/10 text-white text-sm px-4 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40"
+              className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40"
             />
           </div>
 
@@ -65,7 +65,7 @@ export default function RecuperarAdminPage() {
             {loading ? "Enviando..." : "Enviar enlace"}
           </button>
 
-          <Link href="/login" className="flex items-center justify-center gap-1 text-beige/30 text-xs hover:text-white transition-colors">
+          <Link href="/login" className="flex items-center justify-center gap-1 text-gray-400 text-xs hover:text-gray-900 transition-colors">
             <ArrowLeft className="w-3 h-3" /> Volver al login
           </Link>
         </form>

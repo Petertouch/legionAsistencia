@@ -63,17 +63,17 @@ export default function CasosPage() {
 
       {/* View toggle + search */}
       <div className="flex items-center gap-3">
-        <div className="flex bg-white/5 rounded-lg border border-white/10 p-0.5">
+        <div className="flex bg-gray-50 rounded-lg border border-gray-200 p-0.5">
           <button
             onClick={() => setViewMode("kanban")}
-            className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-oro/15 text-oro" : "text-beige/40 hover:text-white"}`}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-amber-100 text-oro" : "text-gray-400 hover:text-gray-900"}`}
             title="Vista Kanban"
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode("tabla")}
-            className={`p-1.5 rounded-md transition-colors ${viewMode === "tabla" ? "bg-oro/15 text-oro" : "text-beige/40 hover:text-white"}`}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "tabla" ? "bg-amber-100 text-oro" : "text-gray-400 hover:text-gray-900"}`}
             title="Vista Tabla"
           >
             <List className="w-4 h-4" />
@@ -81,13 +81,13 @@ export default function CasosPage() {
         </div>
         {viewMode === "tabla" && (
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-beige/30" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por titulo, cliente, abogado..."
-              className="w-full bg-white/5 border border-white/10 text-white text-sm pl-10 pr-4 py-2 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40"
+              className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm pl-10 pr-4 py-2 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40"
             />
           </div>
         )}
@@ -109,31 +109,31 @@ function TableView({ casos }: { casos: import("@/lib/mock-data").Caso[] }) {
       {/* Mobile Cards */}
       <div className="md:hidden space-y-2">
         {casos.length === 0 ? (
-          <p className="text-center text-beige/40 text-sm py-8">No se encontraron casos</p>
+          <p className="text-center text-gray-400 text-sm py-8">No se encontraron casos</p>
         ) : (
           casos.map((c) => (
             <Link key={c.id} href={`/admin/casos/${c.id}`}
-              className="block bg-white/5 border border-white/10 rounded-xl p-3.5 hover:bg-white/[0.07] transition-colors active:bg-white/10">
+              className="block bg-gray-50 border border-gray-200 rounded-xl p-3.5 hover:bg-white transition-colors active:bg-gray-100">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-white text-sm font-medium truncate flex-1 mr-2">{c.titulo}</p>
+                <p className="text-gray-900 text-sm font-medium truncate flex-1 mr-2">{c.titulo}</p>
                 <Badge size="xs">{c.prioridad}</Badge>
               </div>
-              <div className="flex items-center gap-2 text-beige/50 text-xs">
+              <div className="flex items-center gap-2 text-gray-500 text-xs">
                 <span className="truncate">{c.suscriptor_nombre}</span>
                 <span>•</span>
                 <span>{c.etapa}</span>
-                {c.fecha_limite && <span className="ml-auto text-beige/30">{new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>}
+                {c.fecha_limite && <span className="ml-auto text-gray-400">{new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>}
               </div>
             </Link>
           ))
         )}
       </div>
       {/* Desktop Table */}
-      <div className="hidden md:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+      <div className="hidden md:block bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-beige/50 text-xs uppercase tracking-wider">
+              <tr className="border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
                 <th className="text-left px-4 py-3 font-medium">Caso</th>
                 <th className="text-left px-4 py-3 font-medium">Cliente</th>
                 <th className="text-left px-4 py-3 font-medium">Etapa</th>
@@ -144,16 +144,16 @@ function TableView({ casos }: { casos: import("@/lib/mock-data").Caso[] }) {
             </thead>
             <tbody className="divide-y divide-white/5">
               {casos.map((c) => (
-                <tr key={c.id} className="hover:bg-white/5 transition-colors">
+                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/casos/${c.id}`} className="text-white hover:text-oro transition-colors font-medium">{c.titulo}</Link>
-                    <p className="text-beige/40 text-xs mt-0.5">{c.area}</p>
+                    <Link href={`/admin/casos/${c.id}`} className="text-gray-900 hover:text-oro transition-colors font-medium">{c.titulo}</Link>
+                    <p className="text-gray-400 text-xs mt-0.5">{c.area}</p>
                   </td>
-                  <td className="px-4 py-3 text-beige/60">{c.suscriptor_nombre}</td>
+                  <td className="px-4 py-3 text-gray-500">{c.suscriptor_nombre}</td>
                   <td className="px-4 py-3"><Badge variant="neutral">{c.etapa}</Badge></td>
                   <td className="px-4 py-3"><Badge>{c.prioridad}</Badge></td>
-                  <td className="px-4 py-3 text-beige/60 hidden lg:table-cell">{c.abogado}</td>
-                  <td className="px-4 py-3 text-beige/40 hidden lg:table-cell">
+                  <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{c.abogado}</td>
+                  <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                     {c.fecha_limite ? new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" }) : "\u2014"}
                   </td>
                 </tr>

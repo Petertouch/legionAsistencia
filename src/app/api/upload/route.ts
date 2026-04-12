@@ -9,6 +9,7 @@ const ALLOWED_TYPES = [
 ];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const BUCKET = "avatars";
+const ALLOWED_FOLDERS = ["profesores", "cursos", "recursos", "documentos", "videos", "avatars"];
 
 export async function POST(request: NextRequest) {
   // Auth check
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "Archivo muy grande. Máximo 5MB" }, { status: 400 });
+      return NextResponse.json({ error: "Archivo muy grande. Máximo 10MB" }, { status: 400 });
     }
 
     const supabase = createAdminClient();
@@ -41,9 +42,13 @@ export async function POST(request: NextRequest) {
       await supabase.storage.createBucket(BUCKET, { public: true });
     }
 
-    // Generar nombre único — soporta carpeta personalizada
-    const folder = (formData.get("folder") as string) || "profesores";
-    const ext = file.name.split(".").pop() || "jpg";
+    // Sanitize folder — only allow whitelisted folder names, no path traversal
+    const rawFolder = (formData.get("folder") as string) || "profesores";
+    const folder = ALLOWED_FOLDERS.includes(rawFolder) ? rawFolder : "profesores";
+
+    // Sanitize filename — strip path separators and dangerous chars
+    const rawExt = (file.name.split(".").pop() || "jpg").replace(/[^a-zA-Z0-9]/g, "");
+    const ext = rawExt.slice(0, 10); // limit extension length
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const filePath = `${folder}/${fileName}`;
 

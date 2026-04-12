@@ -58,13 +58,26 @@ Estoy aquí para ayudarte con información sobre nuestros servicios legales para
 
 ¿En qué te puedo ayudar?`;
 
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function renderMarkdown(text: string) {
   const lines = text.split("\n");
   return lines.map((line, i) => {
-    let processed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Escape HTML first to prevent XSS
+    let processed = escapeHtml(line);
+    // Then apply safe markdown transformations
+    processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     processed = processed.replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" class="text-oro underline hover:text-oro-light">$1</a>'
+      (_, label, url) => {
+        // Only allow safe URL protocols
+        if (/^(https?:|mailto:|tel:)/.test(url)) {
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-oro underline hover:text-oro-light">${label}</a>`;
+        }
+        return label;
+      }
     );
     return (
       <span key={i}>

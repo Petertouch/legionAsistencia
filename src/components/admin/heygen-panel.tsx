@@ -319,32 +319,32 @@ export default function HeyGenPanel({
   const totalWords = blocksWithText.reduce((s, b) => s + b.text.trim().split(/\s+/).length, 0);
 
   return (
-    <div className="border border-white/10 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
       {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full px-4 py-3 hover:bg-white/[0.03] transition-colors"
+        className="flex items-center justify-between w-full px-4 py-3 hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Clapperboard className="w-4 h-4 text-purple-400" />
-          <span className="text-white text-sm font-medium">Generar video con HeyGen</span>
-          {status === "completed" && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
+          <Clapperboard className="w-4 h-4 text-purple-600" />
+          <span className="text-gray-900 text-sm font-medium">Generar video con HeyGen</span>
+          {status === "completed" && <CheckCircle className="w-3.5 h-3.5 text-green-600" />}
           {status === "polling" && <Loader2 className="w-3.5 h-3.5 text-oro animate-spin" />}
         </div>
-        <span className="text-beige/30 text-xs">
+        <span className="text-gray-400 text-xs">
           {blocksWithText.length} escenas · {totalWords} palabras
         </span>
       </button>
 
       {/* Expanded panel */}
       {expanded && (
-        <div className="border-t border-white/10 px-4 py-4 space-y-4">
+        <div className="border-t border-gray-200 px-4 py-4 space-y-4">
           {/* Loading config */}
           {status === "loading-config" && (
             <div className="flex items-center justify-center gap-2 py-6">
               <Loader2 className="w-5 h-5 text-oro animate-spin" />
-              <span className="text-beige/50 text-sm">Cargando avatares y voces de HeyGen...</span>
+              <span className="text-gray-500 text-sm">Cargando avatares y voces de HeyGen...</span>
             </div>
           )}
 
@@ -353,9 +353,9 @@ export default function HeyGenPanel({
             <>
               {/* Avatar selector */}
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-2 block">Avatar</label>
+                <label className="text-gray-500 text-xs font-medium mb-2 block">Avatar</label>
                 {avatars.length === 0 ? (
-                  <p className="text-beige/30 text-xs">No se encontraron avatares. Verifica tu API key de HeyGen.</p>
+                  <p className="text-gray-400 text-xs">No se encontraron avatares. Verifica tu API key de HeyGen.</p>
                 ) : (
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     {avatars.slice(0, 20).map((av) => (
@@ -366,7 +366,7 @@ export default function HeyGenPanel({
                         className={`flex-shrink-0 rounded-lg border-2 transition-all p-1 ${
                           selectedAvatar === av.avatar_id
                             ? "border-purple-500 bg-purple-500/10"
-                            : "border-white/10 hover:border-white/20"
+                            : "border-gray-200 hover:border-gray-200"
                         }`}
                       >
                         {av.preview_image_url ? (
@@ -376,11 +376,11 @@ export default function HeyGenPanel({
                             className="w-16 h-16 rounded object-cover"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded bg-white/5 flex items-center justify-center">
-                            <User className="w-6 h-6 text-beige/30" />
+                          <div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center">
+                            <User className="w-6 h-6 text-gray-400" />
                           </div>
                         )}
-                        <p className="text-beige/50 text-[9px] mt-1 truncate w-16 text-center">
+                        <p className="text-gray-500 text-[9px] mt-1 truncate w-16 text-center">
                           {av.avatar_name}
                         </p>
                       </button>
@@ -391,16 +391,16 @@ export default function HeyGenPanel({
 
               {/* Voice selector */}
               <div>
-                <label className="text-beige/60 text-xs font-medium mb-1.5 block">Voz</label>
+                <label className="text-gray-500 text-xs font-medium mb-1.5 block">Voz</label>
                 <div className="flex gap-2">
                   <select
                     value={selectedVoice}
                     onChange={(e) => setSelectedVoice(e.target.value)}
-                    className="flex-1 bg-white/5 border border-white/10 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
+                    className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
                   >
-                    <option value="" className="bg-jungle-dark">Selecciona una voz</option>
+                    <option value="" className="bg-white">Selecciona una voz</option>
                     {voices.map((v) => (
-                      <option key={v.voice_id} value={v.voice_id} className="bg-jungle-dark">
+                      <option key={v.voice_id} value={v.voice_id} className="bg-white">
                         {(v.is_cloned || v.source === "clone" || (v.name || "").toLowerCase().includes("tobar")) ? "🎤 " : ""}{v.name} ({v.language}{v.gender ? ` · ${v.gender}` : ""}{(v.is_cloned || v.source === "clone" || (v.name || "").toLowerCase().includes("tobar")) ? " · MI VOZ" : ""})
                       </option>
                     ))}
@@ -412,7 +412,7 @@ export default function HeyGenPanel({
                         const voice = voices.find((v) => v.voice_id === selectedVoice);
                         if (voice?.preview_audio) playPreview(voice.preview_audio);
                       }}
-                      className="p-2 border border-white/10 rounded-lg text-beige/40 hover:text-purple-400 transition-colors"
+                      className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-purple-600 transition-colors"
                       title="Escuchar preview"
                     >
                       <Volume2 className="w-4 h-4" />
@@ -426,39 +426,39 @@ export default function HeyGenPanel({
               <div className="grid grid-cols-3 gap-3">
                 {/* Avatar style */}
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1.5 block">Encuadre</label>
+                  <label className="text-gray-500 text-xs font-medium mb-1.5 block">Encuadre</label>
                   <select
                     value={avatarStyle}
                     onChange={(e) => setAvatarStyle(e.target.value as "closeup" | "normal")}
-                    className="w-full bg-white/5 border border-white/10 text-white text-xs px-2.5 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-xs px-2.5 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
                   >
-                    <option value="closeup" className="bg-jungle-dark">Closeup (cabeza)</option>
-                    <option value="normal" className="bg-jungle-dark">Cuerpo completo</option>
+                    <option value="closeup" className="bg-white">Closeup (cabeza)</option>
+                    <option value="normal" className="bg-white">Cuerpo completo</option>
                   </select>
-                  <p className="text-beige/20 text-[9px] mt-1">Closeup evita problemas con manos</p>
+                  <p className="text-gray-300 text-[9px] mt-1">Closeup evita problemas con manos</p>
                 </div>
 
                 {/* Emotion */}
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1.5 block">Emoción</label>
+                  <label className="text-gray-500 text-xs font-medium mb-1.5 block">Emoción</label>
                   <select
                     value={emotion}
                     onChange={(e) => setEmotion(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 text-white text-xs px-2.5 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-xs px-2.5 py-2 rounded-lg focus:outline-none focus:border-purple-500/40 appearance-none"
                   >
-                    <option value="Friendly" className="bg-jungle-dark">Amigable</option>
-                    <option value="Serious" className="bg-jungle-dark">Serio</option>
-                    <option value="Excited" className="bg-jungle-dark">Entusiasta</option>
-                    <option value="Soothing" className="bg-jungle-dark">Calmado</option>
-                    <option value="Broadcaster" className="bg-jungle-dark">Presentador</option>
-                    <option value="Angry" className="bg-jungle-dark">Enérgico</option>
-                    <option value="none" className="bg-jungle-dark">Sin emoción</option>
+                    <option value="Friendly" className="bg-white">Amigable</option>
+                    <option value="Serious" className="bg-white">Serio</option>
+                    <option value="Excited" className="bg-white">Entusiasta</option>
+                    <option value="Soothing" className="bg-white">Calmado</option>
+                    <option value="Broadcaster" className="bg-white">Presentador</option>
+                    <option value="Angry" className="bg-white">Enérgico</option>
+                    <option value="none" className="bg-white">Sin emoción</option>
                   </select>
                 </div>
 
                 {/* Speed */}
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1.5 block">
+                  <label className="text-gray-500 text-xs font-medium mb-1.5 block">
                     Velocidad: {speed.toFixed(2)}x
                   </label>
                   <input
@@ -470,7 +470,7 @@ export default function HeyGenPanel({
                     onChange={(e) => setSpeed(parseFloat(e.target.value))}
                     className="w-full accent-purple-500 h-2"
                   />
-                  <div className="flex justify-between text-[9px] text-beige/20 mt-0.5">
+                  <div className="flex justify-between text-[9px] text-gray-300 mt-0.5">
                     <span>Lento</span>
                     <span>Natural</span>
                     <span>Rápido</span>
@@ -479,21 +479,21 @@ export default function HeyGenPanel({
               </div>
 
               {/* Scene summary */}
-              <div className="bg-white/[0.03] rounded-lg p-3 space-y-1.5">
-                <p className="text-beige/50 text-xs font-medium">Resumen de escenas:</p>
+              <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+                <p className="text-gray-500 text-xs font-medium">Resumen de escenas:</p>
                 {blocksWithText.map((block, i) => (
                   <div key={block.id} className="flex items-center gap-2 text-[11px]">
-                    <span className="text-beige/30 w-6">#{i + 1}</span>
-                    <span className="text-beige/50 flex-1 truncate">{block.text.slice(0, 60)}...</span>
+                    <span className="text-gray-400 w-6">#{i + 1}</span>
+                    <span className="text-gray-500 flex-1 truncate">{block.text.slice(0, 60)}...</span>
                     {block.slide_number ? (
-                      <span className="text-purple-400/60">Diap. {block.slide_number}</span>
+                      <span className="text-purple-600/60">Diap. {block.slide_number}</span>
                     ) : (
-                      <span className="text-beige/20">Avatar solo</span>
+                      <span className="text-gray-300">Avatar solo</span>
                     )}
-                    <span className="text-beige/20">{Math.ceil(block.text.split(/\s+/).length / 150 * 60)}s</span>
+                    <span className="text-gray-300">{Math.ceil(block.text.split(/\s+/).length / 150 * 60)}s</span>
                   </div>
                 ))}
-                <div className="border-t border-white/5 pt-1.5 mt-1.5 flex justify-between text-[10px] text-beige/30">
+                <div className="border-t border-gray-100 pt-1.5 mt-1.5 flex justify-between text-[10px] text-gray-400">
                   <span>{blocksWithText.length} escenas · {totalWords} palabras</span>
                   <span>~{Math.ceil(totalWords / 150)} min de video</span>
                 </div>
@@ -522,7 +522,7 @@ export default function HeyGenPanel({
                   <button
                     type="button"
                     onClick={() => { setStatus("idle"); setErrorMsg(null); }}
-                    className="text-beige/40 hover:text-white text-xs flex items-center gap-1 transition-colors"
+                    className="text-gray-400 hover:text-gray-900 text-xs flex items-center gap-1 transition-colors"
                   >
                     <RefreshCw className="w-3 h-3" /> Reintentar
                   </button>
@@ -534,23 +534,23 @@ export default function HeyGenPanel({
                 <div className="flex items-center gap-2 text-xs text-oro">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>{progress}</span>
-                  {videoId && <span className="text-beige/20">ID: {videoId.slice(0, 12)}...</span>}
+                  {videoId && <span className="text-gray-300">ID: {videoId.slice(0, 12)}...</span>}
                 </div>
               )}
 
               {/* Error */}
               {errorMsg && (
-                <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-red-300 text-xs">{errorMsg}</p>
                 </div>
               )}
 
               {/* Video result */}
               {videoUrl && (
-                <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3 space-y-2">
+                <div className="bg-green-500/5 border border-green-200 rounded-lg p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="text-green-300 text-sm font-medium">Video generado</span>
                   </div>
                   <video
@@ -564,11 +564,11 @@ export default function HeyGenPanel({
                       href={videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-green-400 text-xs hover:underline flex items-center gap-1"
+                      className="text-green-600 text-xs hover:underline flex items-center gap-1"
                     >
                       <Play className="w-3 h-3" /> Abrir en nueva pestaña
                     </a>
-                    <span className="text-beige/20 text-[10px]">El enlace expira en 7 días</span>
+                    <span className="text-gray-300 text-[10px]">El enlace expira en 7 días</span>
                   </div>
                 </div>
               )}

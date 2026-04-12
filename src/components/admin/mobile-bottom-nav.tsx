@@ -20,7 +20,7 @@ export default function MobileBottomNav() {
   const visibleItems = NAV_ITEMS.filter((item) => !role || item.roles.includes(role));
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-jungle-dark/95 backdrop-blur-md border-t border-white/10 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 safe-bottom">
       <div className="flex items-center justify-around px-2 py-1.5">
         {visibleItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
@@ -29,7 +29,7 @@ export default function MobileBottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors ${
-                active ? "text-oro" : "text-beige/40"
+                active ? "text-oro" : "text-gray-400"
               }`}
             >
               <Icon className="w-5 h-5" />

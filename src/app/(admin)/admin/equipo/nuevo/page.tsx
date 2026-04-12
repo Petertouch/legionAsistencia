@@ -26,7 +26,7 @@ export default function NuevoMiembroPage() {
     areas_habilitadas: [] as CaseArea[],
     especialidad: "Disciplinario" as CaseArea,
     fecha_ingreso: new Date().toISOString().split("T")[0],
-    password: "legion2026",
+    password: "",
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     notas: "",
     max_casos: 10,
@@ -100,16 +100,16 @@ export default function NuevoMiembroPage() {
     router.push("/admin/equipo");
   };
 
-  const inputCls = "w-full bg-white/5 border border-white/10 text-white text-sm px-3 py-2 rounded-lg placeholder-beige/20 focus:outline-none focus:border-oro/40";
-  const labelCls = "text-beige/40 text-[10px] block mb-1";
+  const inputCls = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2 rounded-lg placeholder-beige/20 focus:outline-none focus:border-oro/40";
+  const labelCls = "text-gray-400 text-[10px] block mb-1";
 
   return (
     <div className="space-y-4 max-w-lg">
-      <Link href="/admin/equipo" className="inline-flex items-center gap-1.5 text-beige/40 text-sm hover:text-white transition-colors">
+      <Link href="/admin/equipo" className="inline-flex items-center gap-1.5 text-gray-400 text-sm hover:text-gray-900 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Equipo
       </Link>
 
-      <h1 className="text-white text-xl font-bold">Nuevo miembro</h1>
+      <h1 className="text-gray-900 text-xl font-bold">Nuevo miembro</h1>
 
       {/* Role selector */}
       <div className="flex gap-2">
@@ -117,8 +117,8 @@ export default function NuevoMiembroPage() {
           onClick={() => setRole("abogado")}
           className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
             role === "abogado"
-              ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
-              : "bg-white/5 border-white/10 text-beige/40 hover:text-white"
+              ? "bg-blue-50 border-blue-500/30 text-blue-600"
+              : "bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-900"
           }`}
         >
           <Scale className="w-4 h-4" /> Abogado
@@ -127,8 +127,8 @@ export default function NuevoMiembroPage() {
           onClick={() => setRole("profesor")}
           className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
             role === "profesor"
-              ? "bg-purple-500/15 border-purple-500/30 text-purple-400"
-              : "bg-white/5 border-white/10 text-beige/40 hover:text-white"
+              ? "bg-purple-500/15 border-purple-500/30 text-purple-600"
+              : "bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-900"
           }`}
         >
           <GraduationCap className="w-4 h-4" /> Profesor
@@ -137,7 +137,7 @@ export default function NuevoMiembroPage() {
 
       <div className="space-y-4">
         {/* Basic info */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
           <div>
             <label className={labelCls}>Nombre completo *</label>
             <input type="text" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -171,7 +171,7 @@ export default function NuevoMiembroPage() {
         {/* Abogado-specific fields */}
         {role === "abogado" && (
           <>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
               <label className={labelCls}>Áreas habilitadas *</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
                 {ALL_AREAS.map((area) => {
@@ -179,10 +179,10 @@ export default function NuevoMiembroPage() {
                   return (
                     <button key={area} onClick={() => toggleArea(area)}
                       className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs text-left transition-all ${
-                        enabled ? "bg-oro/10 border-oro/30 text-oro" : "bg-white/3 border-white/5 text-beige/25 hover:bg-white/5"
+                        enabled ? "bg-amber-50 border-oro/30 text-oro" : "bg-gray-50 border-gray-100 text-gray-300 hover:bg-gray-50"
                       }`}>
                       <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
-                        enabled ? "bg-oro/30 border-oro/50" : "border-white/10"
+                        enabled ? "bg-oro/30 border-oro/50" : "border-gray-200"
                       }`}>
                         {enabled && <CheckCircle2 className="w-2.5 h-2.5" />}
                       </div>
@@ -192,18 +192,18 @@ export default function NuevoMiembroPage() {
                 })}
               </div>
               {form.areas_habilitadas.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-white/5">
+                <div className="mt-3 pt-3 border-t border-gray-100">
                   <label className={labelCls}>Especialidad principal</label>
                   <select value={form.especialidad} onChange={(e) => setForm({ ...form, especialidad: e.target.value as CaseArea })}
                     className={`${inputCls} appearance-none`}>
                     {form.areas_habilitadas.map((area) => (
-                      <option key={area} value={area} className="bg-jungle-dark">{area}</option>
+                      <option key={area} value={area} className="bg-white">{area}</option>
                     ))}
                   </select>
                 </div>
               )}
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
               <label className={labelCls}>Max casos simultáneos</label>
               <input type="number" min={1} max={50} value={form.max_casos}
                 onChange={(e) => setForm({ ...form, max_casos: parseInt(e.target.value) || 1 })} className={inputCls} />
@@ -213,7 +213,7 @@ export default function NuevoMiembroPage() {
 
         {/* Profesor-specific fields */}
         {role === "profesor" && (
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
             <div>
               <label className={labelCls}>Especialidad académica *</label>
               <input type="text" value={form.especialidad_academica}
@@ -230,23 +230,23 @@ export default function NuevoMiembroPage() {
               <label className={labelCls}>Foto de perfil</label>
               {form.avatar_url ? (
                 <div className="flex items-center gap-3 mt-1">
-                  <img src={form.avatar_url} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-white/10" />
+                  <img src={form.avatar_url} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, avatar_url: "" })}
-                    className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+                    className="flex items-center gap-1 text-xs text-red-600 hover:text-red-300 transition-colors"
                   >
                     <XIcon className="w-3 h-3" /> Quitar
                   </button>
                 </div>
               ) : (
-                <label className={`flex flex-col items-center justify-center gap-2 py-6 mt-1 border-2 border-dashed border-white/10 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+                <label className={`flex flex-col items-center justify-center gap-2 py-6 mt-1 border-2 border-dashed border-gray-200 hover:border-oro/30 rounded-xl cursor-pointer transition-colors group ${uploading ? "pointer-events-none opacity-60" : ""}`}>
                   {uploading ? (
                     <Loader2 className="w-6 h-6 text-oro animate-spin" />
                   ) : (
-                    <Upload className="w-6 h-6 text-beige/30 group-hover:text-oro transition-colors" />
+                    <Upload className="w-6 h-6 text-gray-400 group-hover:text-oro transition-colors" />
                   )}
-                  <span className="text-beige/40 text-xs group-hover:text-beige/60 transition-colors">
+                  <span className="text-gray-400 text-xs group-hover:text-gray-500 transition-colors">
                     {uploading ? "Subiendo..." : "Click para subir foto (JPG, PNG, WebP)"}
                   </span>
                   <input
@@ -263,13 +263,13 @@ export default function NuevoMiembroPage() {
         )}
 
         {/* Color + notes */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
           <div>
             <label className={labelCls}>Color del avatar</label>
             <div className="flex gap-2 mt-1">
               {COLORS.map((c) => (
                 <button key={c} onClick={() => setForm({ ...form, color: c })}
-                  className={`w-8 h-8 rounded-full transition-all ${form.color === c ? "ring-2 ring-white ring-offset-2 ring-offset-jungle-dark scale-110" : "hover:scale-105"}`}
+                  className={`w-8 h-8 rounded-full transition-all ${form.color === c ? "ring-2 ring-white ring-offset-2 ring-offset-white scale-110" : "hover:scale-105"}`}
                   style={{ backgroundColor: c }} />
               ))}
             </div>

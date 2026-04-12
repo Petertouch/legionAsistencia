@@ -1,7 +1,8 @@
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 // Server-only client con service_role key — bypasea RLS
-// NUNCA importar desde componentes client ("use client")
+// El import "server-only" garantiza que este archivo NUNCA se incluya en el client bundle
 export function createAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

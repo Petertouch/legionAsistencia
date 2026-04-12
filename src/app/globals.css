@@ -12,6 +12,10 @@
   --color-beige: #D2B48C;
   --color-arena: #FAF8F3;
   --color-arena-dark: #F0EBE0;
+  /* Admin panel — light warm theme */
+  --color-panel: #F5F3EE;
+  --color-panel-dark: #13161F;
+  --color-panel-surface: #FFFFFF;
 }
 
 @layer base {

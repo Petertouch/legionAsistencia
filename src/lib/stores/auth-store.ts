@@ -12,24 +12,6 @@ export interface AuthUser {
   cedula?: string;
 }
 
-// Credentials: email → { password, user }
-export const MOCK_CREDENTIALS: Record<string, { password: string; user: AuthUser }> = {
-  "a@a.com": {
-    password: "123",
-    user: { id: "u1", nombre: "Admin", email: "a@a.com", role: "admin" },
-  },
-};
-
-// Helper for login page
-export const MOCK_USERS: AuthUser[] = Object.values(MOCK_CREDENTIALS).map((c) => c.user);
-
-export function authenticate(email: string, password: string): AuthUser | null {
-  const entry = MOCK_CREDENTIALS[email.toLowerCase().trim()];
-  if (!entry) return null;
-  if (entry.password !== password) return null;
-  return entry.user;
-}
-
 interface AuthStore {
   user: AuthUser | null;
   login: (user: AuthUser) => void;

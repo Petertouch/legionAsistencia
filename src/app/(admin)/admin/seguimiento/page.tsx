@@ -83,14 +83,14 @@ export default function SeguimientoPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ClipboardList className="w-5 h-5 text-oro" />
-          <span className="text-beige/50 text-sm">{filteredSeguimientos?.length || 0} actividades</span>
+          <span className="text-gray-500 text-sm">{filteredSeguimientos?.length || 0} actividades</span>
         </div>
         <div className="flex items-center gap-2">
           <select value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
-            <option value="" className="bg-jungle-dark">Todos los tipos</option>
+            className="bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+            <option value="" className="bg-white">Todos los tipos</option>
             {["llamada", "reunion", "whatsapp", "nota"].map((t) => (
-              <option key={t} value={t} className="bg-jungle-dark">{TIPO_LABELS[t]}</option>
+              <option key={t} value={t} className="bg-white">{TIPO_LABELS[t]}</option>
             ))}
           </select>
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
@@ -102,26 +102,26 @@ export default function SeguimientoPage() {
 
       {/* New activity form */}
       {showForm && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
           <div className="flex gap-1.5">
             {TIPO_OPTIONS.map(({ value, label, icon: Icon }) => (
               <button key={value} type="button" onClick={() => setFormTipo(value)}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  formTipo === value ? "bg-oro/15 text-oro border border-oro/30" : "bg-white/5 text-beige/40 hover:text-white hover:bg-white/10"
+                  formTipo === value ? "bg-amber-100 text-oro border border-oro/30" : "bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100"
                 }`}>
                 <Icon className="w-3.5 h-3.5" /> {label}
               </button>
             ))}
           </div>
           <select value={formCasoId} onChange={(e) => setFormCasoId(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
-            <option value="" className="bg-jungle-dark">Sin caso asociado</option>
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+            <option value="" className="bg-white">Sin caso asociado</option>
             {casos?.filter((c) => c.etapa !== "Cerrado").map((c) => (
-              <option key={c.id} value={c.id} className="bg-jungle-dark">{c.titulo} — {c.suscriptor_nombre}</option>
+              <option key={c.id} value={c.id} className="bg-white">{c.titulo} — {c.suscriptor_nombre}</option>
             ))}
           </select>
           <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Describe la actividad..."
-            rows={2} className="w-full bg-white/5 border border-white/10 text-white text-sm px-3 py-2 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40 resize-none" />
+            rows={2} className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40 resize-none" />
           <div className="flex justify-end">
             <button onClick={handleSubmit} disabled={!formDesc.trim() || formLoading}
               className="flex items-center gap-1.5 bg-oro text-jungle-dark text-xs font-medium px-4 py-2 rounded-lg hover:bg-oro/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -133,12 +133,12 @@ export default function SeguimientoPage() {
 
       <div className="space-y-3">
         {filteredSeguimientos?.map((seg) => (
-          <div key={seg.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4 hover:bg-white/[0.07] transition-colors">
-            <div className="p-2.5 rounded-xl bg-white/5 text-oro flex-shrink-0">
+          <div key={seg.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-4 hover:bg-white transition-colors">
+            <div className="p-2.5 rounded-xl bg-gray-50 text-oro flex-shrink-0">
               {TIPO_ICONS[seg.tipo]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-beige/80 text-sm">{seg.descripcion}</p>
+              <p className="text-gray-600 text-sm">{seg.descripcion}</p>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <Badge variant="neutral">{TIPO_LABELS[seg.tipo]}</Badge>
                 {seg.suscriptor_nombre && (
@@ -152,7 +152,7 @@ export default function SeguimientoPage() {
                   </Link>
                 )}
                 {seg.caso_area && <Badge>{seg.caso_area}</Badge>}
-                <span className="text-beige/30 text-xs ml-auto">
+                <span className="text-gray-400 text-xs ml-auto">
                   {new Date(seg.fecha).toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
