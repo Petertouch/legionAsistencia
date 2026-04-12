@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Shield, Check, MessageCircle, Phone, Star, ArrowLeft, ArrowRight, FileText, Lock, Scale, HelpCircle } from "lucide-react";
@@ -88,6 +89,8 @@ async function generateHash(content: string): Promise<string> {
 
 export default function ReferralPage({ params }: Props) {
   const { code } = use(params);
+  const searchParams = useSearchParams();
+  const resumeLeadId = searchParams.get("lead");
   const [lanza, setLanza] = useState<Lanza | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1); // 1=form, 2=contract+extras, 3=sign+photo, 4=password, 5=onboarding
@@ -193,6 +196,37 @@ export default function ReferralPage({ params }: Props) {
         }
       });
   }, [code]);
+
+  // Auto-resume: si la URL tiene ?lead=LEAD_ID (viene del panel del aliado),
+  // cargamos los datos del lead desde la DB, pre-llenamos el form y saltamos
+  // directo al step 2 sin que el usuario tenga que llenar nada otra vez.
+  useEffect(() => {
+    if (!resumeLeadId) return;
+    const supabase = createClient();
+    supabase
+      .from("lanza_leads")
+      .select("id, nombre, cedula, telefono, email, plan_interes")
+      .eq("id", resumeLeadId)
+      .single()
+      .then(({ data }: { data: { id: string; nombre: string; cedula: string; telefono: string; email: string; plan_interes: string | null } | null }) => {
+        if (!data) return;
+        setForm({
+          nombre: data.nombre || "",
+          cedula: data.cedula || "",
+          telefono: data.telefono || "",
+          email: data.email || "",
+        });
+        if (data.plan_interes) setPlan(data.plan_interes);
+        setLeadId(data.id);
+        setStep(2);
+        // Actualizar tracking
+        fetch("/api/lanza-leads/avanzar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_id: data.id, current_step: 2 }),
+        }).catch(() => {});
+      });
+  }, [resumeLeadId]);
 
   const update = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));

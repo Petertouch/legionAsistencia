@@ -7,7 +7,7 @@ import { getComisionesPorTipo, getComisionForAliado } from "@/lib/config";
 import { toast } from "sonner";
 import {
   Copy, Users, Phone, DollarSign, Share2, LogOut, Award,
-  Heart, Shield, Sparkles, Clock, MessageCircle, X, Check, RotateCcw,
+  Heart, Shield, Sparkles, Clock, MessageCircle, X, Check, RotateCcw, ArrowRight,
 } from "lucide-react";
 
 interface Lanza {
@@ -360,27 +360,35 @@ function LanzaPanelContent() {
           leads={leadsByGroup.enProceso}
           accentColor="text-blue-700"
           renderActions={(lead) => (
-            <div className="flex gap-2 mt-2.5">
-              <button
-                onClick={() => handleRemindLead(lead)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
+            <div className="flex flex-col gap-2 mt-2.5">
+              <a
+                href={`/r/${lanza.code}?lead=${lead.id}`}
+                className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark text-[11px] font-bold py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <MessageCircle className="w-3 h-3" /> Recordar por WhatsApp
-              </button>
-              <button
-                onClick={() => handleMarkLead(lead.id, "abandonado")}
-                className="bg-orange-50 hover:bg-orange-100 text-orange-700 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-orange-200"
-                title="Marcar como abandonado"
-              >
-                <Clock className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => handleMarkLead(lead.id, "descartado")}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-gray-200"
-                title="Descartar lead"
-              >
-                <X className="w-3 h-3" />
-              </button>
+                <ArrowRight className="w-3.5 h-3.5" /> Continuar registro
+              </a>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleRemindLead(lead)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
+                >
+                  <MessageCircle className="w-3 h-3" /> WhatsApp
+                </button>
+                <button
+                  onClick={() => handleMarkLead(lead.id, "abandonado")}
+                  className="bg-orange-50 hover:bg-orange-100 text-orange-700 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-orange-200"
+                  title="Marcar como abandonado"
+                >
+                  <Clock className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => handleMarkLead(lead.id, "descartado")}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-[11px] font-bold px-3 py-2 rounded-lg transition-colors border border-gray-200"
+                  title="Descartar lead"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           )}
           showStep
