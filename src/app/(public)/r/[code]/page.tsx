@@ -92,7 +92,21 @@ export default function ReferralPage({ params }: Props) {
   const resumeLeadId = searchParams.get("lead");
   const [lanza, setLanza] = useState<Lanza | null>(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState(1); // 1=form, 2=contract+extras, 3=sign+photo, 4=password, 5=onboarding
+  const [step, setStepRaw] = useState(1); // 1=form, 2=contract+extras, 3=sign+photo, 4=password, 5=onboarding
+  const [maxStep, setMaxStep] = useState(1); // step más alto al que ha llegado (para navegación en stepper)
+  const [editingStep2, setEditingStep2] = useState(true); // si false, step 2 está en modo read-only
+
+  // Wrapper que actualiza step + maxStep. Si vuelve al step 2 y ya lo había
+  // pasado, pone los campos en modo read-only (bloqueados) hasta que pulse "Editar".
+  const setStep = (s: number) => {
+    setStepRaw(s);
+    setMaxStep((prev) => Math.max(prev, s));
+    if (s === 2 && maxStep >= 3) {
+      setEditingStep2(false); // vuelve al step 2 → modo read-only
+    } else if (s === 2) {
+      setEditingStep2(true); // primera vez en step 2 → editable
+    }
+  };
 
   // Step 1: Basic form
   const [plan, setPlan] = useState("Base");
@@ -571,8 +585,8 @@ export default function ReferralPage({ params }: Props) {
   const maxStepReached = Math.max(step, ...(leadId ? [step] : [1]));
 
   const handleStepClick = (s: number) => {
-    // Solo permite ir a steps ya completados (< step actual)
-    if (s < step) {
+    // Permite ir a cualquier step ya visitado (hacia atrás o adelante dentro de maxStep)
+    if (s !== step && s <= maxStep) {
       setStep(s);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -591,13 +605,13 @@ export default function ReferralPage({ params }: Props) {
                 <button
                   type="button"
                   onClick={() => handleStepClick(s)}
-                  disabled={s >= step}
+                  disabled={s > maxStep || s === step}
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                    step >= s
+                    s <= maxStep
                       ? "bg-oro text-jungle-dark"
                       : "bg-white/10 text-beige/30"
-                  } ${s < step ? "cursor-pointer hover:scale-110 hover:ring-2 hover:ring-oro/50" : s === step ? "ring-2 ring-oro/30" : "cursor-default"}`}
-                  title={s < step ? `Volver a ${STEP_LABELS[s - 1]}` : undefined}
+                  } ${s <= maxStep && s !== step ? "cursor-pointer hover:scale-110 hover:ring-2 hover:ring-oro/50" : s === step ? "ring-2 ring-oro/30" : "cursor-default"}`}
+                  title={s <= maxStep && s !== step ? `Ir a ${STEP_LABELS[s - 1]}` : undefined}
                 >
                   {step > s ? <Check className="w-4 h-4" /> : s}
                 </button>
@@ -613,9 +627,9 @@ export default function ReferralPage({ params }: Props) {
                 key={label}
                 type="button"
                 onClick={() => handleStepClick(i + 1)}
-                disabled={i + 1 >= step}
+                disabled={i + 1 > maxStep || i + 1 === step}
                 className={`text-[10px] transition-colors ${
-                  i + 1 < step
+                  i + 1 <= maxStep && i + 1 !== step
                     ? "text-oro/60 hover:text-oro cursor-pointer"
                     : i + 1 === step
                       ? "text-oro font-semibold"
@@ -793,108 +807,154 @@ export default function ReferralPage({ params }: Props) {
         {step === 2 && (
           <>
             <div className="text-center space-y-2">
-              <h1 className="text-white text-xl font-bold">Completa tus datos para el contrato</h1>
-              <p className="text-beige/50 text-sm">Necesitamos algunos datos adicionales para generar tu contrato</p>
+              <h1 className="text-white text-xl font-bold">
+                {editingStep2 ? "Completa tus datos para el contrato" : "Datos del contrato"}
+              </h1>
+              <p className="text-beige/50 text-sm">
+                {editingStep2
+                  ? "Necesitamos algunos datos adicionales para generar tu contrato"
+                  : "Revisa tus datos. Puedes editarlos si necesitas corregir algo."}
+              </p>
             </div>
 
-            <form onSubmit={handleStep2} className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono 2</label>
-                  <input
-                    type="tel" value={extra.telefono2}
-                    onChange={(e) => updateExtra("telefono2", e.target.value.replace(/\D/g, ""))}
-                    placeholder="Opcional" inputMode="numeric"
-                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
-                  />
+            {/* Modo read-only: resumen de datos con botón Editar */}
+            {!editingStep2 ? (
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    ["Teléfono 2", extra.telefono2 || "—"],
+                    ["Estado civil", extra.estado_civil],
+                    ["Grado / Rango", extra.grado || "—"],
+                    ["Fuerza", extra.fuerza],
+                    ["Unidad / Batallón", extra.unidad || "—"],
+                    ["Dirección", extra.direccion || "—"],
+                    ["Ciudad", extra.ciudad || "—"],
+                    ["Departamento", extra.departamento || "—"],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <span className="text-beige/40 text-xs">{label}</span>
+                      <p className="text-white text-sm font-medium">{value}</p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Estado civil *</label>
-                  <select
-                    value={extra.estado_civil} required
-                    onChange={(e) => updateExtra("estado_civil", e.target.value)}
-                    className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingStep2(true)}
+                    className="flex items-center gap-1.5 text-oro hover:text-oro-light text-sm px-4 py-2.5 rounded-xl border border-oro/30 hover:bg-oro/10 transition-colors font-medium"
                   >
-                    {ESTADOS_CIVILES.map((ec) => <option key={ec} value={ec}>{ec}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Grado / Rango *</label>
-                  <input
-                    type="text" required value={extra.grado}
-                    onChange={(e) => updateExtra("grado", e.target.value)}
-                    placeholder="Sargento, Cabo, etc."
-                    className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Fuerza *</label>
-                  <select
-                    value={extra.fuerza} required
-                    onChange={(e) => updateExtra("fuerza", e.target.value)}
-                    className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                    <Scale className="w-4 h-4" /> Editar datos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                   >
-                    {FUERZAS.map((f) => <option key={f} value={f}>{f}</option>)}
-                  </select>
+                    Ver contrato y firmar <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Unidad / Batallón *</label>
-                <input
-                  type="text" required value={extra.unidad}
-                  onChange={(e) => updateExtra("unidad", e.target.value)}
-                  placeholder="Batallón de Infantería No. 1"
-                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-beige/60 text-xs font-medium mb-1 block">Dirección *</label>
-                <input
-                  type="text" required value={extra.direccion}
-                  onChange={(e) => updateExtra("direccion", e.target.value)}
-                  placeholder="Calle 123 #45-67"
-                  className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            ) : (
+              /* Modo editable: form normal */
+              <form onSubmit={handleStep2} className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Teléfono 2</label>
+                    <input
+                      type="tel" value={extra.telefono2}
+                      onChange={(e) => updateExtra("telefono2", e.target.value.replace(/\D/g, ""))}
+                      placeholder="Opcional" inputMode="numeric"
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Estado civil *</label>
+                    <select
+                      value={extra.estado_civil} required
+                      onChange={(e) => updateExtra("estado_civil", e.target.value)}
+                      className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                    >
+                      {ESTADOS_CIVILES.map((ec) => <option key={ec} value={ec}>{ec}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Grado / Rango *</label>
+                    <input
+                      type="text" required value={extra.grado}
+                      onChange={(e) => updateExtra("grado", e.target.value)}
+                      placeholder="Sargento, Cabo, etc."
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Fuerza *</label>
+                    <select
+                      value={extra.fuerza} required
+                      onChange={(e) => updateExtra("fuerza", e.target.value)}
+                      className="w-full bg-white/5 text-beige/70 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+                    >
+                      {FUERZAS.map((f) => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                </div>
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Ciudad *</label>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Unidad / Batallón *</label>
                   <input
-                    type="text" required value={extra.ciudad}
-                    onChange={(e) => updateExtra("ciudad", e.target.value)}
-                    placeholder="Bogotá"
+                    type="text" required value={extra.unidad}
+                    onChange={(e) => updateExtra("unidad", e.target.value)}
+                    placeholder="Batallón de Infantería No. 1"
                     className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-beige/60 text-xs font-medium mb-1 block">Departamento *</label>
+                  <label className="text-beige/60 text-xs font-medium mb-1 block">Dirección *</label>
                   <input
-                    type="text" required value={extra.departamento}
-                    onChange={(e) => updateExtra("departamento", e.target.value)}
-                    placeholder="Cundinamarca"
+                    type="text" required value={extra.direccion}
+                    onChange={(e) => updateExtra("direccion", e.target.value)}
+                    placeholder="Calle 123 #45-67"
                     className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                   />
                 </div>
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Ciudad *</label>
+                    <input
+                      type="text" required value={extra.ciudad}
+                      onChange={(e) => updateExtra("ciudad", e.target.value)}
+                      placeholder="Bogotá"
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-beige/60 text-xs font-medium mb-1 block">Departamento *</label>
+                    <input
+                      type="text" required value={extra.departamento}
+                      onChange={(e) => updateExtra("departamento", e.target.value)}
+                      placeholder="Cundinamarca"
+                      className="w-full bg-white/5 text-white placeholder-beige/30 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
+                    />
+                  </div>
+                </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" /> Atrás
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                >
-                  Ver contrato y firmar <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex items-center gap-1.5 text-beige/50 hover:text-white text-sm px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Atrás
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    Ver contrato y firmar <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Contract preview */}
             <div>
