@@ -602,48 +602,47 @@ export default function ReferralPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-jungle-dark pt-20">
-      {/* Progress bar — steps completados son clickeables para volver */}
+      {/* Progress bar — steps completados son clickeables */}
       {step < 5 && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-start">
             {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex-1 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleStepClick(s)}
-                  disabled={s > maxStep || s === step}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                    s <= maxStep
-                      ? "bg-oro text-jungle-dark"
-                      : "bg-white/10 text-beige/30"
-                  } ${s <= maxStep && s !== step ? "cursor-pointer hover:scale-110 hover:ring-2 hover:ring-oro/50" : s === step ? "ring-2 ring-oro/30" : "cursor-default"}`}
-                  title={s <= maxStep && s !== step ? `Ir a ${STEP_LABELS[s - 1]}` : undefined}
-                >
-                  {step > s ? <Check className="w-4 h-4" /> : s}
-                </button>
+              <div key={s} className="flex-1 flex items-center">
+                {/* Círculo + label alineados verticalmente */}
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => handleStepClick(s)}
+                    disabled={s > maxStep || s === step}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                      s <= maxStep
+                        ? "bg-oro text-jungle-dark"
+                        : "bg-white/10 text-beige/30"
+                    } ${s <= maxStep && s !== step ? "cursor-pointer hover:scale-110 hover:ring-2 hover:ring-oro/50" : s === step ? "ring-2 ring-oro/30" : "cursor-default"}`}
+                    title={s <= maxStep && s !== step ? `Ir a ${STEP_LABELS[s - 1]}` : undefined}
+                  >
+                    {step > s ? <Check className="w-4 h-4" /> : s}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepClick(s)}
+                    disabled={s > maxStep || s === step}
+                    className={`text-[10px] mt-1 transition-colors ${
+                      s <= maxStep && s !== step
+                        ? "text-oro/60 hover:text-oro cursor-pointer"
+                        : s === step
+                          ? "text-oro font-semibold"
+                          : "text-beige/30 cursor-default"
+                    }`}
+                  >
+                    {STEP_LABELS[s - 1]}
+                  </button>
+                </div>
+                {/* Línea conectora (no después del último) */}
                 {s < 4 && (
-                  <div className={`flex-1 h-0.5 rounded-full ${step > s ? "bg-oro" : "bg-white/10"}`} />
+                  <div className={`flex-1 h-0.5 rounded-full mt-[-12px] mx-1 ${s < maxStep ? "bg-oro" : "bg-white/10"}`} />
                 )}
               </div>
-            ))}
-          </div>
-          <div className="flex justify-between mt-1.5">
-            {STEP_LABELS.map((label, i) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => handleStepClick(i + 1)}
-                disabled={i + 1 > maxStep || i + 1 === step}
-                className={`text-[10px] transition-colors ${
-                  i + 1 <= maxStep && i + 1 !== step
-                    ? "text-oro/60 hover:text-oro cursor-pointer"
-                    : i + 1 === step
-                      ? "text-oro font-semibold"
-                      : "text-beige/30 cursor-default"
-                }`}
-              >
-                {label}
-              </button>
             ))}
           </div>
         </div>
