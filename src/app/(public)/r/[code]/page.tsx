@@ -94,17 +94,23 @@ export default function ReferralPage({ params }: Props) {
   const [loading, setLoading] = useState(true);
   const [step, setStepRaw] = useState(1); // 1=form, 2=contract+extras, 3=sign+photo, 4=password, 5=onboarding
   const [maxStep, setMaxStep] = useState(1); // step más alto al que ha llegado (para navegación en stepper)
+  const [editingStep1, setEditingStep1] = useState(true); // si false, step 1 está en modo read-only
   const [editingStep2, setEditingStep2] = useState(true); // si false, step 2 está en modo read-only
 
-  // Wrapper que actualiza step + maxStep. Si vuelve al step 2 y ya lo había
-  // pasado, pone los campos en modo read-only (bloqueados) hasta que pulse "Editar".
+  // Wrapper que actualiza step + maxStep. Si vuelve a un step ya completado,
+  // pone los campos en modo read-only (bloqueados) hasta que pulse "Editar".
   const setStep = (s: number) => {
     setStepRaw(s);
     setMaxStep((prev) => Math.max(prev, s));
+    if (s === 1 && maxStep >= 2) {
+      setEditingStep1(false);
+    } else if (s === 1) {
+      setEditingStep1(true);
+    }
     if (s === 2 && maxStep >= 3) {
-      setEditingStep2(false); // vuelve al step 2 → modo read-only
+      setEditingStep2(false);
     } else if (s === 2) {
-      setEditingStep2(true); // primera vez en step 2 → editable
+      setEditingStep2(true);
     }
   };
 
@@ -654,7 +660,55 @@ export default function ReferralPage({ params }: Props) {
         )}
 
         {/* ═══════ STEP 1: FORM + PLANS ═══════ */}
-        {step === 1 && (
+
+        {/* Step 1 read-only: resumen cuando vuelve desde un step posterior */}
+        {step === 1 && !editingStep1 && (
+          <>
+            <div className="text-center space-y-2">
+              <h1 className="text-white text-xl font-bold">Tus datos</h1>
+              <p className="text-beige/50 text-sm">Revisa tus datos. Puedes editarlos si necesitas corregir algo.</p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  ["Nombre", form.nombre || "—"],
+                  ["Teléfono", form.telefono || "—"],
+                  ["Cédula", form.cedula || "—"],
+                  ["Email", form.email || "—"],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <span className="text-beige/40 text-xs">{label}</span>
+                    <p className="text-white text-sm font-medium">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center justify-between">
+                <span className="text-beige/50 text-xs">Plan seleccionado</span>
+                <span className="text-oro font-bold text-sm">{plan} — ${getPlanPrice(plan)}/mes</span>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStep1(true)}
+                  className="flex items-center gap-1.5 text-oro hover:text-oro-light text-sm px-4 py-2.5 rounded-xl border border-oro/30 hover:bg-oro/10 transition-colors font-medium"
+                >
+                  <Scale className="w-4 h-4" /> Editar datos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="flex-1 bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  Continuar al contrato <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Step 1 editable: form completo (primera vez o después de pulsar Editar) */}
+        {step === 1 && editingStep1 && (
           <>
             {/* Hero */}
             <div className="text-center space-y-3">
