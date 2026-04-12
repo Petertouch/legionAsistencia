@@ -152,6 +152,9 @@ export default function ReferralPage({ params }: Props) {
   // Lead ID (saved after step 1)
   const [leadId, setLeadId] = useState<string | null>(null);
 
+  // Flag para evitar que el auto-resume se re-ejecute al re-renderizar
+  const [resumeApplied, setResumeApplied] = useState(false);
+
   // Precios cargados desde contrato_plantilla.planes. Preferimos precio_alianza
   // porque es el valor real que el suscriptor paga mensualmente bajo alianza.
   const [planPrices, setPlanPrices] = useState<Record<string, string>>(DEFAULT_PLAN_PRICES);
@@ -200,7 +203,8 @@ export default function ReferralPage({ params }: Props) {
   // cargamos los datos del lead desde la DB, pre-llenamos el form y saltamos
   // al step donde quedó sin que el usuario tenga que llenar nada otra vez.
   useEffect(() => {
-    if (!resumeLeadId) return;
+    if (!resumeLeadId || resumeApplied) return;
+    setResumeApplied(true);
     const supabase = createClient();
     supabase
       .from("lanza_leads")
@@ -245,7 +249,8 @@ export default function ReferralPage({ params }: Props) {
           body: JSON.stringify({ lead_id: data.id, current_step: targetStep }),
         }).catch(() => {});
       });
-  }, [resumeLeadId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeLeadId, resumeApplied]);
 
   const update = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
