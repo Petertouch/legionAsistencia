@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Shield, Check, MessageCircle, Phone, Star, ArrowLeft, ArrowRight, FileText, Lock, Scale, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -562,34 +561,41 @@ export default function ReferralPage({ params }: Props) {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-jungle-dark">
-      {/* Header */}
-      <header className="border-b border-white/10 px-4 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-center gap-2.5">
-          <Image src="/images/logo.svg" alt="Legion Juridica" width={32} height={32} />
-          <div className="flex items-center gap-1">
-            <span className="text-white font-black text-base tracking-[0.12em]">LEGIÓN</span>
-            <span className="text-oro font-black text-base tracking-[0.12em]">JURÍDICA</span>
-          </div>
-        </div>
-      </header>
+  // Máximo step al que el usuario ha llegado (para permitir navegar atrás).
+  // No puede ir hacia adelante saltando pasos, pero sí volver a uno que ya completó.
+  const maxStepReached = Math.max(step, ...(leadId ? [step] : [1]));
 
-      {/* Progress bar */}
+  const handleStepClick = (s: number) => {
+    // Solo permite ir a steps ya completados (< step actual)
+    if (s < step) {
+      setStep(s);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const STEP_LABELS = ["Datos", "Contrato", "Firma", "Clave"] as const;
+
+  return (
+    <div className="min-h-screen bg-jungle-dark pt-20">
+      {/* Progress bar — steps completados son clickeables para volver */}
       {step < 5 && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4].map((s) => (
               <div key={s} className="flex-1 flex items-center gap-2">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                <button
+                  type="button"
+                  onClick={() => handleStepClick(s)}
+                  disabled={s >= step}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
                     step >= s
                       ? "bg-oro text-jungle-dark"
                       : "bg-white/10 text-beige/30"
-                  }`}
+                  } ${s < step ? "cursor-pointer hover:scale-110 hover:ring-2 hover:ring-oro/50" : s === step ? "ring-2 ring-oro/30" : "cursor-default"}`}
+                  title={s < step ? `Volver a ${STEP_LABELS[s - 1]}` : undefined}
                 >
                   {step > s ? <Check className="w-4 h-4" /> : s}
-                </div>
+                </button>
                 {s < 4 && (
                   <div className={`flex-1 h-0.5 rounded-full ${step > s ? "bg-oro" : "bg-white/10"}`} />
                 )}
@@ -597,10 +603,23 @@ export default function ReferralPage({ params }: Props) {
             ))}
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-[10px] text-beige/40">Datos</span>
-            <span className="text-[10px] text-beige/40">Contrato</span>
-            <span className="text-[10px] text-beige/40">Firma</span>
-            <span className="text-[10px] text-beige/40">Clave</span>
+            {STEP_LABELS.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => handleStepClick(i + 1)}
+                disabled={i + 1 >= step}
+                className={`text-[10px] transition-colors ${
+                  i + 1 < step
+                    ? "text-oro/60 hover:text-oro cursor-pointer"
+                    : i + 1 === step
+                      ? "text-oro font-semibold"
+                      : "text-beige/30 cursor-default"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       )}
