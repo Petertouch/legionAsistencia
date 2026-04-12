@@ -6,13 +6,17 @@ import { useClientStore } from "@/lib/stores/client-store";
 import { getPublishedCourses, getMyEnrollments, enrollInCourse } from "@/lib/stores/courses-store";
 import type { Course } from "@/lib/stores/courses-store";
 import Link from "next/link";
-import { GraduationCap, Clock, Lock, CheckCircle, BookOpen, Search, ArrowRight, User } from "lucide-react";
+import { GraduationCap, Clock, Lock, CheckCircle, BookOpen, Search, ArrowRight, User, Award } from "lucide-react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+const ClientDiplomasPage = dynamic(() => import("@/app/(client)/mi-caso/diplomas/page"), { ssr: false });
 
 export default function CursosClientePage() {
   const session = useClientStore((s) => s.session);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [subTab, setSubTab] = useState<"cursos" | "diplomas">("cursos");
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["published-courses"],
@@ -58,11 +62,31 @@ export default function CursosClientePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-gray-900 font-bold text-xl">Cursos</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Formación financiera diseñada para ti</p>
+      {/* Sub-tabs: Cursos | Diplomas */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        {([
+          { key: "cursos" as const, label: "Mis Cursos", icon: GraduationCap },
+          { key: "diplomas" as const, label: "Diplomas", icon: Award },
+        ]).map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setSubTab(key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+              subTab === key
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" /> {label}
+          </button>
+        ))}
       </div>
+
+      {/* Diplomas sub-tab */}
+      {subTab === "diplomas" && <ClientDiplomasPage />}
+
+      {/* Cursos sub-tab */}
+      {subTab === "cursos" && (<>
 
       {isLoading && (
         <div className="flex justify-center py-16">
@@ -203,6 +227,8 @@ export default function CursosClientePage() {
           <p className="text-gray-400 text-xs mt-1">Estamos preparando contenido para ti</p>
         </div>
       )}
+
+      </>)}
     </div>
   );
 }

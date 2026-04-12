@@ -65,9 +65,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               { href: "/mi-caso/perfil", label: "Inicio", icon: User },
               { href: "/mi-caso/casos", label: "Mis Casos", icon: Scale },
               { href: "/mi-caso/cursos", label: "Cursos", icon: GraduationCap },
-              { href: "/mi-caso/diplomas", label: "Diplomas", icon: Award },
               { href: "/mi-caso/referidos", label: "Referidos", icon: Gift },
-              { href: "/mi-caso/contrato", label: "Contrato", icon: FileText },
             ].map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href === "/mi-caso/casos" && pathname.startsWith("/mi-caso/casos/"));
               return (

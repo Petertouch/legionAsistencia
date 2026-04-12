@@ -10,6 +10,9 @@ import {
   User, Shield, Scale, ArrowRight, Clock, Check, AlertTriangle,
   FileText, GraduationCap, Gift, Phone, Mail, ChevronRight, MessageCircle,
 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const ClientContratoPage = dynamic(() => import("@/app/(client)/mi-caso/contrato/page"), { ssr: false });
 
 const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof Check }> = {
   "Al dia": { label: "Al día", color: "text-green-700", bg: "bg-green-50 border-green-200", icon: Check },
@@ -21,6 +24,7 @@ export default function ClientDashboardPage() {
   const router = useRouter();
   const session = useClientStore((s) => s.session);
   const [mounted, setMounted] = useState(false);
+  const [subTab, setSubTab] = useState<"resumen" | "contrato">("resumen");
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
@@ -34,6 +38,32 @@ export default function ClientDashboardPage() {
 
   return (
     <div className="space-y-4">
+      {/* Sub-tabs: Resumen | Contrato */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        {([
+          { key: "resumen" as const, label: "Resumen", icon: User },
+          { key: "contrato" as const, label: "Contrato", icon: FileText },
+        ]).map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setSubTab(key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+              subTab === key
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" /> {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Contrato sub-tab */}
+      {subTab === "contrato" && <ClientContratoPage />}
+
+      {/* Resumen sub-tab */}
+      {subTab !== "contrato" && (<>
+
       {/* Pending approval */}
       {session.estado_pago === "Pendiente" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 text-center">
@@ -134,6 +164,8 @@ export default function ClientDashboardPage() {
           <p className="text-gray-400 text-xs mt-0.5">Gana comisiones</p>
         </Link>
       </div>
+
+      </>)}
     </div>
   );
 }
