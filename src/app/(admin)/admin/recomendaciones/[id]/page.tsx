@@ -18,11 +18,15 @@ const TIPO_CONFIG: Record<string, { label: string; pluralLabel: string; icon: ty
   esposa: { label: "Esposa", pluralLabel: "Esposas", icon: Heart, color: "text-pink-700", bg: "bg-pink-50 border-pink-200" },
 };
 
-const LEAD_STATUS_CONFIG = {
+const LEAD_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   nuevo: { label: "Nuevo", color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  contactado: { label: "Contactado", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  en_proceso: { label: "En proceso", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  contactado: { label: "Contactado", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   convertido: { label: "Convertido", color: "bg-green-50 text-green-700 border-green-200" },
+  completado: { label: "Completado", color: "bg-green-50 text-green-700 border-green-200" },
   perdido: { label: "Perdido", color: "bg-gray-100 text-gray-500 border-gray-200" },
+  descartado: { label: "Descartado", color: "bg-gray-100 text-gray-500 border-gray-200" },
+  abandonado: { label: "Abandonado", color: "bg-orange-50 text-orange-700 border-orange-200" },
 };
 
 function getTipoConfig(tipo: string) {
@@ -421,7 +425,7 @@ export default function AliadoDetailPage({ params }: { params: Promise<{ id: str
             ) : (
               <div className="divide-y divide-gray-100">
                 {myLeads.map((lead) => {
-                  const sCfg = LEAD_STATUS_CONFIG[lead.status];
+                  const sCfg = LEAD_STATUS_CONFIG[lead.status] || { label: lead.status, color: "bg-gray-100 text-gray-500 border-gray-200" };
                   return (
                     <div key={lead.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between gap-3">
