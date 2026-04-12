@@ -63,8 +63,8 @@ const DEFAULT_PLANES: PlanConfig[] = [
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-2">
-      <span className="text-beige/50 text-xs min-w-[100px] flex-shrink-0">{label}:</span>
-      <span className="text-white text-xs font-medium">{value || "—"}</span>
+      <span className="text-gray-500 text-xs min-w-[100px] flex-shrink-0">{label}:</span>
+      <span className="text-gray-900 text-xs font-medium">{value || "—"}</span>
     </div>
   );
 }
@@ -73,13 +73,38 @@ function replaceVars(text: string, vars: Record<string, string>): string {
   return text.replace(/\{(\w+)\}/g, (_, key) => vars[key] || `{${key}}`);
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Renders text with **bold** support and preserves line breaks
+function RichText({ text, className = "" }: { text: string; className?: string }) {
+  // Escape HTML first to prevent XSS, then apply markdown
+  const escaped = escapeHtml(text);
+  // Convert **bold** to <strong>
+  const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Preserve line breaks
+  const html = withBold.replace(/\n/g, "<br/>");
+  return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+type ContractSection = "ficha" | "contrato" | "libranza";
+
 interface ContractViewProps {
   data: ContractData;
   plantilla?: PlantillaConfig;
   readOnly?: boolean;
+  sections?: ContractSection[];
 }
 
-export default function ContractView({ data, plantilla, readOnly = false }: ContractViewProps) {
+export default function ContractView({ data, plantilla, readOnly = false, sections }: ContractViewProps) {
+  const showFicha = !sections || sections.includes("ficha");
+  const showContrato = !sections || sections.includes("contrato");
+  const showLibranza = !sections || sections.includes("libranza");
   const fecha = data.fecha || new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
 
   const empresa = plantilla?.empresa_nombre || "CA CONSULTORES SAS";
@@ -105,17 +130,18 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
   return (
     <div className="space-y-6 text-sm">
       {/* ═══ PÁGINA 1: FICHA DE DATOS ═══ */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
-        <div className="text-center border-b border-white/10 pb-3">
+      {showFicha && (
+      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm">
+        <div className="text-center border-b border-gray-200 pb-3">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Image src="/images/logo.svg" alt="Legión Jurídica" width={32} height={32} className="print-logo" />
             <div className="flex items-center gap-1">
-              <span className="font-black text-base tracking-[0.12em] text-white print-logo-text">LEGIÓN</span>
+              <span className="font-black text-base tracking-[0.12em] text-gray-900 print-logo-text">LEGIÓN</span>
               <span className="font-black text-base tracking-[0.12em] text-oro print-logo-oro">JURÍDICA</span>
             </div>
           </div>
-          <p className="text-beige/50 text-xs">{empresa} — NIT {nit}</p>
-          <p className="text-white font-bold text-sm mt-1">{fichaTitulo}</p>
+          <p className="text-gray-500 text-xs">{empresa} — NIT {nit}</p>
+          <p className="text-gray-900 font-bold text-sm mt-1">{fichaTitulo}</p>
         </div>
 
         <div className="space-y-2">
@@ -139,26 +165,29 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
         <div className="space-y-2">
           <h3 className="text-oro text-xs font-bold uppercase tracking-wider">Plan Seleccionado</h3>
           <div className="grid grid-cols-3 gap-2">
-            {planes.map((p) => (
-              <div
-                key={p.nombre}
-                className={`rounded-lg border p-3 text-center transition-all ${
-                  data.plan === p.nombre
-                    ? "border-oro bg-oro/10"
-                    : "border-white/10 bg-white/5 opacity-40"
-                }`}
-              >
-                <p className="text-white font-bold text-xs">{p.nombre}</p>
-                <p className="text-oro text-sm font-bold">${p.precio}</p>
-                <p className="text-beige/40 text-[10px]">/mes</p>
-              </div>
-            ))}
+            {planes.map((p) => {
+              const precio = p.precio_alianza || p.precio;
+              return (
+                <div
+                  key={p.nombre}
+                  className={`rounded-lg border p-3 text-center transition-all ${
+                    data.plan === p.nombre
+                      ? "border-oro bg-amber-50"
+                      : "border-gray-200 bg-gray-50 opacity-50"
+                  }`}
+                >
+                  <p className="text-gray-900 font-bold text-xs">{p.nombre}</p>
+                  <p className="text-oro text-sm font-bold">${precio}</p>
+                  <p className="text-gray-400 text-[10px]">/mes</p>
+                </div>
+              );
+            })}
           </div>
           {data.plan && planFeatures[data.plan] && (
             <ul className="space-y-1 pl-2">
               {planFeatures[data.plan].map((f) => (
-                <li key={f} className="text-beige/60 text-xs flex items-start gap-1.5">
-                  <span className="text-green-400 mt-0.5">✓</span> {f}
+                <li key={f} className="text-gray-600 text-xs flex items-start gap-1.5">
+                  <span className="text-green-600 mt-0.5">✓</span> {f}
                 </li>
               ))}
             </ul>
@@ -168,21 +197,21 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
         {data.beneficiarios && data.beneficiarios.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-oro text-xs font-bold uppercase tracking-wider">Beneficiarios</h3>
-            <div className="border border-white/10 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-white/5">
-                    <th className="text-left text-beige/50 px-3 py-1.5 font-medium">Nombre</th>
-                    <th className="text-left text-beige/50 px-3 py-1.5 font-medium">Parentesco</th>
-                    <th className="text-left text-beige/50 px-3 py-1.5 font-medium">Cédula</th>
+                  <tr className="bg-gray-50">
+                    <th className="text-left text-gray-500 px-3 py-1.5 font-medium">Nombre</th>
+                    <th className="text-left text-gray-500 px-3 py-1.5 font-medium">Parentesco</th>
+                    <th className="text-left text-gray-500 px-3 py-1.5 font-medium">Cédula</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.beneficiarios.map((b, i) => (
-                    <tr key={i} className="border-t border-white/5">
-                      <td className="text-white px-3 py-1.5">{b.nombre}</td>
-                      <td className="text-beige/60 px-3 py-1.5">{b.parentesco}</td>
-                      <td className="text-beige/60 px-3 py-1.5">{b.cedula}</td>
+                    <tr key={i} className="border-t border-gray-100">
+                      <td className="text-gray-900 px-3 py-1.5">{b.nombre}</td>
+                      <td className="text-gray-600 px-3 py-1.5">{b.parentesco}</td>
+                      <td className="text-gray-600 px-3 py-1.5">{b.cedula}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -192,87 +221,93 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
         )}
       </div>
 
+      )}
+
       {/* ═══ PÁGINA 2: CLÁUSULAS DEL CONTRATO ═══ */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
-        <div className="text-center border-b border-white/10 pb-3">
+      {showContrato && (
+      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm">
+        <div className="text-center border-b border-gray-200 pb-3">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Image src="/images/logo.svg" alt="Legión Jurídica" width={28} height={28} className="print-logo" />
             <div className="flex items-center gap-1">
-              <span className="font-black text-sm tracking-[0.12em] text-white print-logo-text">LEGIÓN</span>
+              <span className="font-black text-sm tracking-[0.12em] text-gray-900 print-logo-text">LEGIÓN</span>
               <span className="font-black text-sm tracking-[0.12em] text-oro print-logo-oro">JURÍDICA</span>
             </div>
           </div>
-          <h2 className="text-white font-bold text-sm">CONTRATO DE PRESTACIÓN DE SERVICIOS JURÍDICOS</h2>
-          <p className="text-beige/50 text-xs mt-1">{empresa} — NIT {nit}</p>
+          <h2 className="text-gray-900 font-bold text-sm">CONTRATO DE PRESTACIÓN DE SERVICIOS JURÍDICOS</h2>
+          <p className="text-gray-500 text-xs mt-1">{empresa} — NIT {nit}</p>
         </div>
 
-        <div className="space-y-3 text-beige/70 text-xs leading-relaxed">
-          <p>{introText}</p>
+        <div className="space-y-3 text-gray-700 text-xs leading-relaxed">
+          <RichText text={introText} className="block whitespace-pre-line" />
 
           {clausulas.map((c, i) => (
             <div key={i}>
               <p className="text-oro font-bold text-xs mb-1">{c.titulo}</p>
-              <p>{c.contenido}</p>
+              <RichText text={c.contenido} className="block whitespace-pre-line" />
             </div>
           ))}
 
           <p className="pt-2">
-            En constancia se firma en la ciudad de <strong className="text-white">{data.ciudad || "_______________"}</strong>, a los {fecha}.
+            En constancia se firma en la ciudad de <strong className="text-gray-900">{data.ciudad || "_______________"}</strong>, a los {fecha}.
           </p>
         </div>
       </div>
 
+      )}
+
       {/* ═══ PÁGINA 3: LIBRANZA + FIRMA ═══ */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
-        <div className="text-center border-b border-white/10 pb-3">
+      {showLibranza && (
+      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm">
+        <div className="text-center border-b border-gray-200 pb-3">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Image src="/images/logo.svg" alt="Legión Jurídica" width={28} height={28} className="print-logo" />
             <div className="flex items-center gap-1">
-              <span className="font-black text-sm tracking-[0.12em] text-white print-logo-text">LEGIÓN</span>
+              <span className="font-black text-sm tracking-[0.12em] text-gray-900 print-logo-text">LEGIÓN</span>
               <span className="font-black text-sm tracking-[0.12em] text-oro print-logo-oro">JURÍDICA</span>
             </div>
           </div>
-          <h2 className="text-white font-bold text-sm">AUTORIZACIÓN DE DESCUENTO POR LIBRANZA</h2>
-          <p className="text-beige/50 text-xs mt-1">{empresa} — NIT {nit}</p>
-          <p className="text-beige/50 text-xs mt-0.5">Ley 1527 de 2012</p>
+          <h2 className="text-gray-900 font-bold text-sm">AUTORIZACIÓN DE DESCUENTO POR LIBRANZA</h2>
+          <p className="text-gray-500 text-xs mt-1">{empresa} — NIT {nit}</p>
+          <p className="text-gray-500 text-xs mt-0.5">Ley 1527 de 2012</p>
         </div>
 
-        <div className="text-beige/70 text-xs leading-relaxed space-y-3">
+        <div className="text-gray-700 text-xs leading-relaxed space-y-3">
           {libranza.map((s, i) => (
             <div key={i}>
               {libranza.length > 1 && <p className="text-oro font-bold text-xs mb-1">{s.titulo}</p>}
-              <p>{s.contenido}</p>
+              <RichText text={s.contenido} className="block whitespace-pre-line" />
             </div>
           ))}
         </div>
 
         {/* Firma + Foto section */}
-        <div className="border-t border-white/10 pt-4 mt-4">
+        <div className="border-t border-gray-200 pt-4 mt-4">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="flex-1 space-y-2">
-              <p className="text-beige/50 text-xs font-medium text-center">Firma del Suscriptor</p>
+              <p className="text-gray-500 text-xs font-medium text-center">Firma del Suscriptor</p>
               {data.firma_data ? (
-                <div className="border border-white/10 rounded-lg bg-white p-2 h-28 flex items-center justify-center">
+                <div className="border border-gray-200 rounded-lg bg-white p-2 h-28 flex items-center justify-center">
                   <img src={data.firma_data} alt="Firma" className="max-h-full max-w-full object-contain" />
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-white/10 rounded-lg h-28 flex items-center justify-center">
-                  <span className="text-beige/20 text-xs">Pendiente de firma</span>
+                <div className="border-2 border-dashed border-gray-200 rounded-lg h-28 flex items-center justify-center">
+                  <span className="text-gray-300 text-xs">Pendiente de firma</span>
                 </div>
               )}
-              <p className="text-white text-xs text-center font-medium">{data.nombre}</p>
-              <p className="text-beige/50 text-xs text-center">C.C. {data.cedula}</p>
+              <p className="text-gray-900 text-xs text-center font-medium">{data.nombre}</p>
+              <p className="text-gray-500 text-xs text-center">C.C. {data.cedula}</p>
             </div>
 
             <div className="flex-1 space-y-2">
-              <p className="text-beige/50 text-xs font-medium text-center">Foto del Suscriptor</p>
+              <p className="text-gray-500 text-xs font-medium text-center">Foto del Suscriptor</p>
               {data.foto_data ? (
-                <div className="border border-white/10 rounded-lg overflow-hidden h-28 w-28 mx-auto">
+                <div className="border border-gray-200 rounded-lg overflow-hidden h-28 w-28 mx-auto">
                   <img src={data.foto_data} alt="Foto" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-white/10 rounded-lg h-28 w-28 mx-auto flex items-center justify-center">
-                  <span className="text-beige/20 text-xs">Pendiente</span>
+                <div className="border-2 border-dashed border-gray-200 rounded-lg h-28 w-28 mx-auto flex items-center justify-center">
+                  <span className="text-gray-300 text-xs">Pendiente</span>
                 </div>
               )}
             </div>
@@ -281,23 +316,23 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
 
         {/* Cédula adjunta */}
         {(data.cedula_frente || data.cedula_reverso) && (
-          <div className="border-t border-white/10 pt-4 mt-4">
-            <p className="text-beige/50 text-xs font-medium text-center mb-3">Documento de Identidad</p>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <p className="text-gray-500 text-xs font-medium text-center mb-3">Documento de Identidad</p>
             <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
               {data.cedula_frente && (
                 <div className="space-y-1">
-                  <div className="border border-white/10 rounded-lg overflow-hidden aspect-[8.5/5.4]">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden aspect-[8.5/5.4]">
                     <img src={data.cedula_frente} alt="Cédula frente" className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-beige/30 text-[10px] text-center">Frente</p>
+                  <p className="text-gray-400 text-[10px] text-center">Frente</p>
                 </div>
               )}
               {data.cedula_reverso && (
                 <div className="space-y-1">
-                  <div className="border border-white/10 rounded-lg overflow-hidden aspect-[8.5/5.4]">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden aspect-[8.5/5.4]">
                     <img src={data.cedula_reverso} alt="Cédula reverso" className="w-full h-full object-cover" />
                   </div>
-                  <p className="text-beige/30 text-[10px] text-center">Reverso</p>
+                  <p className="text-gray-400 text-[10px] text-center">Reverso</p>
                 </div>
               )}
             </div>
@@ -305,16 +340,17 @@ export default function ContractView({ data, plantilla, readOnly = false }: Cont
         )}
 
         {data.hash && (
-          <div className="border-t border-white/10 pt-3 mt-3">
-            <p className="text-beige/30 text-[10px] text-center font-mono break-all">
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <p className="text-gray-400 text-[10px] text-center font-mono break-all">
               Hash de autenticidad: {data.hash}
             </p>
-            <p className="text-beige/20 text-[9px] text-center mt-0.5">
+            <p className="text-gray-400 text-[9px] text-center mt-0.5">
               Firmado digitalmente el {fecha}
             </p>
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
