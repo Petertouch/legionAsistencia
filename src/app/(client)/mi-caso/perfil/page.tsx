@@ -314,13 +314,7 @@ export default function ClientDashboardPage() {
                     {b.email && <span>· {b.email}</span>}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleRemoveFamiliar(b.id)}
-                  className="text-gray-300 hover:text-red-500 transition-colors p-1 flex-shrink-0"
-                  title="Eliminar familiar"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                </button>
+                {/* Eliminar solo disponible para admin — el cliente no puede quitar familiares */}
               </div>
             ))}
           </div>
