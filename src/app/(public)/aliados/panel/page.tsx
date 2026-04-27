@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getComisionesPorTipo, getComisionForAliado } from "@/lib/config";
 import { toast } from "sonner";
 import {
-  Copy, Users, Phone, DollarSign, Share2, LogOut, Award,
+  Copy, Users, Phone, DollarSign, Share2, LogOut, Award, Download,
   Heart, Shield, Sparkles, Clock, MessageCircle, X, Check, RotateCcw, ArrowRight,
 } from "lucide-react";
 
@@ -514,6 +514,12 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
                 <a href={`https://wa.me/${lead.telefono.startsWith("57") ? lead.telefono : `57${lead.telefono}`}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
                   <MessageCircle className="w-3 h-3" /> WhatsApp
+                </a>
+              )}
+              {isConverted && lead.cedula && (
+                <a href={`/api/contratos/pdf-cedula?cedula=${lead.cedula}`} download
+                  className="inline-flex items-center gap-1 text-[11px] text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <Download className="w-3 h-3" /> Contrato PDF
                 </a>
               )}
               {isInactive && lead.telefono && (
