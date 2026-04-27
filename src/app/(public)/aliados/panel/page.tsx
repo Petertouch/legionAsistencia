@@ -494,16 +494,22 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
               </div>
             </div>
             <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-              {lead.telefono && (
+              {!isConverted && !isInactive && lead.telefono && (
+                <button onClick={() => handleRemindLead(lead)}
+                  className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <MessageCircle className="w-3 h-3" /> Recordar por WhatsApp
+                </button>
+              )}
+              {isConverted && lead.telefono && (
                 <a href={`https://wa.me/${lead.telefono.startsWith("57") ? lead.telefono : `57${lead.telefono}`}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
                   <MessageCircle className="w-3 h-3" /> WhatsApp
                 </a>
               )}
-              {!isConverted && lead.telefono && (
+              {isInactive && lead.telefono && (
                 <button onClick={() => handleRemindLead(lead)}
-                  className="inline-flex items-center gap-1 text-[11px] text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
-                  <ArrowRight className="w-3 h-3" /> Recordar
+                  className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <MessageCircle className="w-3 h-3" /> Recordar por WhatsApp
                 </button>
               )}
               {isInactive && (
