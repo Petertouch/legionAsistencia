@@ -193,7 +193,8 @@ function LanzaPanelContent() {
       return;
     }
     const firstName = (lead.nombre || "").split(" ")[0] || "";
-    const msg = `Hola ${firstName}, vi que iniciaste tu registro en Legión Jurídica pero no lo terminaste. Te dejo el link para continuar: ${shareLink}`;
+    const resumeLink = `${window.location.origin}/r/${lanza.code}?lead=${lead.id}`;
+    const msg = `Hola ${firstName}, vi que iniciaste tu registro en Legión Jurídica pero no lo terminaste. Continúa desde donde quedaste aquí: ${resumeLink}`;
     window.open(`https://wa.me/${phone.startsWith("57") ? phone : `57${phone}`}?text=${encodeURIComponent(msg)}`, "_blank");
   };
   const tipoCfg = TIPO_LABELS[lanza.tipo] || { label: lanza.tipo, icon: Users };
