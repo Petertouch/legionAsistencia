@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
-import { MOCK_CASOS } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
+import type { Caso } from "@/lib/mock-data";
 import { Scale, ArrowRight, Check, MessageCircle } from "lucide-react";
 import { useMessagesStore } from "@/lib/stores/messages-store";
 
@@ -21,6 +21,7 @@ export default function ClientCasosPage() {
   const session = useClientStore((s) => s.session);
   const messages = useMessagesStore((s) => s.messages);
   const [mounted, setMounted] = useState(false);
+  const [casos, setCasos] = useState<Caso[]>([]);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -28,9 +29,15 @@ export default function ClientCasosPage() {
     if (mounted && !session) router.replace("/mi-caso");
   }, [mounted, session, router]);
 
-  if (!mounted || !session) return null;
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/casos?suscriptor_id=${session.suscriptor_id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then(setCasos)
+      .catch(() => {});
+  }, [session]);
 
-  const casos = MOCK_CASOS.filter((c) => c.suscriptor_id === session.suscriptor_id);
+  if (!mounted || !session) return null;
   const activos = casos.filter((c) => c.etapa !== "Cerrado");
   const cerrados = casos.filter((c) => c.etapa === "Cerrado");
 
