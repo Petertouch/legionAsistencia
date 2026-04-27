@@ -73,9 +73,8 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Fill entire available space
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * 2; // 2x for retina
+    canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -85,7 +84,6 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Lock body scroll
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
@@ -94,15 +92,9 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     if ("touches" in e) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-      };
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
     }
-    return {
-      x: (e as React.MouseEvent).clientX - rect.left,
-      y: (e as React.MouseEvent).clientY - rect.top,
-    };
+    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top };
   };
 
   const startDraw = (e: React.TouchEvent | React.MouseEvent) => {
@@ -143,59 +135,73 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-        <button type="button" onClick={onCancel} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm font-medium">
-          <X className="w-4 h-4" /> Cancelar
-        </button>
-        <p className="text-gray-900 font-bold text-sm">Tu firma</p>
-        <button
-          type="button"
-          onClick={clear}
-          className="flex items-center gap-1 text-red-500 hover:text-red-700 text-sm font-medium"
-        >
-          <Eraser className="w-3.5 h-3.5" /> Borrar
-        </button>
-      </div>
+    <div className="fixed inset-0 z-50 bg-white flex flex-col landscape:flex-row">
+      {/* Force landscape layout on portrait screens by rotating 90° */}
+      <style>{`
+        @media (orientation: portrait) {
+          .sig-landscape {
+            transform: rotate(90deg);
+            transform-origin: center center;
+            width: 100vh;
+            height: 100vw;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: calc(-50vw);
+            margin-left: calc(-50vh);
+          }
+        }
+      `}</style>
+      <div className="sig-landscape flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+          <button type="button" onClick={onCancel} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm font-medium">
+            <X className="w-4 h-4" /> Cancelar
+          </button>
+          <p className="text-gray-900 font-bold text-sm">Firma aquí con tu dedo</p>
+          <button type="button" onClick={clear} className="flex items-center gap-1 text-red-500 hover:text-red-700 text-sm font-medium">
+            <Eraser className="w-3.5 h-3.5" /> Borrar
+          </button>
+        </div>
 
-      {/* Canvas area */}
-      <div className="flex-1 relative bg-white">
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full cursor-crosshair touch-none"
-        />
-        {!hasDrawn && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <PenTool className="w-10 h-10 text-gray-200 mb-2" />
-            <p className="text-gray-300 text-base font-medium">Gira el celular horizontal</p>
-            <p className="text-gray-300 text-sm mt-1">y firma aquí con tu dedo →</p>
-          </div>
-        )}
-        {/* Event overlay */}
-        <div
-          className="absolute inset-0"
-          onMouseDown={startDraw}
-          onMouseMove={draw}
-          onMouseUp={endDraw}
-          onMouseLeave={endDraw}
-          onTouchStart={startDraw}
-          onTouchMove={draw}
-          onTouchEnd={endDraw}
-          style={{ touchAction: "none" }}
-        />
-      </div>
+        {/* Canvas */}
+        <div className="flex-1 relative bg-white border-b border-gray-100">
+          <canvas ref={canvasRef} className="w-full h-full cursor-crosshair touch-none" />
+          {!hasDrawn && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none gap-3">
+              <div className="border-2 border-dashed border-gray-200 rounded-2xl px-8 py-6 flex items-center gap-4">
+                <PenTool className="w-8 h-8 text-gray-300" />
+                <div>
+                  <p className="text-gray-400 text-sm font-medium">Firma aquí →</p>
+                  <p className="text-gray-300 text-xs">Usa tu dedo para firmar</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div
+            className="absolute inset-0"
+            onMouseDown={startDraw}
+            onMouseMove={draw}
+            onMouseUp={endDraw}
+            onMouseLeave={endDraw}
+            onTouchStart={startDraw}
+            onTouchMove={draw}
+            onTouchEnd={endDraw}
+            style={{ touchAction: "none" }}
+          />
+        </div>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-        <button
-          type="button"
-          onClick={handleConfirm}
-          disabled={!hasDrawn}
-          className="w-full bg-gradient-to-r from-oro to-oro-light text-white font-bold py-3.5 rounded-xl text-base transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 shadow-md"
-        >
-          <Check className="w-5 h-5" /> Confirmar firma
-        </button>
+        {/* Footer */}
+        <div className="px-4 py-3 bg-gray-50 flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!hasDrawn}
+            className="w-full bg-gradient-to-r from-oro to-oro-light text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 shadow-md"
+          >
+            <Check className="w-5 h-5" /> Confirmar firma
+          </button>
+        </div>
       </div>
     </div>
   );
