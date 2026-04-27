@@ -21,13 +21,15 @@ export async function GET(request: NextRequest) {
 
       const leads = data || [];
       const enProceso = ["nuevo", "en_proceso", "contactado"];
-      const convertidos = ["convertido", "completado"];
+      const firmados = ["firmado", "completado"];
+      const convertidos = ["convertido"];
       const abandonados = ["abandonado"];
       const descartados = ["descartado", "perdido"];
 
       return NextResponse.json({
         total: leads.length,
         en_proceso: leads.filter((l) => enProceso.includes(l.status)).length,
+        firmados: leads.filter((l) => firmados.includes(l.status)).length,
         convertidos: leads.filter((l) => convertidos.includes(l.status)).length,
         abandonados: leads.filter((l) => abandonados.includes(l.status)).length,
         descartados: leads.filter((l) => descartados.includes(l.status)).length,
@@ -50,8 +52,10 @@ export async function GET(request: NextRequest) {
     // Apply filter
     if (filter === "en_proceso") {
       query = query.in("status", ["nuevo", "en_proceso", "contactado"]);
+    } else if (filter === "firmados") {
+      query = query.in("status", ["firmado", "completado"]);
     } else if (filter === "convertidos") {
-      query = query.in("status", ["convertido", "completado"]);
+      query = query.eq("status", "convertido");
     } else if (filter === "abandonados") {
       query = query.eq("status", "abandonado");
     } else if (filter === "descartados") {

@@ -25,6 +25,7 @@ type LeadStatus =
   | "nuevo"
   | "en_proceso"
   | "contactado"
+  | "firmado"
   | "convertido"
   | "completado"
   | "perdido"
@@ -50,7 +51,8 @@ const LEAD_STATUS_CONFIG: Record<LeadStatus, { label: string; color: string }> =
   en_proceso: { label: "En proceso", color: "bg-blue-50 text-blue-700 border-blue-200" },
   contactado: { label: "Contactado", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   convertido: { label: "Convertido", color: "bg-green-50 text-green-700 border-green-200" },
-  completado: { label: "Completado", color: "bg-green-50 text-green-700 border-green-200" },
+  completado: { label: "Firmado", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  firmado: { label: "Firmado", color: "bg-purple-50 text-purple-700 border-purple-200" },
   perdido: { label: "Perdido", color: "bg-gray-100 text-gray-500 border-gray-200" },
   descartado: { label: "Descartado", color: "bg-gray-100 text-gray-500 border-gray-200" },
   abandonado: { label: "Abandonado", color: "bg-orange-50 text-orange-700 border-orange-200" },
@@ -59,7 +61,8 @@ const LEAD_STATUS_CONFIG: Record<LeadStatus, { label: string; color: string }> =
 // Agrupa los status semánticamente para las secciones del panel
 const STATUS_GROUPS = {
   enProceso: ["nuevo", "en_proceso", "contactado"] as LeadStatus[],
-  convertidos: ["convertido", "completado"] as LeadStatus[],
+  firmados: ["firmado", "completado"] as LeadStatus[],
+  convertidos: ["convertido"] as LeadStatus[],
   abandonados: ["abandonado"] as LeadStatus[],
   descartados: ["descartado", "perdido"] as LeadStatus[],
 };
@@ -98,7 +101,7 @@ function LanzaPanelContent() {
   const code = searchParams.get("code") || "";
   const [lanza, setLanza] = useState<Lanza | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [leadCounts, setLeadCounts] = useState({ total: 0, en_proceso: 0, convertidos: 0, abandonados: 0, descartados: 0 });
+  const [leadCounts, setLeadCounts] = useState({ total: 0, en_proceso: 0, firmados: 0, convertidos: 0, abandonados: 0, descartados: 0 });
   const [loading, setLoading] = useState(true);
   const [panelTab, setPanelTab] = useState<"resumen" | "contactos">("resumen");
   const [comision, setComision] = useState(100000);
@@ -387,12 +390,12 @@ interface LeadsSectionProps {
   showStep?: boolean;
 }
 
-type ContactosFilter = "en_proceso" | "convertidos" | "abandonados" | "descartados";
+type ContactosFilter = "en_proceso" | "firmados" | "convertidos" | "abandonados" | "descartados";
 const PAGE_SIZE = 10;
 
 function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemindLead, handleMarkLead, lanzaCode }: {
   lanzaId: string;
-  leadCounts: { total: number; en_proceso: number; convertidos: number; abandonados: number; descartados: number };
+  leadCounts: { total: number; en_proceso: number; firmados: number; convertidos: number; abandonados: number; descartados: number };
   comision: number;
   formatMoney: (n: number) => string;
   handleRemindLead: (lead: Lead) => void;
@@ -442,7 +445,8 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
 
   const filters: { key: ContactosFilter; label: string; count: number; color: string; desc: string }[] = [
     { key: "en_proceso", label: "En proceso", count: leadCounts.en_proceso, color: "bg-blue-50 text-blue-700 border-blue-200", desc: "Personas que empezaron a registrarse pero aún no terminaron de firmar su contrato." },
-    { key: "convertidos", label: "Convertidos", count: leadCounts.convertidos, color: "bg-green-50 text-green-700 border-green-200", desc: "Completaron su registro y firmaron contrato. Ya ganaste tu comisión por cada uno." },
+    { key: "firmados", label: "Firmados", count: leadCounts.firmados, color: "bg-purple-50 text-purple-700 border-purple-200", desc: "Firmaron contrato. Estamos verificando sus datos para aprobar su inscripción." },
+    { key: "convertidos", label: "Convertidos", count: leadCounts.convertidos, color: "bg-green-50 text-green-700 border-green-200", desc: "Aprobados por nuestro equipo. Ya ganaste tu comisión por cada uno." },
     { key: "abandonados", label: "Abandonados", count: leadCounts.abandonados, color: "bg-orange-50 text-orange-700 border-orange-200", desc: "Pasaron más de 3 días hábiles sin que los contactáramos. Puedes recordarles por WhatsApp." },
     { key: "descartados", label: "Descartados", count: leadCounts.descartados, color: "bg-gray-50 text-gray-500 border-gray-200", desc: "Personas que dijeron que no o ya no aplican. Puedes reactivarlos si cambian de opinión." },
   ];
@@ -473,7 +477,7 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
 
       {contactos.map((lead) => {
         const sCfg = LEAD_STATUS_CONFIG[lead.status] || { label: lead.status, color: "bg-gray-100 text-gray-500 border-gray-200" };
-        const isConverted = lead.status === "convertido" || lead.status === "completado";
+        const isConverted = lead.status === "convertido";
         const isInactive = lead.status === "abandonado" || lead.status === "descartado" || lead.status === "perdido";
         return (
           <div key={lead.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">

@@ -43,5 +43,16 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // When admin approves (estado_pago → "Al dia"), convert the associated lead to "convertido"
+  if (safeUpdates.estado_pago === "Al dia" && data?.cedula) {
+    try {
+      await supabase
+        .from("lanza_leads")
+        .update({ status: "convertido" })
+        .eq("cedula", data.cedula)
+        .in("status", ["firmado", "completado"]);
+    } catch { /* silent */ }
+  }
+
   return NextResponse.json(data);
 }

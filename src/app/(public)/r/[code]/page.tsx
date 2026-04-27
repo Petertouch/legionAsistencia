@@ -596,7 +596,7 @@ export default function ReferralPage({ params }: Props) {
           body: JSON.stringify({
             lead_id: leadId,
             current_step: 5,
-            status: "completado",
+            status: "firmado",
             contrato_id: newContratoId,
           }),
         }).catch(() => {});
