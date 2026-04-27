@@ -49,6 +49,7 @@ export default function ClientDashboardPage() {
   const [familiaForm, setFamiliaForm] = useState({
     nombre: "", parentesco: "Cónyuge", cedula: "", email: "", telefono: "",
   });
+  const [casos, setCasos] = useState<Caso[]>([]);
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
@@ -63,6 +64,15 @@ export default function ClientDashboardPage() {
           login({ ...session, estado_pago: data.estado_pago });
         }
       })
+      .catch(() => {});
+  }, [session?.suscriptor_id]);
+
+  // Cargar casos
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/casos?suscriptor_id=${session.suscriptor_id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then(setCasos)
       .catch(() => {});
   }, [session?.suscriptor_id]);
 
@@ -106,15 +116,6 @@ export default function ClientDashboardPage() {
     } catch { toast.error("Error de conexión"); }
   };
 
-  const [casos, setCasos] = useState<Caso[]>([]);
-
-  useEffect(() => {
-    if (!session) return;
-    fetch(`/api/casos?suscriptor_id=${session.suscriptor_id}`)
-      .then((r) => r.ok ? r.json() : [])
-      .then(setCasos)
-      .catch(() => {});
-  }, [session?.suscriptor_id]);
   const casosActivos = casos.filter((c) => c.etapa !== "Cerrado");
   const casosCerrados = casos.filter((c) => c.etapa === "Cerrado");
   const pago = PAGO_CONFIG[session.estado_pago] || PAGO_CONFIG["Al dia"];
