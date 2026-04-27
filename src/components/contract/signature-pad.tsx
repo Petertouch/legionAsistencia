@@ -168,7 +168,8 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
         {!hasDrawn && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <PenTool className="w-10 h-10 text-gray-200 mb-2" />
-            <p className="text-gray-300 text-base font-medium">Firma con tu dedo aquí</p>
+            <p className="text-gray-300 text-base font-medium">Gira el celular horizontal</p>
+            <p className="text-gray-300 text-sm mt-1">y firma aquí con tu dedo →</p>
           </div>
         )}
         {/* Event overlay */}
