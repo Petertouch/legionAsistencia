@@ -75,30 +75,24 @@ export async function updateSuscriptor(id: string, updates: Partial<Suscriptor>)
   return { ...row, fecha_inicio: row.fecha_inicio?.split("T")[0] || "", created_at: row.created_at || "", updated_at: row.updated_at || "" } as Suscriptor;
 }
 
-// ── Casos ───────────────────────────────────────────────────────
+// ── Casos (Supabase via API) ────────────────────────────────────
 export async function getCasos(params?: {
   search?: string; area?: string; etapa?: string; prioridad?: string; abogado?: string;
 }): Promise<Caso[]> {
-  let data = [...MOCK_CASOS];
-  if (params?.search) {
-    const q = params.search.toLowerCase();
-    data = data.filter((c) =>
-      c.titulo.toLowerCase().includes(q) ||
-      c.descripcion.toLowerCase().includes(q) ||
-      (c.suscriptor_nombre?.toLowerCase().includes(q) ?? false) ||
-      c.abogado.toLowerCase().includes(q)
-    );
-  }
-  if (params?.area) data = data.filter((c) => c.area === params.area);
-  if (params?.etapa) data = data.filter((c) => c.etapa === params.etapa);
-  if (params?.prioridad) data = data.filter((c) => c.prioridad === params.prioridad);
-  if (params?.abogado) data = data.filter((c) => c.abogado === params.abogado);
-  return data;
+  const qs = new URLSearchParams();
+  if (params?.search) qs.set("search", params.search);
+  if (params?.area) qs.set("area", params.area);
+  if (params?.etapa) qs.set("etapa", params.etapa);
+  if (params?.prioridad) qs.set("prioridad", params.prioridad);
+  if (params?.abogado) qs.set("abogado", params.abogado);
+  const res = await fetch(`/api/casos${qs.toString() ? `?${qs}` : ""}`);
+  return res.ok ? await res.json() : [];
 }
 
 export async function getCaso(id: string): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
-  return caso ? { ...caso, checklist: { ...caso.checklist } } : null;
+  const res = await fetch(`/api/casos?search=${id}`);
+  const data = res.ok ? await res.json() : [];
+  return data.find((c: Caso) => c.id === id) || null;
 }
 
 export async function createCaso(data: {
@@ -107,113 +101,126 @@ export async function createCaso(data: {
   fecha_limite: string | null;
 }): Promise<Caso> {
   const pipeline = PIPELINES[data.area];
-  const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.id === data.suscriptor_id);
-  const c: Caso = {
-    id: nextId("c"),
-    suscriptor_nombre: suscriptor?.nombre,
-    etapa: pipeline.stages[0].name,
-    etapa_index: 0,
-    fecha_ingreso_etapa: now(),
-    fecha_audiencia: null,
-    fecha_cierre: null,
-    checklist: {},
-    notas_etapa: "",
-    created_at: now(),
-    updated_at: now(),
-    ...data,
-  };
-  MOCK_CASOS.push(c);
+  const res = await fetch("/api/casos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...data,
+      etapa: pipeline.stages[0].name,
+      etapa_index: 0,
+    }),
+  });
+  const caso = await res.json();
 
   // Send "caso creado" email
   sendCasoEmail("caso-creado", data.suscriptor_id, {
-    nombre: suscriptor?.nombre || "",
+    nombre: "",
     titulo_caso: data.titulo,
     area: data.area,
     abogado: data.abogado,
     fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
   });
 
-  return c;
+  return caso;
 }
 
 export async function getCasosByPipeline(area: CaseArea): Promise<Record<string, Caso[]>> {
   const pipeline = PIPELINES[area];
-  const casos = MOCK_CASOS.filter((c) => c.area === area);
+  const res = await fetch(`/api/casos?area=${encodeURIComponent(area)}`);
+  const casos: Caso[] = res.ok ? await res.json() : [];
   const grouped: Record<string, Caso[]> = {};
   for (const stage of pipeline.stages) {
-    grouped[stage.name] = casos.filter((c) => c.etapa === stage.name).map((c) => ({ ...c, checklist: { ...c.checklist } }));
+    grouped[stage.name] = casos.filter((c) => c.etapa === stage.name);
   }
   return grouped;
 }
 
 export async function advanceCaso(id: string): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
+  const caso = await getCaso(id);
   if (!caso) return null;
-  const pipeline = PIPELINES[caso.area];
+  const pipeline = PIPELINES[caso.area as CaseArea];
+  if (!pipeline) return caso;
   const nextIndex = caso.etapa_index + 1;
-  if (nextIndex >= pipeline.stages.length) return { ...caso };
+  if (nextIndex >= pipeline.stages.length) return caso;
   const etapaAnterior = caso.etapa;
-  caso.etapa = pipeline.stages[nextIndex].name;
-  caso.etapa_index = nextIndex;
-  caso.fecha_ingreso_etapa = now();
-  caso.checklist = {};
-  caso.notas_etapa = "";
-  caso.updated_at = now();
   const isCerrado = pipeline.stages[nextIndex].name === "Cerrado";
-  if (isCerrado) {
-    caso.fecha_cierre = now().split("T")[0];
-  }
 
-  // Send email notification
-  const advSlug = isCerrado ? "caso-cerrado" : "caso-avanzo";
-  sendCasoEmail(advSlug, caso.suscriptor_id, {
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id,
+      etapa: pipeline.stages[nextIndex].name,
+      etapa_index: nextIndex,
+      fecha_ingreso_etapa: now(),
+      checklist: {},
+      notas_etapa: "",
+      ...(isCerrado ? { fecha_cierre: now().split("T")[0] } : {}),
+    }),
+  });
+  const updated = res.ok ? await res.json() : caso;
+
+  // Send email
+  const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+  sendCasoEmail(slug, caso.suscriptor_id, {
     nombre: "",
     titulo_caso: caso.titulo,
     area: caso.area,
     abogado: caso.abogado,
-    etapa: caso.etapa,
+    etapa: pipeline.stages[nextIndex].name,
     etapa_anterior: etapaAnterior,
     fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
   });
 
-  return { ...caso };
+  return updated;
 }
 
-
 export async function revertCaso(id: string): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
+  const caso = await getCaso(id);
   if (!caso) return null;
-  const pipeline = PIPELINES[caso.area];
+  const pipeline = PIPELINES[caso.area as CaseArea];
+  if (!pipeline) return caso;
   const prevIndex = caso.etapa_index - 1;
-  if (prevIndex < 0) return { ...caso };
-  caso.etapa = pipeline.stages[prevIndex].name;
-  caso.etapa_index = prevIndex;
-  caso.fecha_ingreso_etapa = now();
-  caso.fecha_cierre = null;
-  caso.updated_at = now();
-  return { ...caso };
+  if (prevIndex < 0) return caso;
+
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id,
+      etapa: pipeline.stages[prevIndex].name,
+      etapa_index: prevIndex,
+      fecha_ingreso_etapa: now(),
+      fecha_cierre: null,
+    }),
+  });
+  return res.ok ? await res.json() : caso;
 }
 
 export async function moveCaso(id: string, targetStage: string, targetIndex: number): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
+  const caso = await getCaso(id);
   if (!caso) return null;
   const etapaAnterior = caso.etapa;
-  caso.etapa = targetStage;
-  caso.etapa_index = targetIndex;
-  caso.fecha_ingreso_etapa = now();
-  caso.checklist = {};
-  caso.notas_etapa = "";
-  caso.updated_at = now();
   const isCerrado = targetStage === "Cerrado";
-  if (isCerrado) {
-    caso.fecha_cierre = now().split("T")[0];
-  }
 
-  // Send email notification
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id,
+      etapa: targetStage,
+      etapa_index: targetIndex,
+      fecha_ingreso_etapa: now(),
+      checklist: {},
+      notas_etapa: "",
+      ...(isCerrado ? { fecha_cierre: now().split("T")[0] } : {}),
+    }),
+  });
+  const updated = res.ok ? await res.json() : caso;
+
   if (etapaAnterior !== targetStage) {
-    const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.id === caso.suscriptor_id);
-    const moveSlug = isCerrado ? "caso-cerrado" : "caso-avanzo";
-    sendCasoEmail(moveSlug, caso.suscriptor_id, {
+    const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+    sendCasoEmail(slug, caso.suscriptor_id, {
       nombre: "",
       titulo_caso: caso.titulo,
       area: caso.area,
@@ -223,75 +230,62 @@ export async function moveCaso(id: string, targetStage: string, targetIndex: num
       fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
     });
   }
-  return { ...caso };
+  return updated;
 }
 
 export async function updateCasoChecklist(id: string, key: string, done: boolean): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
+  const caso = await getCaso(id);
   if (!caso) return null;
-  caso.checklist[key] = done;
-  caso.updated_at = now();
-  return { ...caso, checklist: { ...caso.checklist } };
+  const checklist = { ...(caso.checklist || {}), [key]: done };
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, checklist }),
+  });
+  return res.ok ? await res.json() : caso;
 }
 
 export async function getCasosBySuscriptor(suscriptorId: string): Promise<Caso[]> {
-  return MOCK_CASOS.filter((c) => c.suscriptor_id === suscriptorId);
+  const res = await fetch(`/api/casos?suscriptor_id=${suscriptorId}`);
+  return res.ok ? await res.json() : [];
 }
 
 export async function respondConsulta(id: string, respuesta: string, abogado: string): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
+  const caso = await getCaso(id);
   if (!caso) return null;
-  caso.respuesta = respuesta;
-  caso.respondido_por = abogado;
-  caso.respondido_at = now();
-  // Advance to "Respondida" stage
-  const pipeline = PIPELINES[caso.area];
-  const respondidaIndex = pipeline.stages.findIndex((s) => s.name === "Respondida");
+  const pipeline = PIPELINES[caso.area as CaseArea];
+  const respondidaIndex = pipeline?.stages.findIndex((s) => s.name === "Respondida") ?? -1;
+
+  const updates: Record<string, unknown> = { id, respuesta, respondido_por: abogado, respondido_at: now() };
   if (respondidaIndex >= 0) {
-    caso.etapa = "Respondida";
-    caso.etapa_index = respondidaIndex;
-    caso.fecha_ingreso_etapa = now();
+    updates.etapa = "Respondida";
+    updates.etapa_index = respondidaIndex;
+    updates.fecha_ingreso_etapa = now();
   }
-  caso.updated_at = now();
-  // Persist updated consulta to localStorage
-  if (typeof window !== "undefined") {
-    try {
-      const key = "legion-consultas";
-      const raw = localStorage.getItem(key);
-      const saved: Caso[] = raw ? JSON.parse(raw) : [];
-      const idx = saved.findIndex((c) => c.id === id);
-      if (idx >= 0) {
-        saved[idx] = { ...caso };
-        localStorage.setItem(key, JSON.stringify(saved));
-      }
-    } catch {}
-  }
-  return { ...caso };
+
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return res.ok ? await res.json() : caso;
 }
 
 export async function deleteConsultaRespuesta(id: string): Promise<Caso | null> {
-  const caso = MOCK_CASOS.find((c) => c.id === id);
-  if (!caso) return null;
-  caso.respuesta = undefined;
-  caso.respondido_por = undefined;
-  caso.respondido_at = undefined;
-  caso.etapa = "Pendiente";
-  caso.etapa_index = 0;
-  caso.fecha_ingreso_etapa = now();
-  caso.updated_at = now();
-  if (typeof window !== "undefined") {
-    try {
-      const key = "legion-consultas";
-      const raw = localStorage.getItem(key);
-      const saved: Caso[] = raw ? JSON.parse(raw) : [];
-      const idx = saved.findIndex((c) => c.id === id);
-      if (idx >= 0) {
-        saved[idx] = { ...caso };
-        localStorage.setItem(key, JSON.stringify(saved));
-      }
-    } catch {}
-  }
-  return { ...caso };
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id,
+      respuesta: null,
+      respondido_por: null,
+      respondido_at: null,
+      etapa: "Pendiente",
+      etapa_index: 0,
+      fecha_ingreso_etapa: now(),
+    }),
+  });
+  return res.ok ? await res.json() : null;
 }
 
 // ── Leads ───────────────────────────────────────────────────────
