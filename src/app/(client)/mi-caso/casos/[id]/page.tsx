@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
 import { useMessagesStore } from "@/lib/stores/messages-store";
-import { MOCK_CASOS } from "@/lib/mock-data";
+import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
   ArrowLeft, Clock, CalendarClock, Check, ArrowRight, User, MessageCircle,
@@ -62,9 +62,21 @@ export default function ClientCaseDetailPage({ params }: Props) {
     }
   }, [chatFullscreen]);
 
+  const [caso, setCaso] = useState<Caso | null>(null);
+  const [casoLoading, setCasoLoading] = useState(true);
+
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/casos/${id}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data && data.suscriptor_id === session.suscriptor_id) setCaso(data); setCasoLoading(false); })
+      .catch(() => setCasoLoading(false));
+  }, [id, session]);
+
   if (!mounted || !session) return null;
 
-  const caso = MOCK_CASOS.find((c) => c.id === id && c.suscriptor_id === session.suscriptor_id);
+  if (casoLoading) return <div className="animate-pulse space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-gray-100 rounded-xl" />)}</div>;
+
   if (!caso) {
     return (
       <div className="text-center py-12">
