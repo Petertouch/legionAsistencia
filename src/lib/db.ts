@@ -4,23 +4,13 @@ import {
 } from "./mock-data";
 import { PIPELINES, getDaysInStage, getDaysUntilDeadline, type CaseArea } from "./pipelines";
 import { createClient } from "./supabase/client";
-// Get suscriptor info from Supabase (mock data may not have email)
-async function getSuscriptorInfo(suscriptorId: string): Promise<{ email: string; nombre: string } | null> {
-  try {
-    const res = await fetch(`/api/suscriptores/${suscriptorId}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.email ? { email: data.email, nombre: data.nombre } : null;
-  } catch { return null; }
-}
-
-// Send case notification emails via API
-async function sendCasoEmail(slug: string, email: string, variables: Record<string, string>) {
+// Send case notification email — resolves suscriptor email server-side
+async function sendCasoEmail(slug: string, suscriptorId: string, variables: Record<string, string>) {
   try {
     await fetch("/api/mail/caso", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, to: email, variables }),
+      body: JSON.stringify({ slug, suscriptor_id: suscriptorId, variables }),
     });
   } catch { /* silent */ }
 }
@@ -134,17 +124,13 @@ export async function createCaso(data: {
   };
   MOCK_CASOS.push(c);
 
-  // Send "caso creado" email — fetch from Supabase since mock may not have email
-  getSuscriptorInfo(data.suscriptor_id).then((info) => {
-    if (info?.email) {
-      sendCasoEmail("caso-creado", info.email, {
-        nombre: info.nombre,
-        titulo_caso: data.titulo,
-        area: data.area,
-        abogado: data.abogado,
-        fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
-      });
-    }
+  // Send "caso creado" email
+  sendCasoEmail("caso-creado", data.suscriptor_id, {
+    nombre: suscriptor?.nombre || "",
+    titulo_caso: data.titulo,
+    area: data.area,
+    abogado: data.abogado,
+    fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
   });
 
   return c;
@@ -179,19 +165,15 @@ export async function advanceCaso(id: string): Promise<Caso | null> {
   }
 
   // Send email notification
-  getSuscriptorInfo(caso.suscriptor_id).then((info) => {
-    if (info?.email) {
-      const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
-      sendCasoEmail(slug, info.email, {
-        nombre: info.nombre,
-        titulo_caso: caso.titulo,
-        area: caso.area,
-        abogado: caso.abogado,
-        etapa: caso.etapa,
-        etapa_anterior: etapaAnterior,
-        fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
-      });
-    }
+  const advSlug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+  sendCasoEmail(advSlug, caso.suscriptor_id, {
+    nombre: "",
+    titulo_caso: caso.titulo,
+    area: caso.area,
+    abogado: caso.abogado,
+    etapa: caso.etapa,
+    etapa_anterior: etapaAnterior,
+    fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
   });
 
   return { ...caso };
@@ -230,19 +212,15 @@ export async function moveCaso(id: string, targetStage: string, targetIndex: num
   // Send email notification
   if (etapaAnterior !== targetStage) {
     const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.id === caso.suscriptor_id);
-    getSuscriptorInfo(caso.suscriptor_id).then((info) => {
-      if (info?.email) {
-        const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
-        sendCasoEmail(slug, info.email, {
-          nombre: info.nombre,
-          titulo_caso: caso.titulo,
-          area: caso.area,
-          abogado: caso.abogado,
-          etapa: targetStage,
-          etapa_anterior: etapaAnterior,
-          fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
-        });
-      }
+    const moveSlug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+    sendCasoEmail(moveSlug, caso.suscriptor_id, {
+      nombre: "",
+      titulo_caso: caso.titulo,
+      area: caso.area,
+      abogado: caso.abogado,
+      etapa: targetStage,
+      etapa_anterior: etapaAnterior,
+      fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
     });
   }
   return { ...caso };

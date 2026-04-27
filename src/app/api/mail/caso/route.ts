@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail, renderTemplate } from "@/lib/mail";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Hardcoded case email templates (same as mail-store but server-side)
 const TEMPLATES: Record<string, { asunto: string; html: string }> = {
@@ -85,11 +86,26 @@ const TEMPLATES: Record<string, { asunto: string; html: string }> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { slug, to, variables } = await request.json();
+    const { slug, to, suscriptor_id, variables } = await request.json();
 
-    if (!slug || !to) {
-      return NextResponse.json({ error: "slug y to requeridos" }, { status: 400 });
+    // Resolve email: either provided directly or looked up by suscriptor_id
+    let email = to;
+    let nombre = variables?.nombre || "";
+    if (!email && suscriptor_id) {
+      const supabase = createAdminClient();
+      const { data } = await supabase.from("suscriptores").select("email, nombre").eq("id", suscriptor_id).single();
+      if (data?.email) {
+        email = data.email;
+        if (!nombre) nombre = data.nombre;
+      }
     }
+
+    if (!slug || !email) {
+      return NextResponse.json({ error: "slug y email requeridos" }, { status: 400 });
+    }
+
+    // Merge nombre into variables
+    if (nombre && variables) variables.nombre = variables.nombre || nombre;
 
     const template = TEMPLATES[slug];
     if (!template) {
@@ -99,7 +115,7 @@ export async function POST(request: NextRequest) {
     const subject = renderTemplate(template.asunto, variables || {});
     const html = renderTemplate(template.html, variables || {});
 
-    await sendMail({ to, subject, html });
+    await sendMail({ to: email, subject, html });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[CASO MAIL]", err);
