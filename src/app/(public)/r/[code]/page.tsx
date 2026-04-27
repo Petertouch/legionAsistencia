@@ -1116,13 +1116,19 @@ export default function ReferralPage({ params }: Props) {
               </form>
             )}
 
-            {/* Contract preview */}
-            <div>
-              <h2 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-oro" /> Vista previa del contrato
-              </h2>
-              <ContractView data={contractData} />
-            </div>
+            {/* Contract preview — collapsible */}
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm hover:bg-gray-50 transition-colors list-none">
+                <span className="text-gray-900 font-bold text-sm flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-oro" /> Vista previa del contrato
+                </span>
+                <span className="text-gray-400 text-xs group-open:hidden">Toca para ver ▾</span>
+                <span className="text-gray-400 text-xs hidden group-open:inline">Ocultar ▴</span>
+              </summary>
+              <div className="mt-3">
+                <ContractView data={contractData} />
+              </div>
+            </details>
           </>
         )}
 
