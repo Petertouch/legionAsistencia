@@ -90,9 +90,8 @@ export async function getCasos(params?: {
 }
 
 export async function getCaso(id: string): Promise<Caso | null> {
-  const res = await fetch(`/api/casos?search=${id}`);
-  const data = res.ok ? await res.json() : [];
-  return data.find((c: Caso) => c.id === id) || null;
+  const res = await fetch(`/api/casos/${id}`);
+  return res.ok ? await res.json() : null;
 }
 
 export async function createCaso(data: {
