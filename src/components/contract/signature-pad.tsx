@@ -136,23 +136,7 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
 
   return (
     <div className="fixed inset-0 z-50 bg-white flex flex-col landscape:flex-row">
-      {/* Force landscape layout on portrait screens by rotating 90° */}
-      <style>{`
-        @media (orientation: portrait) {
-          .sig-landscape {
-            transform: rotate(90deg);
-            transform-origin: center center;
-            width: 100vh;
-            height: 100vw;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            margin-top: calc(-50vw);
-            margin-left: calc(-50vh);
-          }
-        }
-      `}</style>
-      <div className="sig-landscape flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex-shrink-0">
           <button type="button" onClick={onCancel} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm font-medium">
@@ -172,8 +156,7 @@ function FullscreenSignature({ onDone, onCancel }: { onDone: (dataUrl: string) =
               <div className="border-2 border-dashed border-gray-200 rounded-2xl px-8 py-6 flex items-center gap-4">
                 <PenTool className="w-8 h-8 text-gray-300" />
                 <div>
-                  <p className="text-gray-400 text-sm font-medium">Firma aquí →</p>
-                  <p className="text-gray-300 text-xs">Usa tu dedo para firmar</p>
+                  <p className="text-gray-400 text-sm font-medium">Firma aquí con tu dedo</p>
                 </div>
               </div>
             </div>
