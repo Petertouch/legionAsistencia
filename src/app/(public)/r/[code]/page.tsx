@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback } from "react";
+import { useState, useEffect, use, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Shield, Check, MessageCircle, Phone, Star, ArrowLeft, ArrowRight, FileText, Lock, Scale, HelpCircle } from "lucide-react";
@@ -284,6 +284,56 @@ export default function ReferralPage({ params }: Props) {
 
   const updateExtra = (field: string, value: string) =>
     setExtra((f) => ({ ...f, [field]: value }));
+
+  // Auto-fill from existing lead in process (by cedula or telefono)
+  const autoFillDebounce = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const autoFillDone = useRef<Set<string>>(new Set());
+
+  const tryAutoFill = useCallback((field: "cedula" | "telefono", value: string) => {
+    if (!value || value.length < 7 || autoFillDone.current.has(value) || leadId) return;
+    clearTimeout(autoFillDebounce.current);
+    autoFillDebounce.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/lanza-leads/buscar?${field}=${encodeURIComponent(value)}`);
+        const data = res.ok ? await res.json() : null;
+        if (!data || !data.lead_id) return;
+        autoFillDone.current.add(value);
+
+        // Split nombre into nombre + apellido
+        const parts = (data.nombre || "").split(" ");
+        const nombre = parts[0] || "";
+        const apellido = parts.slice(1).join(" ") || "";
+
+        setForm((f) => ({
+          nombre: f.nombre || nombre,
+          apellido: f.apellido || apellido,
+          telefono: f.telefono || data.telefono || "",
+          email: f.email || data.email || "",
+          cedula: f.cedula || data.cedula || "",
+        }));
+
+        if (data.plan_interes) setPlan(data.plan_interes);
+
+        // Fill extra data if available
+        if (data.datos_extra) {
+          const d = data.datos_extra;
+          setExtra((prev) => ({
+            telefono2: prev.telefono2 || d.telefono2 || "",
+            estado_civil: d.estado_civil || prev.estado_civil,
+            grado: prev.grado || d.grado || "",
+            fuerza: d.fuerza || prev.fuerza,
+            unidad: prev.unidad || d.unidad || "",
+            direccion: prev.direccion || d.direccion || "",
+            ciudad: prev.ciudad || d.ciudad || "",
+            departamento: prev.departamento || d.departamento || "",
+          }));
+        }
+
+        setLeadId(data.lead_id);
+        toast.success("Datos encontrados — completamos el formulario");
+      } catch { /* silent */ }
+    }, 500);
+  }, [leadId]);
 
   // Step 1: Si es la primera vez, muestra modal de confirmación.
   // Si es edición (ya pasó el step 1 antes), guarda y vuelve al step 2 directo.
@@ -824,7 +874,7 @@ export default function ReferralPage({ params }: Props) {
                     <label className="text-gray-600 text-xs font-medium mb-1 block">Teléfono *</label>
                     <input
                       type="tel" required value={form.telefono}
-                      onChange={(e) => update("telefono", e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); update("telefono", v); tryAutoFill("telefono", v); }}
                       placeholder="3176689580" inputMode="numeric"
                       className="w-full bg-white text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none"
                     />
@@ -833,7 +883,7 @@ export default function ReferralPage({ params }: Props) {
                     <label className="text-gray-600 text-xs font-medium mb-1 block">Cédula *</label>
                     <input
                       type="text" required value={form.cedula}
-                      onChange={(e) => update("cedula", e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); update("cedula", v); tryAutoFill("cedula", v); }}
                       placeholder="12345678" inputMode="numeric"
                       className="w-full bg-white text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none"
                     />
