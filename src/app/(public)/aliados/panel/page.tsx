@@ -386,12 +386,8 @@ interface LeadsSectionProps {
   showStep?: boolean;
 }
 
-const KANBAN_COLUMNS: { key: string; label: string; color: string; headerBg: string; countKey: string }[] = [
-  { key: "en_proceso", label: "En proceso", color: "border-blue-300", headerBg: "bg-blue-50 text-blue-700", countKey: "en_proceso" },
-  { key: "convertidos", label: "Convertidos", color: "border-green-300", headerBg: "bg-green-50 text-green-700", countKey: "convertidos" },
-  { key: "abandonados", label: "Abandonados", color: "border-orange-300", headerBg: "bg-orange-50 text-orange-700", countKey: "abandonados" },
-  { key: "descartados", label: "Descartados", color: "border-gray-300", headerBg: "bg-gray-100 text-gray-600", countKey: "descartados" },
-];
+type ContactosFilter = "en_proceso" | "convertidos" | "abandonados" | "descartados";
+const PAGE_SIZE = 10;
 
 function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemindLead, handleMarkLead, lanzaCode }: {
   lanzaId: string;
@@ -402,111 +398,129 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
   handleMarkLead: (leadId: string, status: LeadStatus) => Promise<void>;
   lanzaCode: string;
 }) {
-  const [columnLeads, setColumnLeads] = useState<Record<string, Lead[]>>({});
-  const [columnLoading, setColumnLoading] = useState<Record<string, boolean>>({});
-  const [columnPages, setColumnPages] = useState<Record<string, number>>({});
-  const [columnHasMore, setColumnHasMore] = useState<Record<string, boolean>>({});
+  const [filter, setFilter] = useState<ContactosFilter>("en_proceso");
+  const [contactos, setContactos] = useState<Lead[]>([]);
+  const [page, setPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const observerRef = useRef<HTMLDivElement>(null);
 
-  const fetchColumn = useCallback(async (colKey: string, pageNum: number, append: boolean) => {
-    setColumnLoading((prev) => ({ ...prev, [colKey]: true }));
+  const fetchLeads = useCallback(async (pageNum: number, reset: boolean) => {
+    setLoadingMore(true);
     try {
-      const res = await fetch(`/api/aliados/leads?lanza_id=${lanzaId}&filter=${colKey}&page=${pageNum}&limit=10`);
-      const data: Lead[] = res.ok ? await res.json() : [];
-      setColumnLeads((prev) => ({ ...prev, [colKey]: append ? [...(prev[colKey] || []), ...data] : data }));
-      setColumnHasMore((prev) => ({ ...prev, [colKey]: data.length === 10 }));
-      setColumnPages((prev) => ({ ...prev, [colKey]: pageNum }));
-    } catch { /* silent */ }
-    setColumnLoading((prev) => ({ ...prev, [colKey]: false }));
-  }, [lanzaId]);
+      const res = await fetch(`/api/aliados/leads?lanza_id=${lanzaId}&filter=${filter}&page=${pageNum}&limit=${PAGE_SIZE}`);
+      const data = res.ok ? await res.json() : [];
+      setContactos((prev) => reset ? data : [...prev, ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+      setInitialLoad(false);
+    } catch { setHasMore(false); setInitialLoad(false); }
+    setLoadingMore(false);
+  }, [lanzaId, filter]);
 
-  // Load first page of each column on mount
   useEffect(() => {
-    KANBAN_COLUMNS.forEach((col) => fetchColumn(col.key, 0, false));
-  }, [fetchColumn]);
+    setPage(0);
+    setContactos([]);
+    setHasMore(true);
+    setInitialLoad(true);
+    fetchLeads(0, true);
+  }, [filter, fetchLeads]);
 
-  const loadMore = (colKey: string) => {
-    const nextPage = (columnPages[colKey] || 0) + 1;
-    fetchColumn(colKey, nextPage, true);
-  };
+  useEffect(() => {
+    if (!observerRef.current || !hasMore || loadingMore) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && hasMore && !loadingMore) {
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchLeads(nextPage, false);
+      }
+    }, { threshold: 0.5 });
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, page, fetchLeads]);
+
+  const filters: { key: ContactosFilter; label: string; count: number; color: string; desc: string }[] = [
+    { key: "en_proceso", label: "En proceso", count: leadCounts.en_proceso, color: "bg-blue-50 text-blue-700 border-blue-200", desc: "Personas que empezaron a registrarse pero aún no terminaron de firmar su contrato." },
+    { key: "convertidos", label: "Convertidos", count: leadCounts.convertidos, color: "bg-green-50 text-green-700 border-green-200", desc: "Completaron su registro y firmaron contrato. Ya ganaste tu comisión por cada uno." },
+    { key: "abandonados", label: "Abandonados", count: leadCounts.abandonados, color: "bg-orange-50 text-orange-700 border-orange-200", desc: "Pasaron más de 3 días hábiles sin que los contactáramos. Puedes recordarles por WhatsApp." },
+    { key: "descartados", label: "Descartados", count: leadCounts.descartados, color: "bg-gray-50 text-gray-500 border-gray-200", desc: "Personas que dijeron que no o ya no aplican. Puedes reactivarlos si cambian de opinión." },
+  ];
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4 pb-4">
-      <div className="flex gap-3 min-w-[800px]">
-        {KANBAN_COLUMNS.map((col) => {
-          const leads = columnLeads[col.key] || [];
-          const count = leadCounts[col.countKey as keyof typeof leadCounts] || 0;
-          const loading = columnLoading[col.key];
-          const hasMore = columnHasMore[col.key];
+    <div className="space-y-3">
+      <div className="flex gap-1.5 flex-wrap">
+        {filters.map((f) => (
+          <button key={f.key} onClick={() => setFilter(f.key)}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border ${filter === f.key ? `${f.color} ring-1 ring-current/20` : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50"}`}>
+            {f.label} ({f.count})
+          </button>
+        ))}
+      </div>
 
-          return (
-            <div key={col.key} className={`flex-1 min-w-[200px] bg-gray-50 rounded-xl border-t-2 ${col.color} overflow-hidden`}>
-              {/* Column header */}
-              <div className={`px-3 py-2.5 ${col.headerBg} flex items-center justify-between`}>
-                <span className="font-bold text-xs">{col.label}</span>
-                <span className="text-[10px] font-bold opacity-70">{count}</span>
+      <p className="text-gray-500 text-xs leading-relaxed">{filters.find((f) => f.key === filter)?.desc}</p>
+
+      {initialLoad && (
+        <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-oro rounded-full animate-spin" /></div>
+      )}
+
+      {!initialLoad && contactos.length === 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+          <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+          <p className="text-gray-500 text-sm">Sin contactos en esta categoría</p>
+        </div>
+      )}
+
+      {contactos.map((lead) => {
+        const sCfg = LEAD_STATUS_CONFIG[lead.status] || { label: lead.status, color: "bg-gray-100 text-gray-500 border-gray-200" };
+        const isConverted = lead.status === "convertido" || lead.status === "completado";
+        const isInactive = lead.status === "abandonado" || lead.status === "descartado" || lead.status === "perdido";
+        return (
+          <div key={lead.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-gray-900 font-medium text-sm">{lead.nombre}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sCfg.color}`}>{sCfg.label}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-500 text-xs">
+                  {lead.telefono && <span>{lead.telefono}</span>}
+                  {lead.email && <span>{lead.email}</span>}
+                </div>
               </div>
-
-              {/* Cards */}
-              <div className="p-2 space-y-2 max-h-[60vh] overflow-y-auto">
-                {!loading && leads.length === 0 && (
-                  <p className="text-gray-400 text-[10px] text-center py-6">Sin contactos</p>
-                )}
-
-                {leads.map((lead) => {
-                  const isConverted = lead.status === "convertido" || lead.status === "completado";
-                  const isInactive = lead.status === "abandonado" || lead.status === "descartado" || lead.status === "perdido";
-                  return (
-                    <div key={lead.id} className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <span className="text-gray-900 font-medium text-xs leading-tight">{lead.nombre}</span>
-                        {isConverted && <span className="text-green-700 text-[10px] font-bold flex-shrink-0">+{formatMoney(comision)}</span>}
-                      </div>
-                      <div className="text-gray-400 text-[10px] space-y-0.5">
-                        {lead.telefono && <p>{lead.telefono}</p>}
-                        <p>{new Date(lead.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</p>
-                      </div>
-                      <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                        {lead.telefono && (
-                          <a href={`https://wa.me/${lead.telefono.startsWith("57") ? lead.telefono : `57${lead.telefono}`}`} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2 py-1 rounded font-medium">
-                            <MessageCircle className="w-2.5 h-2.5" /> WA
-                          </a>
-                        )}
-                        {!isConverted && lead.telefono && (
-                          <button onClick={() => handleRemindLead(lead)}
-                            className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-1 rounded font-medium">
-                            <ArrowRight className="w-2.5 h-2.5" /> Recordar
-                          </button>
-                        )}
-                        {isInactive && (
-                          <button onClick={() => handleMarkLead(lead.id, "en_proceso")}
-                            className="inline-flex items-center gap-1 text-[10px] text-oro bg-amber-50 hover:bg-amber-100 border border-oro/20 px-2 py-1 rounded font-medium">
-                            <RotateCcw className="w-2.5 h-2.5" /> Reactivar
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Load more */}
-                {hasMore && (
-                  <button onClick={() => loadMore(col.key)} disabled={loading}
-                    className="w-full text-center text-[10px] text-gray-400 hover:text-oro py-2 transition-colors font-medium">
-                    {loading ? "Cargando..." : "Ver más"}
-                  </button>
-                )}
-
-                {loading && leads.length === 0 && (
-                  <div className="flex justify-center py-6">
-                    <div className="w-4 h-4 border-2 border-gray-200 border-t-oro rounded-full animate-spin" />
-                  </div>
-                )}
+              <div className="text-right flex-shrink-0">
+                <p className="text-gray-400 text-[10px]">{new Date(lead.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</p>
+                {isConverted && <p className="text-green-700 text-xs font-bold mt-0.5">+{formatMoney(comision)}</p>}
               </div>
             </div>
-          );
-        })}
-      </div>
+            <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+              {lead.telefono && (
+                <a href={`https://wa.me/${lead.telefono.startsWith("57") ? lead.telefono : `57${lead.telefono}`}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <MessageCircle className="w-3 h-3" /> WhatsApp
+                </a>
+              )}
+              {!isConverted && lead.telefono && (
+                <button onClick={() => handleRemindLead(lead)}
+                  className="inline-flex items-center gap-1 text-[11px] text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <ArrowRight className="w-3 h-3" /> Recordar
+                </button>
+              )}
+              {isInactive && (
+                <button onClick={() => handleMarkLead(lead.id, "en_proceso")}
+                  className="inline-flex items-center gap-1 text-[11px] text-oro bg-amber-50 hover:bg-amber-100 border border-oro/20 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
+                  <RotateCcw className="w-3 h-3" /> Reactivar
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {hasMore && !initialLoad && (
+        <div ref={observerRef} className="flex justify-center py-4">
+          {loadingMore && <div className="w-5 h-5 border-2 border-gray-200 border-t-oro rounded-full animate-spin" />}
+        </div>
+      )}
     </div>
   );
 }
