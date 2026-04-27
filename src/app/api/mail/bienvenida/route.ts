@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
                 </td>
                 <td style="padding:2px 0 0 12px">
                   <p style="margin:0;font-size:14px;color:#1a1a1a;font-weight:600">¿Tienes una duda legal? Escríbenos</p>
-                  <p style="margin:4px 0 0;font-size:13px;color:#777;line-height:1.5">Puedes consultarnos por WhatsApp al <strong style="color:#1a1a1a">317 668 9580</strong> o desde tu portal. No importa el tema — disciplinarios, familia, pensiones, documentos — estamos para ayudarte.</p>
+                  <p style="margin:4px 0 0;font-size:13px;color:#777;line-height:1.5">Puedes consultarnos por <a href="https://wa.me/573176689580" style="color:#25D366;font-weight:600;text-decoration:none">WhatsApp al 317 668 9580</a> o desde tu portal. No importa el tema — disciplinarios, familia, pensiones, documentos — estamos para ayudarte.</p>
                 </td>
               </tr>
             </table>
@@ -138,10 +138,20 @@ export async function POST(request: NextRequest) {
 
           <!-- CTA -->
           <div style="text-align:center;padding:0 32px 32px;">
-            <a href="https://legionjuridica.com/mi-caso" style="display:inline-block;padding:16px 40px;background:#1a1a1a;color:#C8A96E;text-decoration:none;border-radius:12px;font-weight:bold;font-size:15px;letter-spacing:0.5px">
-              Ingresar a mi portal →
-            </a>
-            <p style="margin:12px 0 0;font-size:12px;color:#aaa">o escríbenos por WhatsApp al 317 668 9580</p>
+            <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 auto;max-width:400px;">
+              <tr>
+                <td style="padding:0 4px 0 0;width:65%">
+                  <a href="https://legionjuridica.com/mi-caso" style="display:block;padding:14px 0;background:#1a1a1a;color:#C8A96E;text-decoration:none;border-radius:10px;font-weight:bold;font-size:14px;text-align:center">
+                    Ingresar a mi portal →
+                  </a>
+                </td>
+                <td style="padding:0 0 0 4px;width:35%">
+                  <a href="https://wa.me/573176689580" style="display:block;padding:14px 0;background:#25D366;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;font-size:14px;text-align:center">
+                    WhatsApp
+                  </a>
+                </td>
+              </tr>
+            </table>
           </div>
 
           <!-- Contract note -->
