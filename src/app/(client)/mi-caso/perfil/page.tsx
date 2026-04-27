@@ -50,6 +50,7 @@ export default function ClientDashboardPage() {
     nombre: "", parentesco: "Cónyuge", cedula: "", email: "", telefono: "",
   });
   const [casos, setCasos] = useState<Caso[]>([]);
+  const [educacionActiva, setEducacionActiva] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
@@ -66,6 +67,14 @@ export default function ClientDashboardPage() {
       })
       .catch(() => {});
   }, [session?.suscriptor_id]);
+
+  // Cargar toggle educación
+  useEffect(() => {
+    fetch("/api/config?key=modulo_educacion")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.value === true || data?.value === "true") setEducacionActiva(true); })
+      .catch(() => {});
+  }, []);
 
   // Cargar casos
   useEffect(() => {
@@ -229,26 +238,19 @@ export default function ClientDashboardPage() {
         )}
       </div>
 
-      {/* Quick access grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/mi-caso/cursos"
-          className="bg-white rounded-2xl border border-gray-200 p-4 hover:border-jungle-dark/20 transition-colors active:scale-[0.98]">
-          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-3">
-            <GraduationCap className="w-5 h-5 text-purple-400" />
-          </div>
-          <p className="text-gray-900 font-semibold text-sm">Cursos</p>
-          <p className="text-gray-400 text-xs mt-0.5">Formación legal</p>
-        </Link>
-
-        <Link href="/mi-caso/referidos"
-          className="bg-white rounded-2xl border border-gray-200 p-4 hover:border-jungle-dark/20 transition-colors active:scale-[0.98]">
-          <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mb-3">
-            <Gift className="w-5 h-5 text-green-500" />
-          </div>
-          <p className="text-gray-900 font-semibold text-sm">Referidos</p>
-          <p className="text-gray-400 text-xs mt-0.5">Gana comisiones</p>
-        </Link>
-      </div>
+      {/* Quick access grid — only shows if education module is active */}
+      {educacionActiva && (
+        <div className="grid grid-cols-1 gap-3">
+          <Link href="/mi-caso/cursos"
+            className="bg-white rounded-2xl border border-gray-200 p-4 hover:border-jungle-dark/20 transition-colors active:scale-[0.98]">
+            <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-3">
+              <GraduationCap className="w-5 h-5 text-purple-400" />
+            </div>
+            <p className="text-gray-900 font-semibold text-sm">Cursos</p>
+            <p className="text-gray-400 text-xs mt-0.5">Formación legal</p>
+          </Link>
+        </div>
+      )}
 
       {/* Familia */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
