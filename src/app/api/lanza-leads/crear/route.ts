@@ -69,7 +69,7 @@ function buildFilter(cedulaN: string, telefonoN: string, emailN: string | null):
 // - Detecta leads en proceso del mismo cliente (status nuevo|en_proceso|contactado|abandonado)
 //   y devuelve { resume: true } con los datos del lead viejo para que el frontend
 //   ofrezca continuar donde quedó.
-// - Auto-marca como "abandonado" leads con > 7 días sin actividad (lazy on read).
+// - Auto-marca como "abandonado" leads con > 3 días hábiles sin actividad (lazy on read).
 // - Aplica first-touch attribution: el lead pertenece al primer aliado que lo trajo.
 // - Rate limit por IP (10/hora) y por cédula (5 reanudaciones/24h).
 //
@@ -175,9 +175,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (matchedLead) {
-      // Lazy abandonment: si lleva > 7 días sin actividad y aún no completado/descartado,
+      // Lazy abandonment: si lleva > 3 días hábiles (~72h) sin actividad y aún no completado/descartado,
       // lo marcamos como abandonado en este momento.
-      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const SEVEN_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
       const lastActivity = matchedLead.last_activity_at
         ? new Date(matchedLead.last_activity_at).getTime()
         : 0;

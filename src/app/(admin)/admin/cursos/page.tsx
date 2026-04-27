@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCoursesAdmin, deleteCourse, updateCourse } from "@/lib/stores/courses-store";
 import type { Course } from "@/lib/stores/courses-store";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
-import { Plus, Search, GraduationCap, Eye, EyeOff, Trash2, Pencil, Users, Star } from "lucide-react";
+import { Plus, Search, GraduationCap, Eye, EyeOff, Trash2, Pencil, Users, Star, Power } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -25,7 +25,41 @@ const STATUS_COLORS: Record<string, string> = {
 export default function CursosAdminPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [moduloActivo, setModuloActivo] = useState(true);
+  const [loadingModulo, setLoadingModulo] = useState(true);
   const queryClient = useQueryClient();
+
+  // Load module toggle state
+  useEffect(() => {
+    fetch("/api/config?key=modulo_educacion")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.value !== undefined) setModuloActivo(data.value === true || data.value === "true");
+        setLoadingModulo(false);
+      })
+      .catch(() => setLoadingModulo(false));
+  }, []);
+
+  const handleToggleModulo = async () => {
+    const newValue = !moduloActivo;
+    setModuloActivo(newValue);
+    try {
+      const res = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "modulo_educacion", value: newValue }),
+      });
+      if (res.ok) {
+        toast.success(newValue ? "Módulo de educación activado — visible para clientes" : "Módulo de educación desactivado — oculto para clientes");
+      } else {
+        setModuloActivo(!newValue);
+        toast.error("Error al guardar");
+      }
+    } catch {
+      setModuloActivo(!newValue);
+      toast.error("Error de conexión");
+    }
+  };
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["admin-courses"],
@@ -65,6 +99,24 @@ export default function CursosAdminPage() {
 
   return (
     <div className="space-y-3 md:space-y-4">
+      {/* Module toggle */}
+      <div className={`flex items-center justify-between rounded-xl p-4 border ${moduloActivo ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
+        <div className="flex items-center gap-3">
+          <Power className={`w-5 h-5 ${moduloActivo ? "text-green-600" : "text-gray-400"}`} />
+          <div>
+            <p className="text-gray-900 font-bold text-sm">Módulo de Educación</p>
+            <p className="text-gray-500 text-xs">{moduloActivo ? "Visible para los clientes en su portal" : "Oculto para los clientes — no ven la sección de cursos"}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleToggleModulo}
+          disabled={loadingModulo}
+          className={`relative w-12 h-6 rounded-full transition-colors ${moduloActivo ? "bg-green-500" : "bg-gray-300"}`}
+        >
+          <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${moduloActivo ? "translate-x-6" : "translate-x-0.5"}`} />
+        </button>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">

@@ -61,7 +61,8 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin routes and protected APIs ──
   const isAdminRoute = pathname.startsWith("/admin");
-  const isProtectedApi = PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p));
+  const PUBLIC_API_EXCEPTIONS = ["/api/mail/bienvenida", "/api/contratos/pdf"];
+  const isProtectedApi = PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p)) && !PUBLIC_API_EXCEPTIONS.some((p) => pathname.startsWith(p));
 
   if (isAdminRoute || isProtectedApi) {
     const token = request.cookies.get(COOKIE_NAME)?.value;

@@ -5,11 +5,11 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { useReferidorStore } from "@/lib/stores/referidor-store";
 import {
   LayoutDashboard, Users, Scale, ClipboardList, PanelLeftClose, PanelLeftOpen,
   LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen, Award,
-  BadgeDollarSign,
+  BadgeDollarSign, ClipboardCheck, Settings, QrCode,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,21 +32,29 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "abogado", "profesor", "vendedor"] },
       { href: "/admin/mi-panel-vendedor", label: "Mi Panel", icon: BadgeDollarSign, roles: ["vendedor"] },
-      { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
+    ],
+  },
+  {
+    label: "Clientes",
+    items: [
+      { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
+      { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
+      { href: "/admin/validacion-identidad", label: "Identidad", icon: Users, roles: ["admin"] },
     ],
   },
   {
     label: "Legal",
     items: [
       { href: "/admin/casos", label: "Casos", icon: Scale, roles: ["admin", "abogado"] },
-      { href: "/admin/suscriptores", label: "Suscriptores", icon: Users, roles: ["admin"] },
+      { href: "/admin/seguimiento", label: "Seguimiento", icon: ClipboardList, roles: ["admin", "abogado"] },
     ],
   },
   {
-    label: "Contrato Clientes",
+    label: "Comercial",
     items: [
-      { href: "/admin/contratos", label: "Contratos", icon: FileText, roles: ["admin"] },
-      { href: "/admin/validacion-identidad", label: "Aprobación de identidad", icon: Users, roles: ["admin"] },
+      { href: "/admin/referidores", label: "Aliados", icon: Gift, roles: ["admin"] },
+      { href: "/admin/qrs", label: "Códigos QR", icon: QrCode, roles: ["admin"] },
+      { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
     ],
   },
   {
@@ -59,18 +67,12 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Equipo",
+    label: "Sistema",
     items: [
       { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
-      { href: "/admin/vendedores", label: "Vendedores", icon: BadgeDollarSign, roles: ["admin"] },
+      { href: "/admin/configuracion", label: "Configuración", icon: Settings, roles: ["admin"] },
       { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
-    ],
-  },
-  {
-    label: "Marketing",
-    items: [
-      { href: "/admin/recomendaciones", label: "Aliados", icon: Gift, roles: ["admin"] },
-      { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
+      { href: "/admin/blueprint", label: "Blueprint QA", icon: ClipboardCheck, roles: ["admin"] },
     ],
   },
 ];
@@ -86,7 +88,7 @@ export default function Sidebar() {
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const setMobileOpen = useSidebarStore((s) => s.setMobileOpen);
   const { user, role, logout } = useAuth();
-  const pendingLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
+  const pendingLeads = useReferidorStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
 
   const handleLogout = () => {
     logout();
@@ -155,7 +157,7 @@ export default function Sidebar() {
                 <div className="space-y-0.5">
                   {visibleItems.map(({ href, label, icon: Icon }) => {
                     const active = pathname.startsWith(href);
-                    const isLanzas = href === "/admin/recomendaciones";
+                    const isLanzas = href === "/admin/referidores";
 
                     return (
                       <Link

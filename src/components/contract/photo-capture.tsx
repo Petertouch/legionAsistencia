@@ -103,7 +103,7 @@ export default function PhotoCapture({
         <button
           type="button"
           onClick={retake}
-          className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 mx-auto py-1"
+          className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 mx-auto py-1"
         >
           <RotateCcw className="w-3.5 h-3.5" /> Tomar otra
         </button>
@@ -114,7 +114,7 @@ export default function PhotoCapture({
   if (stream) {
     return (
       <div className="space-y-3">
-        <div className={`relative ${containerClass} rounded-xl overflow-hidden border-2 border-white/20`}>
+        <div className={`relative ${containerClass} rounded-xl overflow-hidden border-2 border-gray-300`}>
           <video
             ref={videoRef}
             autoPlay
@@ -163,7 +163,7 @@ export default function PhotoCapture({
       <button
         type="button"
         onClick={startCamera}
-        className="flex items-center gap-2 text-sm bg-white/10 text-white px-5 py-3 rounded-xl mx-auto hover:bg-white/15 transition-colors border border-white/10 font-medium"
+        className="flex items-center gap-2 text-sm bg-gray-900 text-white px-6 py-3 rounded-xl mx-auto hover:bg-gray-800 transition-colors font-medium shadow-md"
       >
         <Camera className="w-4 h-4" /> {label}
       </button>

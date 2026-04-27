@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CaseArea } from "@/lib/pipelines";
 
-export type MemberRole = "abogado" | "profesor" | "vendedor";
+export type MemberRole = "abogado" | "profesor";
 export type MemberEstado = "activo" | "inactivo" | "vacaciones";
 
 export interface TeamMember {
@@ -95,8 +95,6 @@ interface TeamStore {
   getMember: (id: string) => TeamMember | undefined;
   getByRole: (role: MemberRole) => TeamMember[];
   getProfesores: () => TeamMember[];
-  getVendedores: () => TeamMember[];
-  getVendedorByCode: (code: string) => TeamMember | undefined;
   addAbogado: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
   addMember: (data: Omit<TeamMember, "id" | "created_at" | "updated_at">) => void;
   updateAbogado: (id: string, data: Partial<TeamMember>) => void;
@@ -116,8 +114,6 @@ export const useTeamStore = create<TeamStore>()(
       getMember: (id) => get().abogados.find((a) => a.id === id),
       getByRole: (role) => get().abogados.filter((a) => a.role === role),
       getProfesores: () => get().abogados.filter((a) => a.role === "profesor"),
-      getVendedores: () => get().abogados.filter((a) => a.role === "vendedor"),
-      getVendedorByCode: (code) => get().abogados.find((a) => a.role === "vendedor" && a.vendedor_code === code),
 
       addAbogado: (data) => {
         const now = new Date().toISOString();

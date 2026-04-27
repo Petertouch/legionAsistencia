@@ -11,6 +11,7 @@ export interface ClientSession {
   estado_pago: string;
   rama: string;
   rango: string;
+  debe_cambiar_clave?: boolean;
 }
 
 interface ClientStore {

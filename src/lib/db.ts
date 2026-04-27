@@ -14,13 +14,14 @@ function now() { return new Date().toISOString(); }
 export async function getSuscriptores(params?: {
   search?: string; plan?: string; estado_pago?: string; orderBy?: "created_at" | "updated_at";
 }): Promise<Suscriptor[]> {
-  const supabase = createClient();
-  const orderField = params?.orderBy || "created_at";
-  let query = supabase.from("suscriptores").select("*").order(orderField, { ascending: false });
-  if (params?.plan) query = query.eq("plan", params.plan);
-  if (params?.estado_pago) query = query.eq("estado_pago", params.estado_pago);
-  if (params?.search) query = query.or(`nombre.ilike.%${params.search}%,email.ilike.%${params.search}%,telefono.ilike.%${params.search}%,cedula.ilike.%${params.search}%`);
-  const { data } = await query;
+  const qs = new URLSearchParams();
+  if (params?.search) qs.set("search", params.search);
+  if (params?.plan) qs.set("plan", params.plan);
+  if (params?.estado_pago) qs.set("estado_pago", params.estado_pago);
+  if (params?.orderBy) qs.set("orderBy", params.orderBy);
+  const url = `/api/suscriptores${qs.toString() ? `?${qs}` : ""}`;
+  const res = await fetch(url);
+  const data = res.ok ? await res.json() : [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((s: any) => ({
     ...s,

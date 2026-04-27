@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
     const { data: suscriptor, error } = await supabase
       .from("suscriptores")
-      .select("id, nombre, cedula, email, telefono, plan, estado_pago, rama, rango, clave")
+      .select("id, nombre, cedula, email, telefono, plan, estado_pago, rama, rango, clave, debe_cambiar_clave")
       .eq("cedula", cedula.trim())
       .single();
 
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       estado_pago: suscriptor.estado_pago,
       rama: suscriptor.rama || "",
       rango: suscriptor.rango || "",
+      debe_cambiar_clave: suscriptor.debe_cambiar_clave ?? false,
     });
   } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

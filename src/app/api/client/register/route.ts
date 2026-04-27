@@ -27,16 +27,16 @@ export async function POST(request: NextRequest) {
   try {
     const { contrato_id, nombre, cedula, telefono, email, plan, fuerza, grado, clave } = await request.json();
 
-    if (!contrato_id || !nombre || !cedula || !telefono || !plan || !clave) {
+    if (!contrato_id || !nombre || !cedula || !telefono || !plan) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    if (clave.length < 8) {
-      return NextResponse.json({ error: "Clave debe tener al menos 8 caracteres" }, { status: 400 });
-    }
-
     const supabase = createAdminClient();
-    const hashedClave = await bcrypt.hash(clave, 12);
+
+    // Generate temp password if not provided, or use the one from the form
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    const tempClave = clave || ("LJ-" + Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join(""));
+    const hashedClave = await bcrypt.hash(tempClave, 12);
 
     // Save hashed password to contrato
     const { error: claveError } = await supabase
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ya existe un suscriptor con esta cédula" }, { status: 409 });
     }
 
-    // Create suscriptor with hashed password
+    // Create suscriptor with hashed password and flag to change it
     const { error: suscError } = await supabase.from("suscriptores").insert({
       contrato_id,
       nombre: nombre.trim(),
@@ -71,13 +71,15 @@ export async function POST(request: NextRequest) {
       rama: fuerza || null,
       rango: grado || null,
       clave: hashedClave,
+      debe_cambiar_clave: true,
     });
 
     if (suscError) {
       return NextResponse.json({ error: suscError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    // Return the temp password so it can be included in the welcome email
+    return NextResponse.json({ ok: true, clave_temporal: tempClave });
   } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }

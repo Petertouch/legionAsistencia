@@ -18,13 +18,21 @@ export default function ClientLoginPage() {
   const [error, setError] = useState("");
   const [showAliado, setShowAliado] = useState(false);
 
+  // Change password flow
+  const [showCambioClave, setShowCambioClave] = useState(false);
+  const [nuevaClave, setNuevaClave] = useState("");
+  const [confirmarClave, setConfirmarClave] = useState("");
+  const [cambiandoClave, setCambiandoClave] = useState(false);
+  const [pendingSession, setPendingSession] = useState<import("@/lib/stores/client-store").ClientSession | null>(null);
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (mounted && session) router.replace("/mi-caso/perfil");
+    if (mounted && session && !session.debe_cambiar_clave) router.replace("/mi-caso/perfil");
   }, [mounted, session, router]);
 
-  if (!mounted || session) return null;
+  if (!mounted) return null;
+  if (session && !session.debe_cambiar_clave) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,15 +53,117 @@ export default function ClientLoginPage() {
         return;
       }
 
-      const session = await res.json();
-      login(session);
-      toast.success(`Bienvenido, ${session.nombre}`);
+      const sessionData = await res.json();
+
+      if (sessionData.debe_cambiar_clave) {
+        setPendingSession(sessionData);
+        setShowCambioClave(true);
+        setLoading(false);
+        return;
+      }
+
+      login(sessionData);
+      toast.success(`Bienvenido, ${sessionData.nombre}`);
       router.push("/mi-caso/perfil");
     } catch {
       setError("Error de conexión");
       setLoading(false);
     }
   };
+
+  const handleCambiarClave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (nuevaClave.length < 8) { setError("La nueva clave debe tener al menos 8 caracteres"); return; }
+    if (nuevaClave !== confirmarClave) { setError("Las claves no coinciden"); return; }
+
+    setCambiandoClave(true);
+    try {
+      const res = await fetch("/api/client/cambiar-clave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cedula: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error al cambiar clave");
+        setCambiandoClave(false);
+        return;
+      }
+
+      // Login with updated session (no longer needs to change)
+      if (pendingSession) {
+        login({ ...pendingSession, debe_cambiar_clave: false });
+      }
+      toast.success("¡Clave actualizada! Bienvenido.");
+      router.push("/mi-caso/perfil");
+    } catch {
+      setError("Error de conexión");
+      setCambiandoClave(false);
+    }
+  };
+
+  // ── Change password screen ──
+  if (showCambioClave && pendingSession) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <form onSubmit={handleCambiarClave} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 w-full max-w-sm space-y-4">
+          <div className="text-center">
+            <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Shield className="w-7 h-7 text-oro" />
+            </div>
+            <h2 className="text-gray-900 font-bold text-lg">Cambia tu clave</h2>
+            <p className="text-gray-500 text-sm mt-1">
+              Hola <strong>{pendingSession.nombre}</strong>, por seguridad debes crear una clave personal antes de continuar.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-gray-600 text-xs font-medium mb-1 block">Nueva clave</label>
+            <input
+              type="password"
+              value={nuevaClave}
+              onChange={(e) => { setNuevaClave(e.target.value); setError(""); }}
+              placeholder="Mínimo 8 caracteres"
+              required
+              minLength={8}
+              className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:border-oro/40 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-gray-600 text-xs font-medium mb-1 block">Confirmar clave</label>
+            <input
+              type="password"
+              value={confirmarClave}
+              onChange={(e) => { setConfirmarClave(e.target.value); setError(""); }}
+              placeholder="Repite tu nueva clave"
+              required
+              minLength={8}
+              className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:border-oro/40 focus:outline-none"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-red-600 text-xs">{error}</div>
+          )}
+
+          <button
+            type="submit"
+            disabled={cambiandoClave || nuevaClave.length < 8 || nuevaClave !== confirmarClave}
+            className="w-full bg-jungle-dark text-white font-semibold py-3 rounded-xl hover:bg-jungle transition-colors disabled:opacity-40 active:scale-[0.98]"
+          >
+            {cambiandoClave ? "Guardando..." : "Guardar y entrar"}
+          </button>
+
+          <p className="text-gray-400 text-[10px] text-center">
+            Tu cédula ({pendingSession.cedula}) es tu usuario. Guarda tu nueva clave en un lugar seguro.
+          </p>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">

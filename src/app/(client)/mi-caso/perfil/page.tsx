@@ -38,6 +38,7 @@ const PAGO_CONFIG: Record<string, { label: string; color: string; bg: string; ic
 export default function ClientDashboardPage() {
   const router = useRouter();
   const session = useClientStore((s) => s.session);
+  const login = useClientStore((s) => s.login);
   const [mounted, setMounted] = useState(false);
   const [subTab, setSubTab] = useState<"resumen" | "contrato">("resumen");
 
@@ -51,6 +52,19 @@ export default function ClientDashboardPage() {
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
+
+  // Refrescar estado_pago desde la DB (por si el admin aprobó)
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/client/estado?cedula=${encodeURIComponent(session.cedula)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.estado_pago && data.estado_pago !== session.estado_pago) {
+          login({ ...session, estado_pago: data.estado_pago });
+        }
+      })
+      .catch(() => {});
+  }, [session?.suscriptor_id]);
 
   // Cargar beneficiarios
   useEffect(() => {

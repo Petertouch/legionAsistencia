@@ -10,7 +10,7 @@ import Badge from "@/components/ui/badge";
 import { getDaysUntilDeadline } from "@/lib/pipelines";
 import { Users, Scale, Inbox, AlertTriangle, Phone, MessageSquare, Calendar, StickyNote, CalendarClock, Gift, GraduationCap, BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { useReferidorStore } from "@/lib/stores/referidor-store";
 import { useTeamStore } from "@/lib/stores/team-store";
 import { getCoursesAdmin } from "@/lib/stores/courses-store";
 import type { AuthUser } from "@/lib/stores/auth-store";
@@ -25,10 +25,10 @@ export default function DashboardPage() {
 
   if (isProfesor) return <ProfesorDashboard user={user} />;
   const abogadoFilter = isAbogado ? user?.nombre : undefined;
-  const fetchAll = useLanzaStore((s) => s.fetchAll);
-  const lanzaCount = useLanzaStore((s) => s.lanzas.length);
-  const convertidos = useLanzaStore((s) => s.leads.filter((l) => l.status === "convertido").length);
-  const nuevosLeads = useLanzaStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
+  const fetchAll = useReferidorStore((s) => s.fetchAll);
+  const lanzaCount = useReferidorStore((s) => s.referidores.length);
+  const convertidos = useReferidorStore((s) => s.leads.filter((l) => l.status === "convertido").length);
+  const nuevosLeads = useReferidorStore((s) => s.leads.filter((l) => l.status === "nuevo").length);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 

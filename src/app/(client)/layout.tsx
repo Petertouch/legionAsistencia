@@ -13,6 +13,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const session = useClientStore((s) => s.session);
+  const [educacionActiva, setEducacionActiva] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/config?key=modulo_educacion")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.value === true || data?.value === "true") setEducacionActiva(true);
+      })
+      .catch(() => {});
+  }, []);
   const logout = useClientStore((s) => s.logout);
   const [mounted, setMounted] = useState(false);
 
@@ -64,7 +74,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {[
               { href: "/mi-caso/perfil", label: "Inicio", icon: User },
               { href: "/mi-caso/casos", label: "Mis Casos", icon: Scale },
-              { href: "/mi-caso/cursos", label: "Cursos", icon: GraduationCap },
+              ...(educacionActiva ? [{ href: "/mi-caso/cursos", label: "Cursos", icon: GraduationCap }] : []),
               { href: "/mi-caso/referidos", label: "Referidos", icon: Gift },
             ].map(({ href, label, icon: Icon }) => {
               const active = pathname === href || (href === "/mi-caso/casos" && pathname.startsWith("/mi-caso/casos/"));

@@ -1,32 +1,35 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useTeamStore } from "@/lib/stores/team-store";
-import { useLanzaStore } from "@/lib/stores/lanza-store";
+import { useReferidorStore } from "@/lib/stores/referidor-store";
 import { Copy, ExternalLink, Users, TrendingUp, CircleDollarSign, Clock, Share2, BadgeDollarSign } from "lucide-react";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function MiPanelVendedorPage() {
   const { user } = useAuth();
-  const allMembers = useTeamStore((s) => s.abogados);
-  const leads = useLanzaStore((s) => s.leads);
+  const referidores = useReferidorStore((s) => s.referidores);
+  const leads = useReferidorStore((s) => s.leads);
+  const fetchAll = useReferidorStore((s) => s.fetchAll);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const vendedor = useMemo(() => {
     if (!user) return null;
-    return allMembers.find((m) => m.id === user.id && m.role === "vendedor") || null;
-  }, [user, allMembers]);
+    // Match by cedula or id
+    return referidores.find((r) => r.tipo === "vendedor" && (r.id === user.id || r.cedula === user.cedula)) || null;
+  }, [user, referidores]);
 
   const stats = useMemo(() => {
     if (!vendedor) return null;
-    const myLeads = leads.filter((l) => l.lanza_code === vendedor.vendedor_code);
+    const myLeads = leads.filter((l) => l.lanza_code === vendedor.code || l.lanza_id === vendedor.id);
     const convertidos = myLeads.filter((l) => l.status === "convertido");
     const nuevos = myLeads.filter((l) => l.status === "nuevo");
     const contactados = myLeads.filter((l) => l.status === "contactado");
     const perdidos = myLeads.filter((l) => l.status === "perdido");
-    const comisionUnit = vendedor.comision_porcentaje > 0 ? vendedor.comision_porcentaje : 50000;
+    const comisionUnit = vendedor.comision_personalizada ?? 50000;
     const comisionTotal = convertidos.length * comisionUnit;
     const tasa = myLeads.length > 0 ? Math.round((convertidos.length / myLeads.length) * 100) : 0;
     return { myLeads, convertidos, nuevos, contactados, perdidos, comisionTotal, comisionUnit, tasa };
@@ -42,7 +45,7 @@ export default function MiPanelVendedorPage() {
   }
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://www.legionjuridica.com";
-  const referralLink = `${siteUrl}/r/${vendedor.vendedor_code}`;
+  const referralLink = `${siteUrl}/r/${vendedor.code}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);

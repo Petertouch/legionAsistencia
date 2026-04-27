@@ -70,28 +70,7 @@ const DEFAULT_TEMPLATES: MailTemplate[] = [
   // SUSCRIPTOR JOURNEY
   // ════════════════════════════════════════
   {
-    id: "mail-1", slug: "contrato-firmado", nombre: "Contrato Firmado",
-    asunto: "Tu contrato con Legión Jurídica ha sido registrado",
-    cuerpo: wrap("📝", "CONTRATO REGISTRADO",
-      greeting("{{nombre}}") +
-      p("Tu contrato ha sido registrado exitosamente. Nuestro equipo revisará tu inscripción y te notificaremos cuando sea aprobada.") +
-      infoCard(
-        row("Plan seleccionado", "{{plan}}") +
-        row("Cédula", "{{cedula}}") +
-        `<p style="margin:0;font-size:11px;color:rgba(212,197,160,0.4);text-transform:uppercase;letter-spacing:0.5px">Estado</p>` +
-        `<p style="margin:0;font-size:14px;color:#eab308;font-weight:600">⏳ Pendiente de aprobación</p>`
-      ) +
-      p("Recibirás un email de confirmación una vez que tu inscripción sea aprobada. Este proceso normalmente toma menos de 24 horas.") +
-      `<div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:8px;padding:14px 16px;margin:16px 0">
-        <p style="margin:0;font-size:13px;color:rgba(234,179,8,0.8);line-height:1.5">⏳ <strong>¿Qué sigue?</strong> — Nuestro equipo verificará tu información y aprobará tu inscripción. Te enviaremos un email de bienvenida cuando esté listo.</p>
-      </div>`
-    ),
-    categoria: "suscriptor", trigger: "Cuando el suscriptor firma su contrato",
-    activo: true, variables: ["nombre", "plan", "cedula", "fecha"], orden: 1,
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "mail-2", slug: "bienvenida", nombre: "Bienvenida",
+    id: "mail-1", slug: "bienvenida", nombre: "Bienvenida + Contrato",
     asunto: "¡Bienvenido a Legión Jurídica, {{nombre}}!",
     cuerpo: wrap("⚔️", "¡BIENVENIDO!",
       `<div style="text-align:center;margin-bottom:12px">
@@ -116,8 +95,24 @@ const DEFAULT_TEMPLATES: MailTemplate[] = [
       featureRow("🤖", "Asistente IA 24/7", "Accede a nuestro chatbot legal para respuestas inmediatas") +
       btn("Ir a mi portal")
     ),
-    categoria: "suscriptor", trigger: "Cuando el admin admite al nuevo inscrito",
-    activo: true, variables: ["nombre", "plan", "email", "fecha"], orden: 2,
+    categoria: "suscriptor", trigger: "Cuando el suscriptor firma su contrato. Incluye PDF del contrato adjunto.",
+    activo: true, variables: ["nombre", "plan", "email", "cedula", "fecha", "contrato_id"], orden: 1,
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "mail-2", slug: "bienvenida-familiar", nombre: "Bienvenida Familiar",
+    asunto: "¡Estás protegido(a) por Legión Jurídica, {{nombre_familiar}}!",
+    cuerpo: wrap("🛡️", "¡BIENVENIDO A LA FAMILIA!",
+      `<h2 style="margin:0 0 6px;font-size:18px;color:#ffffff;font-weight:bold">¡Hola, {{nombre_familiar}}!</h2>` +
+      p("<strong>{{nombre_suscriptor}}</strong> ({{parentesco}}) te agregó como beneficiario(a) de su plan <strong style='color:#C8A96E'>{{plan}}</strong>.") +
+      p("Esto significa que ahora <strong style='color:#fff'>también cuentas con protección legal</strong>. Nuestro equipo de abogados está disponible para ayudarte.") +
+      featureRow("✓", "Estás protegido(a)", "Cobertura legal como beneficiario(a) del plan") +
+      featureRow("✓", "Puedes consultar", "Escríbenos por WhatsApp y te atendemos") +
+      featureRow("✓", "No tienes que hacer nada", "Tu cobertura ya está activa") +
+      btn("Escribirnos por WhatsApp", "https://wa.me/573176689580")
+    ),
+    categoria: "suscriptor", trigger: "Automático al agregar un familiar/beneficiario con email",
+    activo: true, variables: ["nombre_familiar", "nombre_suscriptor", "parentesco", "plan"], orden: 2,
     updated_at: new Date().toISOString(),
   },
   {

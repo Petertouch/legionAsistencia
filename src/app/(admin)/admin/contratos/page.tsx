@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { FileText, Save, Eye, Edit3, Trash2, Building2, Users, Plus } from "lucide-react";
 import ContractView from "@/components/contract/contract-view";
 import ClauseEditor, { type Clausula } from "@/components/contract/clause-editor";
-import PlanEditor, { type PlanConfig } from "@/components/contract/plan-editor";
+import { type PlanConfig } from "@/components/contract/plan-editor";
 
 interface FamiliaLimite {
   parentesco: string;
@@ -136,7 +136,7 @@ export default function ContratosAdminPage() {
         clausulas_contrato: (plantillaData.clausulas_contrato as Clausula[]) || DEFAULT_PLANTILLA.clausulas_contrato,
         secciones_libranza: (plantillaData.secciones_libranza as Clausula[]) || DEFAULT_PLANTILLA.secciones_libranza,
         planes: (plantillaData.planes as PlanConfig[]) || DEFAULT_PLANTILLA.planes,
-        familia_config: (plantillaData.familia_config as FamiliaConfig) || DEFAULT_PLANTILLA.familia_config,
+        familia_config: (plantillaData.familia_config as FamiliaConfig)?.limites ? (plantillaData.familia_config as FamiliaConfig) : DEFAULT_PLANTILLA.familia_config,
       });
     }
     setLoading(false);
@@ -292,10 +292,26 @@ export default function ContratosAdminPage() {
                       <input type="text" value={plantilla.ficha_titulo} onChange={(e) => updatePlantilla("ficha_titulo", e.target.value)} className={inputClass} />
                     </div>
                   </div>
-                  <PlanEditor
-                    planes={plantilla.planes}
-                    onChange={(planes) => setPlantilla((p) => ({ ...p, planes }))}
-                  />
+                  {/* Planes — solo lectura, se configuran en /admin/configuracion */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-gray-900 font-bold text-sm">Planes</h2>
+                      <a href="/admin/configuracion" className="text-oro text-xs font-medium hover:underline">Editar en Configuración →</a>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {plantilla.planes.map((plan, i) => (
+                        <div key={i} className="bg-white border border-gray-200 rounded-lg p-3">
+                          <p className="text-gray-900 font-bold text-sm">{plan.nombre}</p>
+                          <p className="text-oro font-bold text-lg">${plan.precio}<span className="text-gray-400 text-xs font-normal">/mes</span></p>
+                          <ul className="mt-2 space-y-1">
+                            {plan.caracteristicas.map((f, fi) => (
+                              <li key={fi} className="text-gray-500 text-xs flex items-start gap-1"><span className="text-green-500">✓</span>{f}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Configuración de familia / beneficiarios */}
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-4">
