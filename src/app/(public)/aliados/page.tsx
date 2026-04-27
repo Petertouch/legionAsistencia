@@ -149,22 +149,10 @@ export default function AliadoLoginPage() {
           </button>
         </form>
 
-        <div className="space-y-3">
-          <p className="text-gray-500 text-xs text-center">¿No tienes cuenta? Regístrate como:</p>
-          <div className="grid grid-cols-2 gap-2">
-            <Link href="/aliados/registro"
-              className="flex flex-col items-center gap-1.5 bg-white border border-blue-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl p-4 transition-colors">
-              <Shield className="w-6 h-6 text-blue-700" />
-              <span className="text-blue-700 text-xs font-bold">Lanza</span>
-              <span className="text-gray-500 text-[10px] text-center">Militar / Policía</span>
-            </Link>
-            <Link href="/esposa"
-              className="flex flex-col items-center gap-1.5 bg-white border border-pink-200 hover:border-pink-400 hover:bg-pink-50 rounded-2xl p-4 transition-colors">
-              <Heart className="w-6 h-6 text-pink-700" />
-              <span className="text-pink-700 text-xs font-bold">Aliada</span>
-              <span className="text-gray-500 text-[10px] text-center">Esposa militar</span>
-            </Link>
-          </div>
+        <div className="text-center">
+          <Link href="/aliados/recuperar" className="text-oro hover:text-amber-700 text-sm font-medium underline underline-offset-2 transition-colors">
+            ¿Olvidaste tu clave?
+          </Link>
         </div>
       </div>
     </div>
