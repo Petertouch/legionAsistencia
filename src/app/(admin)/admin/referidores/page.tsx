@@ -26,10 +26,15 @@ const TIPO_CONFIG: Record<string, { label: string; pluralLabel: string; icon: ty
   esposa: { label: "Esposa", pluralLabel: "Esposas", icon: Heart, color: "text-pink-700", bg: "bg-pink-50 border-pink-200" },
 };
 
-const LEAD_STATUS_CONFIG = {
+const LEAD_STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   nuevo: { label: "Nuevo", color: "bg-yellow-50 text-yellow-700 border-yellow-200", icon: Clock },
+  en_proceso: { label: "En proceso", color: "bg-blue-50 text-blue-700 border-blue-200", icon: Clock },
   contactado: { label: "Contactado", color: "bg-blue-50 text-blue-700 border-blue-200", icon: Phone },
+  firmado: { label: "Firmado", color: "bg-purple-50 text-purple-700 border-purple-200", icon: Check },
   convertido: { label: "Convertido", color: "bg-green-50 text-green-700 border-green-200", icon: Check },
+  completado: { label: "Completado", color: "bg-green-50 text-green-700 border-green-200", icon: Check },
+  abandonado: { label: "Abandonado", color: "bg-orange-50 text-orange-700 border-orange-200", icon: Clock },
+  descartado: { label: "Descartado", color: "bg-gray-100 text-gray-500 border-gray-200", icon: Clock },
   perdido: { label: "Perdido", color: "bg-gray-100 text-gray-500 border-gray-200", icon: Clock },
 };
 
@@ -718,7 +723,7 @@ export default function ReferidoresPage() {
         ) : (
           <div className="space-y-3">
             {filteredLeads.map((l) => {
-              const config = LEAD_STATUS_CONFIG[l.status];
+              const config = LEAD_STATUS_CONFIG[l.status] || { label: l.status, color: "bg-gray-100 text-gray-500 border-gray-200", icon: Clock };
               const StatusIcon = config.icon;
               const ref = referidores.find((r) => r.id === l.lanza_id);
               const comActual = ref ? getComisionForReferidor(comisiones, ref.tipo, ref.comision_personalizada) : 0;
