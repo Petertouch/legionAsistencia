@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateContratoPDF } from "@/lib/generate-contrato-pdf";
+import archiver from "archiver";
 
 // GET /api/contratos/pdf-cedula?cedula=123
 export async function GET(request: NextRequest) {
@@ -27,11 +28,23 @@ export async function GET(request: NextRequest) {
       .single();
 
     const pdfBuffer = await generateContratoPDF(contrato, plantilla);
+    const nombre = (contrato.nombre || "cliente").replace(/\s+/g, "_");
 
-    return new NextResponse(pdfBuffer as unknown as BodyInit, {
+    // Create zip
+    const zipBuffer = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const archive = archiver("zip", { zlib: { level: 9 } });
+      archive.on("data", (chunk: Buffer) => chunks.push(chunk));
+      archive.on("end", () => resolve(Buffer.concat(chunks)));
+      archive.on("error", reject);
+      archive.append(pdfBuffer, { name: `Contrato_${nombre}_${cedula}.pdf` });
+      archive.finalize();
+    });
+
+    return new NextResponse(zipBuffer as unknown as BodyInit, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="Contrato_${cedula}.pdf"`,
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="Contrato_${nombre}_${cedula}.zip"`,
       },
     });
   } catch (err) {
