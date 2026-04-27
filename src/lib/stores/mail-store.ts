@@ -458,7 +458,7 @@ export const useMailStore = create<MailStore>()(
     }),
     {
       name: "legion-mails",
-      version: 3,
+      version: 4,
       migrate: () => ({
         templates: DEFAULT_TEMPLATES,
       }),
