@@ -1203,70 +1203,91 @@ export default function ReferralPage({ params }: Props) {
 
         {/* ═══════ STEP 5: ONBOARDING ═══════ */}
         {step === 5 && (
-          <div className="space-y-6 py-4">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 bg-oro/20 rounded-full flex items-center justify-center mx-auto">
-                <Shield className="w-8 h-8 text-oro" />
+          <div className="space-y-5 py-4">
+            {/* Success header */}
+            <div className="text-center space-y-3">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <Check className="w-10 h-10 text-green-600" />
               </div>
-              <h1 className="text-gray-900 text-xl font-bold">¡Bienvenido a Legión Jurídica!</h1>
-              <p className="text-gray-600 text-sm">Tu cuenta está lista. Así funciona tu portal:</p>
+              <h1 className="text-gray-900 text-2xl font-bold">¡Listo, {form.nombre}! 🎉</h1>
+              <p className="text-gray-600 text-sm max-w-sm mx-auto">
+                Tu contrato del <strong className="text-gray-900">Plan {plan}</strong> fue firmado exitosamente.
+                Ya eres parte de Legión Jurídica.
+              </p>
             </div>
 
-            <div className="space-y-3">
-              {[
-                {
-                  icon: <Scale className="w-5 h-5 text-oro" />,
-                  title: "Mis Casos",
-                  desc: "Aquí verás el estado de tus procesos legales. Tu abogado actualizará cada etapa y podrás seguir el avance en tiempo real.",
-                },
-                {
-                  icon: <MessageCircle className="w-5 h-5 text-green-400" />,
-                  title: "Solicitar asesoría",
-                  desc: "Desde tu portal puedes enviar consultas directamente a tu abogado asignado. También puedes escribirnos por WhatsApp.",
-                },
-                {
-                  icon: <HelpCircle className="w-5 h-5 text-blue-400" />,
-                  title: "¿Cómo pedir algo?",
-                  desc: "Te enviamos un correo con tu clave temporal. Entra a tu portal con tu cédula y esa clave. La primera vez te pediremos cambiarla.",
-                },
-              ].map((item) => (
-                <div key={item.title} className="bg-white border border-gray-200 rounded-xl p-4 flex gap-3">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                    {item.icon}
+            {/* What happens now - 3 steps */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <h2 className="text-gray-900 font-bold text-sm mb-4">¿Qué sigue ahora?</h2>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-oro rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h3 className="text-gray-900 font-bold text-sm">{item.title}</h3>
-                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                    <p className="text-gray-900 font-medium text-sm">Revisa tu correo</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Te enviamos tu <strong className="text-gray-700">clave de acceso</strong> y una copia de tu contrato a <strong className="text-gray-700">{form.email || "tu correo"}</strong></p>
                   </div>
                 </div>
-              ))}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-oro rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">2</span>
+                  </div>
+                  <div>
+                    <p className="text-gray-900 font-medium text-sm">Ingresa a tu portal</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Entra a <strong className="text-gray-700">legionjuridica.com/mi-caso</strong> con tu cédula y la clave que te enviamos. La primera vez te pediremos crear una clave personal.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-oro rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">3</span>
+                  </div>
+                  <div>
+                    <p className="text-gray-900 font-medium text-sm">¿Necesitas ayuda? Escríbenos</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Si tienes una duda legal o necesitas algo, escríbenos por WhatsApp al <strong className="text-gray-700">317 668 9580</strong>. Estamos para protegerte.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-oro/10 border border-oro/20 rounded-xl p-4 text-center space-y-2">
-              <p className="text-oro text-sm font-medium">Tu acceso al portal</p>
-              <div className="flex items-center justify-center gap-4 text-xs">
-                <span className="text-gray-500">Usuario: <strong className="text-gray-900">{form.cedula}</strong></span>
-                <span className="text-gray-500">Clave: <strong className="text-gray-900">revisa tu correo</strong></span>
+            {/* Access card */}
+            <div className="bg-gray-900 rounded-2xl p-5 text-center space-y-3">
+              <p className="text-oro font-bold text-sm">Tus datos de acceso</p>
+              <div className="bg-white/10 rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-xs">Usuario (cédula)</span>
+                  <span className="text-white font-bold text-base font-mono">{form.cedula}</span>
+                </div>
+                <div className="border-t border-white/10" />
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-xs">Clave temporal</span>
+                  <span className="text-oro font-bold text-sm">📩 En tu correo</span>
+                </div>
               </div>
-              <p className="text-gray-400 text-[10px]">Te enviamos tu clave temporal a {form.email || "tu correo"}</p>
               <a
                 href="/mi-caso"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-oro to-oro-light text-jungle-dark px-5 py-2.5 rounded-xl font-bold text-sm mt-2 transition-all active:scale-[0.98]"
+                className="inline-flex items-center gap-2 bg-oro text-gray-900 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.98] hover:bg-oro-light w-full justify-center"
               >
-                <Lock className="w-4 h-4" /> Ir al portal
+                <Lock className="w-4 h-4" /> Ingresar a mi portal
               </a>
             </div>
 
+            {/* WhatsApp CTA */}
             <a
               href={`https://wa.me/573176689580?text=${encodeURIComponent(
                 `Hola, acabo de firmar mi contrato del Plan ${plan}. Mi nombre es ${form.nombre} ${form.apellido}, cédula ${form.cedula}. Código: ${code}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 bg-green-600 text-gray-900 px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors text-sm"
+              className="w-full inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors text-sm"
             >
-              <MessageCircle className="w-5 h-5" /> Contactar por WhatsApp
+              <MessageCircle className="w-5 h-5" /> Escríbenos por WhatsApp
             </a>
+
+            {/* Warm closing */}
+            <p className="text-center text-gray-400 text-xs italic">
+              "Tu misión es servir a la patria. La nuestra es protegerte." ⚔️
+            </p>
           </div>
         )}
 
