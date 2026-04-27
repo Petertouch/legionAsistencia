@@ -478,6 +478,7 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
       {contactos.map((lead) => {
         const sCfg = LEAD_STATUS_CONFIG[lead.status] || { label: lead.status, color: "bg-gray-100 text-gray-500 border-gray-200" };
         const isConverted = lead.status === "convertido";
+        const isFirmado = lead.status === "firmado" || lead.status === "completado";
         const isInactive = lead.status === "abandonado" || lead.status === "descartado" || lead.status === "perdido";
         return (
           <div key={lead.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
@@ -498,11 +499,16 @@ function ContactosTab({ lanzaId, leadCounts, comision, formatMoney, handleRemind
               </div>
             </div>
             <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-              {!isConverted && !isInactive && lead.telefono && (
+              {!isConverted && !isInactive && !isFirmado && lead.telefono && (
                 <button onClick={() => handleRemindLead(lead)}
                   className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors">
                   <MessageCircle className="w-3 h-3" /> Recordar por WhatsApp
                 </button>
+              )}
+              {isFirmado && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-1.5 rounded-lg font-medium">
+                  <Clock className="w-3 h-3" /> Pendiente de aprobación
+                </span>
               )}
               {isConverted && lead.telefono && (
                 <a href={`https://wa.me/${lead.telefono.startsWith("57") ? lead.telefono : `57${lead.telefono}`}`} target="_blank" rel="noopener noreferrer"
