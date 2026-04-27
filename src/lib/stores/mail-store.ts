@@ -116,6 +116,22 @@ const DEFAULT_TEMPLATES: MailTemplate[] = [
     updated_at: new Date().toISOString(),
   },
   {
+    id: "mail-2b", slug: "bienvenida-aliado", nombre: "Bienvenida Aliado",
+    asunto: "¡Bienvenido(a) al equipo, {{nombre}}! — Legión Jurídica",
+    cuerpo: wrap("🤝", "¡BIENVENIDO AL EQUIPO!",
+      `<h2 style="margin:0 0 6px;font-size:18px;color:#ffffff;font-weight:bold">¡Hola, {{nombre}}!</h2>` +
+      p("Ya haces parte del equipo de aliados de Legión Jurídica como <strong>{{tipo}}</strong>. Desde ahora puedes ganar dinero recomendando nuestro servicio legal.") +
+      featureRow("1️⃣", "Comparte tu link", "Envíalo por WhatsApp a militares y policías") +
+      featureRow("2️⃣", "Ellos se registran", "Llenan datos y firman contrato") +
+      featureRow("3️⃣", "Tú ganas", "Comisión por cada aprobado") +
+      infoCard(row("Tu código de referido", "{{code}}") + row("Tu link", "legionjuridica.com/r/{{code}}")) +
+      btn("Ir a mi panel", "https://legionjuridica.com/aliados")
+    ),
+    categoria: "referidos", trigger: "Automático al crear un aliado desde el admin. Incluye clave temporal.",
+    activo: true, variables: ["nombre", "tipo", "code", "clave_temporal"], orden: 1,
+    updated_at: new Date().toISOString(),
+  },
+  {
     id: "mail-3", slug: "inscripcion-rechazada", nombre: "Inscripción Rechazada",
     asunto: "Actualización sobre tu solicitud — Legión Jurídica",
     cuerpo: wrap("⚠️", "SOLICITUD NO APROBADA",

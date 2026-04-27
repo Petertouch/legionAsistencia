@@ -112,15 +112,13 @@ export const useReferidorStore = create<ReferidorStore>()((set, get) => ({
   },
 
   createReferidor: async (data) => {
-    const code = generateReferidorCode(data.tipo);
-    const supabase = createClient();
-    const { data: row, error } = await supabase
-      .from("lanzas")
-      .insert({ ...data, code, status: data.status || "activo" })
-      .select()
-      .single();
-    if (error || !row) return null;
-    const referidor = row as Referidor;
+    const res = await fetch("/api/referidores/crear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    const referidor = await res.json() as Referidor;
     set((s) => ({ referidores: [referidor, ...s.referidores] }));
     return referidor;
   },
