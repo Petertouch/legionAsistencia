@@ -4,6 +4,16 @@ import {
 } from "./mock-data";
 import { PIPELINES, getDaysInStage, getDaysUntilDeadline, type CaseArea } from "./pipelines";
 import { createClient } from "./supabase/client";
+// Send case notification emails via API
+async function sendCasoEmail(slug: string, email: string, variables: Record<string, string>) {
+  try {
+    await fetch("/api/mail/caso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, to: email, variables }),
+    });
+  } catch { /* silent */ }
+}
 
 // ── Helpers ─────────────────────────────────────────────────────
 let idCounter = 100;
@@ -113,6 +123,18 @@ export async function createCaso(data: {
     ...data,
   };
   MOCK_CASOS.push(c);
+
+  // Send "caso creado" email
+  if (suscriptor?.email) {
+    sendCasoEmail("caso-creado", suscriptor.email, {
+      nombre: suscriptor.nombre,
+      titulo_caso: data.titulo,
+      area: data.area,
+      abogado: data.abogado,
+      fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
+    });
+  }
+
   return c;
 }
 
@@ -132,15 +154,33 @@ export async function advanceCaso(id: string): Promise<Caso | null> {
   const pipeline = PIPELINES[caso.area];
   const nextIndex = caso.etapa_index + 1;
   if (nextIndex >= pipeline.stages.length) return { ...caso };
+  const etapaAnterior = caso.etapa;
   caso.etapa = pipeline.stages[nextIndex].name;
   caso.etapa_index = nextIndex;
   caso.fecha_ingreso_etapa = now();
   caso.checklist = {};
   caso.notas_etapa = "";
   caso.updated_at = now();
-  if (pipeline.stages[nextIndex].name === "Cerrado") {
+  const isCerrado = pipeline.stages[nextIndex].name === "Cerrado";
+  if (isCerrado) {
     caso.fecha_cierre = now().split("T")[0];
   }
+
+  // Send email notification
+  const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.id === caso.suscriptor_id);
+  if (suscriptor?.email) {
+    const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+    sendCasoEmail(slug, suscriptor.email, {
+      nombre: suscriptor.nombre,
+      titulo_caso: caso.titulo,
+      area: caso.area,
+      abogado: caso.abogado,
+      etapa: caso.etapa,
+      etapa_anterior: etapaAnterior,
+      fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
+    });
+  }
+
   return { ...caso };
 }
 
@@ -162,14 +202,33 @@ export async function revertCaso(id: string): Promise<Caso | null> {
 export async function moveCaso(id: string, targetStage: string, targetIndex: number): Promise<Caso | null> {
   const caso = MOCK_CASOS.find((c) => c.id === id);
   if (!caso) return null;
+  const etapaAnterior = caso.etapa;
   caso.etapa = targetStage;
   caso.etapa_index = targetIndex;
   caso.fecha_ingreso_etapa = now();
   caso.checklist = {};
   caso.notas_etapa = "";
   caso.updated_at = now();
-  if (targetStage === "Cerrado") {
+  const isCerrado = targetStage === "Cerrado";
+  if (isCerrado) {
     caso.fecha_cierre = now().split("T")[0];
+  }
+
+  // Send email notification
+  if (etapaAnterior !== targetStage) {
+    const suscriptor = MOCK_SUSCRIPTORES.find((s) => s.id === caso.suscriptor_id);
+    if (suscriptor?.email) {
+      const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
+      sendCasoEmail(slug, suscriptor.email, {
+        nombre: suscriptor.nombre,
+        titulo_caso: caso.titulo,
+        area: caso.area,
+        abogado: caso.abogado,
+        etapa: targetStage,
+        etapa_anterior: etapaAnterior,
+        fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
+      });
+    }
   }
   return { ...caso };
 }
