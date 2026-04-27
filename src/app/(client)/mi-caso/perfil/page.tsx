@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
-import { MOCK_CASOS } from "@/lib/mock-data";
+import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
   User, Shield, Scale, ArrowRight, Clock, Check, AlertTriangle,
@@ -106,7 +106,15 @@ export default function ClientDashboardPage() {
     } catch { toast.error("Error de conexión"); }
   };
 
-  const casos = MOCK_CASOS.filter((c) => c.suscriptor_id === session.suscriptor_id);
+  const [casos, setCasos] = useState<Caso[]>([]);
+
+  useEffect(() => {
+    if (!session) return;
+    fetch(`/api/casos?suscriptor_id=${session.suscriptor_id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then(setCasos)
+      .catch(() => {});
+  }, [session?.suscriptor_id]);
   const casosActivos = casos.filter((c) => c.etapa !== "Cerrado");
   const casosCerrados = casos.filter((c) => c.etapa === "Cerrado");
   const pago = PAGO_CONFIG[session.estado_pago] || PAGO_CONFIG["Al dia"];
