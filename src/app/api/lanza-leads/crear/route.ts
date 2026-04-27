@@ -218,9 +218,9 @@ export async function POST(request: NextRequest) {
 
       // Estado reanudable: ofrecer al usuario continuar donde quedó.
       if (reanudableStatuses.includes(matchedLead.status)) {
-        // Rate limit por cédula: 5 reanudaciones/24h
+        // Rate limit por cédula: 20 reanudaciones/24h
         const resumedCount = matchedLead.resumed_count || 0;
-        if (resumedCount >= 5) {
+        if (resumedCount >= 20) {
           return NextResponse.json(
             {
               error: "Demasiados intentos con esta cédula. Contáctanos por WhatsApp para ayudarte.",
