@@ -63,10 +63,11 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email directly (not via HTTP to avoid serverless self-call issues)
     if (email?.trim()) {
+      try {
       const tipoLabel = tipo === "esposa" ? "Aliada" : tipo === "vendedor" ? "Vendedor" : "Lanza";
       const referralLink = `https://legionjuridica.com/r/${code}`;
       const firstName = nombre.trim().split(" ")[0];
-      sendMail({
+      await sendMail({
         to: email.trim(),
         subject: `¡Bienvenido(a) al equipo, ${firstName}! — Legión Jurídica`,
         html: `<div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#fff">
@@ -103,7 +104,10 @@ export async function POST(request: NextRequest) {
           </div>
           <div style="background:#f9f9f9;border-radius:0 0 12px 12px;padding:16px 32px;text-align:center;border-top:1px solid #eee"><p style="margin:0;font-size:10px;color:#ccc">Legión Jurídica · legionjuridica.com</p></div>
         </div>`,
-      }).catch((err) => console.error("[ALIADO MAIL]", err));
+      });
+      } catch (mailErr) {
+        console.error("[ALIADO MAIL]", mailErr);
+      }
     }
 
     return NextResponse.json(data);
