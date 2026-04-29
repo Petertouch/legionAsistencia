@@ -114,12 +114,9 @@ export default function BrochurePage() {
           <div className="relative px-12 py-16 flex flex-col justify-between" style={{ minHeight: "500px" }}>
             {/* Top */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Image src="/images/logo.svg" alt="Legión" width={48} height={48} />
-                <div>
-                  <p className="text-[#C8A96E] font-black text-lg tracking-[0.2em]">LEGIÓN</p>
-                  <p className="text-[#C8A96E]/60 text-[10px] tracking-[0.3em] uppercase">Jurídica</p>
-                </div>
+                <p className="text-[#C8A96E] font-black text-xl tracking-[0.15em]">LEGIÓN <span className="font-bold text-[#C8A96E]/60">Jurídica</span></p>
               </div>
               <p className="text-white/20 text-[10px] tracking-widest uppercase">Presentación Corporativa</p>
             </div>
