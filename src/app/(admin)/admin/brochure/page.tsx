@@ -69,46 +69,8 @@ export default function BrochurePage() {
   const [editing, setEditing] = useState(false);
   const brochureRef = useRef<HTMLDivElement>(null);
 
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async () => {
-    if (!brochureRef.current || downloading) return;
-    setDownloading(true);
-    try {
-      const html2canvas = (await import("html2canvas-pro")).default;
-      const { jsPDF } = await import("jspdf");
-
-      // Get all slides
-      const slides = brochureRef.current.querySelectorAll(".slide");
-      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1280, 720] });
-      let first = true;
-
-      for (const slide of Array.from(slides)) {
-        const canvas = await html2canvas(slide as HTMLElement, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          removeContainer: true,
-          allowTaint: true,
-        });
-
-        if (!first) pdf.addPage([1280, 720], "landscape");
-        first = false;
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgW = 1280;
-        const imgH = (canvas.height / canvas.width) * imgW;
-        pdf.addImage(imgData, "PNG", 0, 0, imgW, Math.min(imgH, 720));
-      }
-
-      pdf.save("Legion_Juridica_Brochure.pdf");
-      toast.success("PDF descargado");
-    } catch (err) {
-      console.error(err);
-      toast.error("Error al generar PDF");
-    }
-    setDownloading(false);
+  const handleDownload = () => {
+    window.print();
   };
 
   const updateField = (field: keyof BrochureContent, value: unknown) => {
@@ -130,8 +92,8 @@ export default function BrochurePage() {
             {editing ? <Eye className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
             {editing ? "Vista previa" : "Editar"}
           </button>
-          <Button size="sm" onClick={handleDownload} disabled={downloading}>
-            <Download className="w-4 h-4" /> {downloading ? "Generando..." : "Descargar PDF"}
+          <Button size="sm" onClick={handleDownload}>
+            <Download className="w-4 h-4" /> Descargar PDF
           </Button>
         </div>
       </div>
@@ -446,13 +408,14 @@ export default function BrochurePage() {
       {/* Print styles */}
       <style>{`
         @media print {
-          .no-print { display: none !important; }
-          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print-brochure { border: none !important; border-radius: 0 !important; box-shadow: none !important; }
-          .print-brochure > div { border: none !important; border-radius: 0 !important; }
+          .no-print, nav, aside, header { display: none !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+          body { margin: 0 !important; padding: 0 !important; }
+          .print-brochure { border: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; }
+          .print-brochure > div { border-radius: 0 !important; }
           .slide { page-break-before: always; page-break-inside: avoid; }
           .slide:first-child { page-break-before: avoid; }
-          @page { margin: 10mm; }
+          @page { margin: 0; }
         }
       `}</style>
     </div>
