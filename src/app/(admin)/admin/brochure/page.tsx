@@ -87,17 +87,19 @@ export default function BrochurePage() {
         const canvas = await html2canvas(slide as HTMLElement, {
           scale: 2,
           useCORS: true,
-          backgroundColor: null,
+          backgroundColor: "#ffffff",
           logging: false,
+          removeContainer: true,
+          allowTaint: true,
         });
 
         if (!first) pdf.addPage([1280, 720], "landscape");
         first = false;
 
-        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const imgData = canvas.toDataURL("image/png");
         const imgW = 1280;
         const imgH = (canvas.height / canvas.width) * imgW;
-        pdf.addImage(imgData, "JPEG", 0, 0, imgW, Math.min(imgH, 720));
+        pdf.addImage(imgData, "PNG", 0, 0, imgW, Math.min(imgH, 720));
       }
 
       pdf.save("Legion_Juridica_Brochure.pdf");
