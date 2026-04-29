@@ -410,12 +410,12 @@ export default function BrochurePage() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .print-brochure { border: none !important; border-radius: 0 !important; box-shadow: none !important; }
           .print-brochure > div { border: none !important; border-radius: 0 !important; }
-          .slide { page-break-before: always; page-break-inside: avoid; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .slide { page-break-before: always; page-break-inside: avoid; }
           .slide:first-child { page-break-before: avoid; }
-          @page { margin: 0; size: landscape; }
+          @page { margin: 10mm; }
         }
       `}</style>
     </div>
