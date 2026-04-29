@@ -275,22 +275,22 @@ export default function BrochurePage() {
             {[
               {
                 nombre: "Base",
-                precio: "$50.000",
+                precio: "$47.000",
                 color: "border-gray-200",
-                features: ["Asesoría jurídica ilimitada", "Revisión de documentos (1/mes)", "Derecho de petición incluido", "Atención por WhatsApp y llamada"],
+                features: ["Asesoría jurídica ilimitada", "2 representaciones / año", "4 opiniones / mes", "Revisión de documentos", "Atención por WhatsApp", "2 familiares T&C"],
               },
               {
                 nombre: "Plus",
-                precio: "$66.000",
+                precio: "$60.000",
                 popular: true,
                 color: "border-[#C8A96E]",
-                features: ["Todo lo del Plan Base", "2 revisiones de documentos/mes", "Acompañamiento a audiencias (1/sem)", "Consulta familiar incluida"],
+                features: ["Todo lo del Base, más:", "3 representaciones / año", "8 opiniones / mes", "Prioridad en asignación", "WhatsApp y llamada", "3 familiares T&C", "Junta Médica"],
               },
               {
-                nombre: "Elite",
-                precio: "$80.000",
+                nombre: "Élite",
+                precio: "$78.000",
                 color: "border-gray-200",
-                features: ["Todo lo del Plan Plus", "Documentos ilimitados", "Audiencias ilimitadas", "Línea prioritaria 24/7", "Cobertura grupo familiar"],
+                features: ["Todo lo del Plus, más:", "5 representaciones / año", "Opiniones ilimitadas", "Abogado dedicado", "Atención prioritaria 24/7", "4 familiares T&C", "Junta Médica"],
               },
             ].map((plan) => (
               <div key={plan.nombre} className={`relative rounded-xl border-2 ${plan.color} p-6 ${plan.popular ? "bg-[#FAFAF8] shadow-md" : "bg-white"}`}>
