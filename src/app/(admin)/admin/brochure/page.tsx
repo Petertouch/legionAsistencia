@@ -103,7 +103,7 @@ export default function BrochurePage() {
       <div ref={brochureRef} className="print-brochure bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
         {/* ═══ COVER ═══ */}
-        <div className="relative bg-[#0F1A0F] text-white overflow-hidden" style={{ minHeight: "500px" }}>
+        <div className="slide relative bg-[#0F1A0F] text-white overflow-hidden" style={{ minHeight: "500px" }}>
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8A96E' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
           <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0F1A0F] to-transparent" />
@@ -159,7 +159,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ HISTORIA ═══ */}
-        <div className="px-12 py-14 border-b border-gray-100">
+        <div className="slide px-12 py-14 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-[#0F1A0F] rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-[#C8A96E]" />
@@ -177,7 +177,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ MISIÓN, VISIÓN, VALORES ═══ */}
-        <div className="grid grid-cols-1 md:grid-cols-3 border-b border-gray-100">
+        <div className="slide grid grid-cols-1 md:grid-cols-3 border-b border-gray-100">
           {/* Misión */}
           <div className="px-10 py-10 border-b md:border-b-0 md:border-r border-gray-100">
             <div className="w-8 h-8 bg-[#C8A96E]/10 rounded-lg flex items-center justify-center mb-4">
@@ -224,7 +224,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ SERVICIOS ═══ */}
-        <div className="px-12 py-14 bg-[#FAFAF8] border-b border-gray-100">
+        <div className="slide px-12 py-14 bg-[#FAFAF8] border-b border-gray-100">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#0F1A0F] rounded-lg flex items-center justify-center">
               <Scale className="w-5 h-5 text-[#C8A96E]" />
@@ -261,7 +261,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ PLANES ═══ */}
-        <div className="px-12 py-14 border-b border-gray-100">
+        <div className="slide px-12 py-14 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#0F1A0F] rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-[#C8A96E]" />
@@ -322,7 +322,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ DIFERENCIADORES ═══ */}
-        <div className="px-12 py-14 border-b border-gray-100">
+        <div className="slide px-12 py-14 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#0F1A0F] rounded-lg flex items-center justify-center">
               <Award className="w-5 h-5 text-[#C8A96E]" />
@@ -357,7 +357,7 @@ export default function BrochurePage() {
         </div>
 
         {/* ═══ CONTACTO ═══ */}
-        <div className="bg-[#0F1A0F] text-white px-12 py-14">
+        <div className="slide bg-[#0F1A0F] text-white px-12 py-14">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-[#C8A96E]/10 rounded-lg flex items-center justify-center">
               <Phone className="w-5 h-5 text-[#C8A96E]" />
@@ -410,8 +410,12 @@ export default function BrochurePage() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { margin: 0; padding: 0; }
+          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print-brochure { border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+          .print-brochure > div { border: none !important; border-radius: 0 !important; }
+          .slide { page-break-before: always; page-break-inside: avoid; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .slide:first-child { page-break-before: avoid; }
+          @page { margin: 0; size: landscape; }
         }
       `}</style>
     </div>
