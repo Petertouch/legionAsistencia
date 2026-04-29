@@ -92,6 +92,10 @@ export default function BrochurePage() {
             {editing ? <Eye className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
             {editing ? "Vista previa" : "Editar"}
           </button>
+          <button onClick={() => { navigator.clipboard.writeText("https://legionjuridica.com/presentacion"); toast.success("Link copiado"); }}
+            className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border bg-gray-50 text-gray-500 border-gray-200 hover:text-gray-900 transition-colors">
+            <Globe className="w-3.5 h-3.5" /> Copiar link público
+          </button>
           <Button size="sm" onClick={handleDownload}>
             <Download className="w-4 h-4" /> Descargar PDF
           </Button>
