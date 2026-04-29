@@ -39,7 +39,7 @@ const DEFAULT_CONTENT: BrochureContent = {
   ],
   servicios: [
     { titulo: "Derecho Disciplinario", descripcion: "Defensa en procesos disciplinarios, descargos, recursos de apelación y acompañamiento en todas las etapas del proceso." },
-    { titulo: "Derecho Penal Militar", descripcion: "Representación ante la jurisdicción penal militar. Defensa en consejos de guerra, audiencias y sentencias." },
+    { titulo: "Derecho Penal y Penal Militar", descripcion: "Representación ante la jurisdicción penal ordinaria y penal militar. Defensa en audiencias, consejos de guerra y sentencias." },
     { titulo: "Derecho de Familia", descripcion: "Custodia, alimentos, divorcios y regulación de visitas adaptados a la realidad del servicio militar." },
     { titulo: "Derecho Civil y Consumidor", descripcion: "Reclamaciones por cobros indebidos, créditos de libranza, seguros y derechos del consumidor." },
     { titulo: "Documentos Legales", descripcion: "Derechos de petición, tutelas, recursos y cualquier documento jurídico que necesites." },

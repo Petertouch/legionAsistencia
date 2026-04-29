@@ -151,7 +151,7 @@ export default function PresentacionPublicaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               { t: "Derecho Disciplinario", d: "Defensa en procesos disciplinarios, descargos, recursos de apelación y acompañamiento en todas las etapas." },
-              { t: "Derecho Penal Militar", d: "Representación ante la jurisdicción penal militar. Defensa en consejos de guerra, audiencias y sentencias." },
+              { t: "Derecho Penal y Penal Militar", d: "Representación ante la jurisdicción penal ordinaria y penal militar. Defensa en audiencias, consejos de guerra y sentencias." },
               { t: "Derecho de Familia", d: "Custodia, alimentos, divorcios y regulación de visitas adaptados a la realidad del servicio militar." },
               { t: "Derecho Civil y Consumidor", d: "Reclamaciones por cobros indebidos, créditos de libranza, seguros y derechos del consumidor." },
               { t: "Documentos Legales", d: "Derechos de petición, tutelas, recursos y cualquier documento jurídico que necesites." },
