@@ -260,6 +260,67 @@ export default function BrochurePage() {
           </div>
         </div>
 
+        {/* ═══ PLANES ═══ */}
+        <div className="px-12 py-14 border-b border-gray-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-[#0F1A0F] rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-[#C8A96E]" />
+            </div>
+            <div>
+              <p className="text-[#C8A96E] text-[10px] font-bold uppercase tracking-[0.2em]">Planes de Suscripción</p>
+              <h2 className="text-gray-900 text-xl font-bold">Protección Para Cada Necesidad</h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                nombre: "Base",
+                precio: "$50.000",
+                color: "border-gray-200",
+                features: ["Asesoría jurídica ilimitada", "Revisión de documentos (1/mes)", "Derecho de petición incluido", "Atención por WhatsApp y llamada"],
+              },
+              {
+                nombre: "Plus",
+                precio: "$66.000",
+                popular: true,
+                color: "border-[#C8A96E]",
+                features: ["Todo lo del Plan Base", "2 revisiones de documentos/mes", "Acompañamiento a audiencias (1/sem)", "Consulta familiar incluida"],
+              },
+              {
+                nombre: "Elite",
+                precio: "$80.000",
+                color: "border-gray-200",
+                features: ["Todo lo del Plan Plus", "Documentos ilimitados", "Audiencias ilimitadas", "Línea prioritaria 24/7", "Cobertura grupo familiar"],
+              },
+            ].map((plan) => (
+              <div key={plan.nombre} className={`relative rounded-xl border-2 ${plan.color} p-6 ${plan.popular ? "bg-[#FAFAF8] shadow-md" : "bg-white"}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C8A96E] text-white text-[9px] font-bold uppercase tracking-widest px-4 py-1 rounded-full">
+                    Más popular
+                  </div>
+                )}
+                <div className="text-center mb-5">
+                  <h3 className="text-gray-900 font-bold text-lg">{plan.nombre}</h3>
+                  <div className="flex items-baseline justify-center gap-1 mt-2">
+                    <span className="text-gray-900 text-3xl font-black">{plan.precio}</span>
+                    <span className="text-gray-400 text-sm">/mes</span>
+                  </div>
+                </div>
+                <div className="w-full h-px bg-gray-100 mb-5" />
+                <ul className="space-y-3">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.popular ? "text-[#C8A96E]" : "text-gray-400"}`} />
+                      <span className="text-gray-600 text-xs leading-relaxed">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="text-gray-400 text-xs text-center mt-6">Todos los planes incluyen acceso al portal digital de seguimiento de casos.</p>
+        </div>
+
         {/* ═══ DIFERENCIADORES ═══ */}
         <div className="px-12 py-14 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-8">
