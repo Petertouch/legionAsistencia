@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Download, Pencil, Eye, X, Save, FileText, Shield, Scale, Users, Phone, Mail, Globe, Award, CheckCircle2, ChevronRight } from "lucide-react";
+import { Download, Pencil, Eye, FileText, Shield, Scale, Users, Phone, Mail, Globe, Award, CheckCircle2, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -67,11 +67,46 @@ const DEFAULT_CONTENT: BrochureContent = {
 export default function BrochurePage() {
   const [content, setContent] = useState<BrochureContent>(DEFAULT_CONTENT);
   const [editing, setEditing] = useState(false);
-  const [preview, setPreview] = useState(true);
   const brochureRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
-    window.print();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!brochureRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const { jsPDF } = await import("jspdf");
+
+      // Get all slides
+      const slides = brochureRef.current.querySelectorAll(".slide");
+      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [1280, 720] });
+      let first = true;
+
+      for (const slide of Array.from(slides)) {
+        const canvas = await html2canvas(slide as HTMLElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+        });
+
+        if (!first) pdf.addPage([1280, 720], "landscape");
+        first = false;
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const imgW = 1280;
+        const imgH = (canvas.height / canvas.width) * imgW;
+        pdf.addImage(imgData, "JPEG", 0, 0, imgW, Math.min(imgH, 720));
+      }
+
+      pdf.save("Legion_Juridica_Brochure.pdf");
+      toast.success("PDF descargado");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al generar PDF");
+    }
+    setDownloading(false);
   };
 
   const updateField = (field: keyof BrochureContent, value: unknown) => {
@@ -93,8 +128,8 @@ export default function BrochurePage() {
             {editing ? <Eye className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
             {editing ? "Vista previa" : "Editar"}
           </button>
-          <Button size="sm" onClick={handlePrint}>
-            <Download className="w-4 h-4" /> Descargar PDF
+          <Button size="sm" onClick={handleDownload} disabled={downloading}>
+            <Download className="w-4 h-4" /> {downloading ? "Generando..." : "Descargar PDF"}
           </Button>
         </div>
       </div>
