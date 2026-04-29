@@ -53,6 +53,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Comercial",
     items: [
       { href: "/admin/referidores", label: "Aliados", icon: Gift, roles: ["admin"] },
+      { href: "/admin/brochure", label: "Brochure", icon: FileText, roles: ["admin"] },
       { href: "/admin/qrs", label: "Códigos QR", icon: QrCode, roles: ["admin"] },
       { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
     ],
