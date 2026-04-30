@@ -5,66 +5,7 @@ import Image from "next/image";
 import { Shield, Scale, Users, Phone, Mail, Globe, Award, CheckCircle2, ChevronRight, Download, Eye } from "lucide-react";
 
 export default function PresentacionPublicaPage() {
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [authorized, setAuthorized] = useState(false);
-
-  const handleAccess = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!nombre.trim() || !email.trim()) { setError("Completa ambos campos"); return; }
-    setLoading(true);
-    try {
-      const res = await fetch("/api/brochure-lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nombre.trim(), email: email.trim() }),
-      });
-      if (!res.ok) { setError("Error al registrar"); setLoading(false); return; }
-      setAuthorized(true);
-    } catch { setError("Error de conexión"); }
-    setLoading(false);
-  };
-
-  // Gate: ask for name + email before showing
-  if (!authorized) {
-    return (
-      <div className="min-h-screen bg-[#0F1A0F] flex items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-8">
-          <div className="text-center">
-            <Image src="/images/logo.svg" alt="Legión" width={56} height={56} className="mx-auto mb-4" />
-            <h1 className="text-[#C8A96E] font-black text-xl tracking-[0.15em]">LEGIÓN JURÍDICA</h1>
-            <p className="text-white/40 text-xs mt-2 tracking-wider uppercase">Presentación Corporativa</p>
-          </div>
-
-          <form onSubmit={handleAccess} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-            <p className="text-white/60 text-sm text-center">Ingresa tus datos para acceder a la presentación</p>
-            <div>
-              <label className="text-white/40 text-xs font-medium mb-1 block">Nombre completo</label>
-              <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" required
-                className="w-full bg-white/5 text-white placeholder-white/20 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-[#C8A96E]/50 focus:outline-none" />
-            </div>
-            <div>
-              <label className="text-white/40 text-xs font-medium mb-1 block">Correo electrónico</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" required
-                className="w-full bg-white/5 text-white placeholder-white/20 text-sm px-4 py-2.5 rounded-lg border border-white/10 focus:border-[#C8A96E]/50 focus:outline-none" />
-            </div>
-            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full bg-[#C8A96E] text-[#0F1A0F] font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50">
-              {loading ? "Verificando..." : "Ver presentación"}
-            </button>
-          </form>
-
-          <p className="text-white/20 text-[10px] text-center">Tus datos son confidenciales y no serán compartidos.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══ BROCHURE (same as admin but read-only) ═══
+  // ═══ BROCHURE — acceso libre ═══
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Top bar */}
