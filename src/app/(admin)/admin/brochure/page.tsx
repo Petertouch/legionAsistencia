@@ -70,7 +70,7 @@ export default function BrochurePage() {
   const brochureRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
-    window.print();
+    window.open("/api/brochure/pdf", "_blank");
   };
 
   const updateField = (field: keyof BrochureContent, value: unknown) => {

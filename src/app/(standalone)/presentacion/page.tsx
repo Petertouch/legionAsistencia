@@ -73,10 +73,10 @@ export default function PresentacionPublicaPage() {
           <Image src="/images/logo.svg" alt="Legión" width={28} height={28} />
           <span className="text-[#C8A96E] font-black text-sm tracking-[0.1em]">LEGIÓN JURÍDICA</span>
         </div>
-        <button onClick={() => window.print()}
-          className="flex items-center gap-1.5 bg-[#0F1A0F] text-[#C8A96E] px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#1a2e1a] transition-colors">
+        <a href="/api/brochure/pdf" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1.5 bg-[#0F1A0F] text-[#C8A96E] px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#1a2e1a] transition-colors no-underline">
           <Download className="w-3.5 h-3.5" /> Descargar PDF
-        </button>
+        </a>
       </div>
 
       <div className="max-w-5xl mx-auto mt-16 mb-6 print-brochure bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
