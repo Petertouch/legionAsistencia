@@ -5,6 +5,7 @@ import Badge from "@/components/ui/badge";
 import type { Caso } from "@/lib/mock-data";
 import type { PipelineStage } from "@/lib/pipelines";
 import { getStaleLevel, getDaysInStage, getDaysUntilDeadline } from "@/lib/pipelines";
+import AbogadoAssign from "./abogado-assign";
 import { ChevronRight, Clock, CalendarClock } from "lucide-react";
 
 const STALE_COLORS = {
@@ -19,12 +20,14 @@ export default function CaseCard({
   onAdvance,
   draggable = true,
   onDragStart,
+  onReassigned,
 }: {
   caso: Caso;
   stage: PipelineStage;
   onAdvance?: (id: string) => void;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent, id: string) => void;
+  onReassigned?: () => void;
 }) {
   const daysInStage = getDaysInStage(caso.fecha_ingreso_etapa);
   const staleLevel = getStaleLevel(caso.fecha_ingreso_etapa, stage.expectedDays);
@@ -73,7 +76,7 @@ export default function CaseCard({
 
       {/* Bottom row: lawyer + deadline + checklist */}
       <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-100">
-        <span className="text-gray-400 text-[11px] truncate">{caso.abogado}</span>
+        <AbogadoAssign casoId={caso.id} current={caso.abogado} onSaved={onReassigned} className="text-gray-400 text-[11px] max-w-[120px]" />
         <div className="flex items-center gap-2">
           {deadlineDays !== null && (
             <span className={`flex items-center gap-0.5 text-[11px] ${deadlineDays <= 3 ? "text-red-600" : deadlineDays <= 7 ? "text-yellow-600" : "text-gray-400"}`}>

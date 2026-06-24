@@ -38,6 +38,7 @@ export default function MemberDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
   const { getAbogado, updateAbogado, toggleArea, changePassword, setEstado, deleteAbogado } = useTeamStore();
+  const loaded = useTeamStore((s) => s.loaded);
   const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -52,6 +53,13 @@ export default function MemberDetailPage({ params }: Props) {
 
   const member = getAbogado(id);
   if (!member) {
+    if (!loaded) {
+      return (
+        <div className="flex justify-center py-16">
+          <div className="w-7 h-7 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />
+        </div>
+      );
+    }
     return (
       <div className="text-center py-12">
         <p className="text-gray-400">Miembro no encontrado</p>

@@ -7,6 +7,7 @@ import Topbar from "@/components/admin/topbar";
 import MobileBottomNav from "@/components/admin/mobile-bottom-nav";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useTeamStore } from "@/lib/stores/team-store";
 import { syncPersistedData } from "@/lib/stores/questions-store";
 
 // Sync blog consultas/suscriptores from localStorage into mock arrays
@@ -16,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const collapsed = useSidebarStore((s) => s.collapsed);
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
+  const loadEquipo = useTeamStore((s) => s.loadEquipo);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -29,6 +31,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/login");
     }
   }, [hydrated, user, router]);
+
+  // Cargar el equipo (abogados/profesores) desde Supabase una sola vez al entrar al panel.
+  useEffect(() => {
+    if (hydrated && user) loadEquipo();
+  }, [hydrated, user, loadEquipo]);
 
   if (!hydrated || !user) {
     return (

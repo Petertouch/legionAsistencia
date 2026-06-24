@@ -8,6 +8,7 @@ import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 import { PIPELINES, AREAS, type CaseArea } from "@/lib/pipelines";
+import { useTeamStore } from "@/lib/stores/team-store";
 import { createCaso, getSuscriptores } from "@/lib/db";
 import type { Suscriptor } from "@/lib/mock-data";
 import { ArrowLeft, Check, Search, X, User } from "lucide-react";
@@ -18,6 +19,16 @@ export default function NuevoCasoPage() {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [selectedArea, setSelectedArea] = useState<CaseArea>("Disciplinario");
+
+  // Abogados activos desde el equipo (gate de montaje para evitar mismatch de hidratación)
+  const abogadosTeam = useTeamStore((s) => s.abogados);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const abogadoOptions = mounted
+    ? abogadosTeam
+        .filter((a) => a.role === "abogado" && a.estado === "activo")
+        .map((a) => ({ value: a.nombre, label: a.nombre }))
+    : [];
 
   // Suscriptor search
   const [searchQuery, setSearchQuery] = useState("");
@@ -208,11 +219,7 @@ export default function NuevoCasoPage() {
             { value: "normal", label: "Normal" },
             { value: "baja", label: "Baja" },
           ]} />
-          <Select label="Abogado asignado" name="abogado" placeholder="Seleccionar..." options={[
-            { value: "Dr. Ramirez", label: "Dr. Ramirez" },
-            { value: "Dra. Lopez", label: "Dra. Lopez" },
-            { value: "Dr. Martinez", label: "Dr. Martinez" },
-          ]} required />
+          <Select label="Abogado asignado" name="abogado" placeholder="Seleccionar..." options={abogadoOptions} required />
         </div>
 
         <div className="space-y-1.5">

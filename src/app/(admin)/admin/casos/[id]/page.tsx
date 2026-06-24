@@ -2,8 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCasoChecklist, createSeguimiento, respondConsulta, deleteConsultaRespuesta } from "@/lib/db";
+import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCaso, updateCasoChecklist, createSeguimiento, respondConsulta, deleteConsultaRespuesta } from "@/lib/db";
 import { PIPELINES, getDaysUntilDeadline, getDaysInStage } from "@/lib/pipelines";
+import { useTeamStore } from "@/lib/stores/team-store";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
 import Card from "@/components/ui/card";
@@ -42,6 +43,9 @@ export default function CasoDetailPage() {
   const [dragging, setDragging] = useState(false);
   const [deletingDoc, setDeletingDoc] = useState<{ id: string; nombre: string } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editingAbogado, setEditingAbogado] = useState(false);
+  const [savingAbogado, setSavingAbogado] = useState(false);
+  const abogadosTeam = useTeamStore((s) => s.abogados);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -92,10 +96,25 @@ export default function CasoDetailPage() {
     if (files.length > 0) uploadFile(files[0]);
   };
 
-  const { data: caso, refetch } = useQuery({ queryKey: ["caso", id], queryFn: () => getCaso(id) });
+  const { data: caso, refetch, isLoading } = useQuery({ queryKey: ["caso", id], queryFn: () => getCaso(id) });
   const { data: seguimientos, refetch: refetchSeg } = useQuery({ queryKey: ["seguimientos", { caso_id: id }], queryFn: () => getSeguimientos({ caso_id: id }) });
 
-  if (!caso) return <div className="animate-pulse space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-20 md:h-24 bg-gray-50 rounded-xl" />)}</div>;
+  if (isLoading) return <div className="animate-pulse space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-20 md:h-24 bg-gray-50 rounded-xl" />)}</div>;
+
+  if (!caso) return (
+    <div className="max-w-md mx-auto text-center py-16 space-y-4">
+      <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto">
+        <Scale className="w-7 h-7 text-gray-300" />
+      </div>
+      <div>
+        <h2 className="text-gray-900 font-bold text-lg">Caso no encontrado</h2>
+        <p className="text-gray-500 text-sm mt-1">No existe ningún caso con el identificador <span className="font-mono text-gray-600">{id}</span>. Es posible que haya sido eliminado o que el enlace sea incorrecto.</p>
+      </div>
+      <Link href="/admin/casos">
+        <Button variant="secondary" size="sm"><ArrowLeft className="w-4 h-4" /> Volver a casos</Button>
+      </Link>
+    </div>
+  );
 
   const pipeline = PIPELINES[caso.area];
   const currentStage = pipeline.stages[caso.etapa_index];
@@ -114,6 +133,22 @@ export default function CasoDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["casos-pipeline"] });
     queryClient.invalidateQueries({ queryKey: ["casos"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+  };
+
+  // Abogados activos para reasignar (incluye el actual aunque esté inactivo/legacy)
+  const activeAbogados = abogadosTeam.filter((a) => a.role === "abogado" && a.estado === "activo").map((a) => a.nombre);
+  const abogadoOptions = caso.abogado && !activeAbogados.includes(caso.abogado)
+    ? [caso.abogado, ...activeAbogados]
+    : activeAbogados;
+
+  const handleReassign = async (nombre: string) => {
+    if (!nombre || nombre === caso.abogado) { setEditingAbogado(false); return; }
+    setSavingAbogado(true);
+    await updateCaso(caso.id, { abogado: nombre });
+    setSavingAbogado(false);
+    setEditingAbogado(false);
+    invalidateAll();
+    toast.success(`Caso reasignado a ${nombre}`);
   };
 
   const handleAdvance = async () => { await advanceCaso(caso.id); invalidateAll(); toast.success("Caso avanzado"); };
@@ -242,7 +277,34 @@ export default function CasoDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         <Card className="flex items-center gap-2 md:gap-3">
           <User className="w-4 h-4 text-oro flex-shrink-0" />
-          <div className="min-w-0"><p className="text-gray-400 text-[10px]">Abogado</p><p className="text-gray-900 text-xs md:text-sm truncate">{caso.abogado}</p></div>
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-400 text-[10px]">Abogado</p>
+            {editingAbogado ? (
+              <select
+                autoFocus
+                disabled={savingAbogado}
+                defaultValue={caso.abogado || ""}
+                onChange={(e) => handleReassign(e.target.value)}
+                onBlur={() => setEditingAbogado(false)}
+                className="w-full bg-white border border-oro/40 text-gray-900 text-xs md:text-sm rounded-md px-1.5 py-1 -ml-1 focus:outline-none focus:ring-1 focus:ring-oro/30 disabled:opacity-50"
+              >
+                {!caso.abogado && <option value="">Sin asignar</option>}
+                {abogadoOptions.map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingAbogado(true)}
+                className="group flex items-center gap-1 text-left w-full"
+                title="Reasignar abogado"
+              >
+                <span className="text-gray-900 text-xs md:text-sm truncate">{caso.abogado || "Sin asignar"}</span>
+                <Pencil className="w-3 h-3 text-gray-300 group-hover:text-oro transition-colors flex-shrink-0" />
+              </button>
+            )}
+          </div>
         </Card>
         <Card className="flex items-center gap-2 md:gap-3">
           <Scale className="w-4 h-4 text-oro flex-shrink-0" />

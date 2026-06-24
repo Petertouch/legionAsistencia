@@ -112,6 +112,11 @@ export default function KanbanBoard({ area, abogadoFilter }: KanbanBoardProps) {
                     stage={stage}
                     onAdvance={handleAdvance}
                     onDragStart={handleDragStart}
+                    onReassigned={() => {
+                      queryClient.invalidateQueries({ queryKey: ["casos-pipeline", area] });
+                      queryClient.invalidateQueries({ queryKey: ["casos"] });
+                      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+                    }}
                   />
                 ))
               )}

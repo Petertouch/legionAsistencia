@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCasos, getDashboardStats } from "@/lib/db";
 import { PIPELINES, AREAS, type CaseArea } from "@/lib/pipelines";
 import { useCasosStore } from "@/lib/stores/casos-store";
@@ -12,6 +12,7 @@ import Button from "@/components/ui/button";
 import PipelineTabs from "@/components/admin/pipeline-tabs";
 import StatsBar from "@/components/admin/stats-bar";
 import KanbanBoard from "@/components/admin/kanban-board";
+import AbogadoAssign from "@/components/admin/abogado-assign";
 import { Plus, Search, LayoutGrid, List, Scale, MessageCircle, Clock, Check, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
@@ -245,6 +246,12 @@ function ConsultasGratuitas() {
 }
 
 function TableView({ casos }: { casos: import("@/lib/mock-data").Caso[] }) {
+  const queryClient = useQueryClient();
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["casos"] });
+    queryClient.invalidateQueries({ queryKey: ["casos-pipeline"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+  };
   return (
     <>
       {/* Mobile Cards */}
@@ -293,7 +300,9 @@ function TableView({ casos }: { casos: import("@/lib/mock-data").Caso[] }) {
                   <td className="px-4 py-3 text-gray-500">{c.suscriptor_nombre}</td>
                   <td className="px-4 py-3"><Badge variant="neutral">{c.etapa}</Badge></td>
                   <td className="px-4 py-3"><Badge>{c.prioridad}</Badge></td>
-                  <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{c.abogado}</td>
+                  <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">
+                    <AbogadoAssign casoId={c.id} current={c.abogado} onSaved={invalidate} />
+                  </td>
                   <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                     {c.fecha_limite ? new Date(c.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" }) : "\u2014"}
                   </td>

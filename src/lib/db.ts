@@ -232,6 +232,15 @@ export async function moveCaso(id: string, targetStage: string, targetIndex: num
   return updated;
 }
 
+export async function updateCaso(id: string, updates: Partial<Caso>): Promise<Caso | null> {
+  const res = await fetch("/api/casos", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ...updates }),
+  });
+  return res.ok ? await res.json() : null;
+}
+
 export async function updateCasoChecklist(id: string, key: string, done: boolean): Promise<Caso | null> {
   const caso = await getCaso(id);
   if (!caso) return null;
