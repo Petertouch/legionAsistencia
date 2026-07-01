@@ -52,6 +52,13 @@ const DEFAULT_QRS: QRItem[] = [
     url: `${BASE_URL}/blog`,
     removable: false,
   },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    description: "Escríbenos directo por WhatsApp (+57 317 668 9580)",
+    url: "https://wa.me/573176689580",
+    removable: false,
+  },
 ];
 
 async function qrWithLogo(text: string, size: number, logoSize: number): Promise<string> {
