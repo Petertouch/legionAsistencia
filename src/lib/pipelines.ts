@@ -586,11 +586,18 @@ export async function loadPipelinesConfig(force = false): Promise<void> {
         ? (typeof data.value === "string" ? JSON.parse(data.value) : data.value)
         : null;
       if (saved && typeof saved === "object") {
-        for (const area of Object.keys(saved)) {
-          const p = saved[area];
-          // Aplica áreas editadas y también AGREGA las áreas nuevas creadas en configuración.
-          if (p && Array.isArray(p.stages) && p.stages.length > 0) {
-            (PIPELINES as Record<string, Pipeline>)[area] = p as Pipeline;
+        const validAreas = Object.keys(saved).filter(
+          (a) => saved[a] && Array.isArray(saved[a].stages) && saved[a].stages.length > 0
+        );
+        // La config guardada es autoritativa: reemplaza el conjunto de áreas
+        // (permite editar, AGREGAR y ELIMINAR áreas respecto a los valores por defecto).
+        if (validAreas.length > 0) {
+          const P = PIPELINES as Record<string, Pipeline>;
+          for (const k of Object.keys(P)) {
+            if (!validAreas.includes(k)) delete P[k];
+          }
+          for (const a of validAreas) {
+            P[a] = saved[a] as Pipeline;
           }
         }
       }

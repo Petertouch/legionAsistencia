@@ -9,7 +9,7 @@ import PlanEditor, { type PlanConfig } from "@/components/contract/plan-editor";
 import Button from "@/components/ui/button";
 import {
   Settings, ChevronDown, ChevronUp, Plus, Trash2, GripVertical,
-  Save, RotateCcw, AlertTriangle, X, Scale, CreditCard,
+  Save, RotateCcw, AlertTriangle, X, Scale, CreditCard, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -307,24 +307,72 @@ function PipelinesTab() {
     setHasChanges(true);
   };
 
-  const handleSave = async () => {
+  // Guarda un conjunto de pipelines y lo reaplica en memoria. Devuelve true si OK.
+  const persist = async (next: Record<string, Pipeline>): Promise<boolean> => {
     setSaving(true);
     try {
       const res = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "pipelines", value: pipelines }),
+        body: JSON.stringify({ key: "pipelines", value: next }),
       });
-      if (res.ok) {
-        // Reaplica la config guardada sobre PIPELINES en memoria (nuevas áreas incluidas).
-        await loadPipelinesConfig(true);
-        toast.success("Pipelines guardados");
-        setHasChanges(false);
-      } else {
-        toast.error("Error al guardar");
-      }
-    } catch { toast.error("Error de conexión"); }
-    finally { setSaving(false); }
+      if (!res.ok) { toast.error("Error al guardar"); return false; }
+      await loadPipelinesConfig(true);
+      setPipelines(next);
+      setHasChanges(false);
+      return true;
+    } catch {
+      toast.error("Error de conexión");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (await persist(pipelines)) toast.success("Pipelines guardados");
+  };
+
+  const renameArea = async (area: string) => {
+    const nuevo = prompt(`Nuevo nombre para el área "${area}":`, area)?.trim();
+    if (!nuevo || nuevo === area) return;
+    if (pipelines[nuevo]) { toast.error("Ya existe un área con ese nombre"); return; }
+    // Migra los casos existentes de esa área al nuevo nombre.
+    const res = await fetch("/api/config/rename-area", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from: area, to: nuevo }),
+    });
+    if (!res.ok) { toast.error("No se pudo renombrar (casos)"); return; }
+    // Reconstruye el objeto preservando el orden y renombrando la clave.
+    const next: Record<string, Pipeline> = {};
+    for (const [k, v] of Object.entries(pipelines)) {
+      if (k === area) next[nuevo] = { ...v, area: nuevo as CaseArea };
+      else next[k] = v;
+    }
+    if (await persist(next)) {
+      if (selectedArea === area) setSelectedArea(nuevo);
+      toast.success(`Área renombrada a "${nuevo}"`);
+    }
+  };
+
+  const deleteArea = async (area: string) => {
+    if (area === "Consulta") { toast.error("El área 'Consulta' es del sistema y no se puede eliminar"); return; }
+    if (Object.keys(pipelines).length <= 1) { toast.error("Debe existir al menos un área"); return; }
+    // Bloquea si tiene casos (para no dejarlos huérfanos).
+    const usRes = await fetch(`/api/casos?area=${encodeURIComponent(area)}`);
+    const casos = usRes.ok ? await usRes.json() : [];
+    if (Array.isArray(casos) && casos.length > 0) {
+      toast.error(`No puedes eliminar "${area}": tiene ${casos.length} caso(s). Reasígnalos primero.`);
+      return;
+    }
+    if (!confirm(`¿Eliminar el área "${area}" y su pipeline? Esta acción no se puede deshacer.`)) return;
+    const next = { ...pipelines };
+    delete next[area];
+    if (await persist(next)) {
+      if (selectedArea === area) setSelectedArea(Object.keys(next)[0]);
+      toast.success(`Área "${area}" eliminada`);
+    }
   };
 
   const handleReset = () => {
@@ -390,7 +438,27 @@ function PipelinesTab() {
       {/* Pipeline summary */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-gray-900 font-bold text-sm">Pipeline: {selectedArea}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-gray-900 font-bold text-sm">Pipeline: {selectedArea}</h2>
+            <button
+              onClick={() => renameArea(selectedArea)}
+              disabled={saving}
+              className="text-gray-400 hover:text-oro transition-colors p-1 disabled:opacity-40"
+              title="Renombrar área"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            {selectedArea !== "Consulta" && (
+              <button
+                onClick={() => deleteArea(selectedArea)}
+                disabled={saving}
+                className="text-gray-400 hover:text-red-600 transition-colors p-1 disabled:opacity-40"
+                title="Eliminar área"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <span className="text-gray-400 text-xs">{stages.length} etapas</span>
         </div>
         <div className="flex items-center gap-1 flex-wrap mb-4">
