@@ -98,7 +98,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
 
   const kpis = [
     { label: "Acciones (7 días)", value: acciones7d, icon: Activity, color: "text-oro" },
-    { label: "Última actividad", value: ultimaActividad ? fmt(ultimaActividad) : "—", icon: Clock, color: "text-gray-600" },
+    { label: "Última actividad", value: ultimaActividad ? fmtDateTime(ultimaActividad) : "—", icon: Clock, color: "text-gray-600" },
     { label: "Casos asignados", value: asignados.length, icon: Briefcase, color: "text-oro" },
     { label: "Activos", value: activos.length, icon: Scale, color: "text-blue-600" },
     { label: "Cerrados", value: cerrados.length, icon: CheckCircle2, color: "text-green-600" },
