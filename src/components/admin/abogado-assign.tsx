@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTeamStore } from "@/lib/stores/team-store";
+import { useAuth } from "@/components/providers/auth-provider";
 import { updateCaso, logActividad } from "@/lib/db";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
@@ -20,8 +21,14 @@ export default function AbogadoAssign({
   className?: string;
 }) {
   const abogados = useTeamStore((s) => s.abogados);
+  const { isAdmin } = useAuth();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Solo el admin puede reasignar el abogado; el abogado solo lo ve.
+  if (!isAdmin) {
+    return <span className={`truncate ${className}`}>{current || "Sin asignar"}</span>;
+  }
 
   const active = abogados
     .filter((a) => a.role === "abogado" && a.estado === "activo")

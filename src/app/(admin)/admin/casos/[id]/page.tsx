@@ -47,7 +47,7 @@ export default function CasoDetailPage() {
   const [editingAbogado, setEditingAbogado] = useState(false);
   const [savingAbogado, setSavingAbogado] = useState(false);
   const abogadosTeam = useTeamStore((s) => s.abogados);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     fetch(`/api/documentos?caso_id=${id}`).then((r) => r.json()).then(setDocs).catch(() => {});
@@ -296,7 +296,9 @@ export default function CasoDetailPage() {
           <User className="w-4 h-4 text-oro flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-gray-400 text-[10px]">Abogado</p>
-            {editingAbogado ? (
+            {!isAdmin ? (
+              <p className="text-gray-900 text-xs md:text-sm truncate">{caso.abogado || "Sin asignar"}</p>
+            ) : editingAbogado ? (
               <select
                 autoFocus
                 disabled={savingAbogado}
