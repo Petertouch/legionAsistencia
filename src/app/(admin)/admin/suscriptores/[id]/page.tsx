@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSuscriptor, getCasosBySuscriptor, getSeguimientos, getDocumentosBySuscriptor, createDocumento, deleteDocumento, updateSuscriptor } from "@/lib/db";
+import { getSuscriptor, getCasosBySuscriptor, getSeguimientos, getDocumentosBySuscriptor, createDocumento, deleteDocumento, updateSuscriptor, setSuscriptorClave } from "@/lib/db";
 import type { DocumentoContrato } from "@/lib/mock-data";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import Button from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   ArrowLeft, Phone, Mail, MapPin, Calendar, Scale, MessageSquare, StickyNote,
-  FileText, Upload, Trash2, File, X, Download, Plus,
+  FileText, Upload, Trash2, File, X, Download, Plus, KeyRound,
 } from "lucide-react";
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
@@ -70,6 +70,25 @@ export default function SuscriptorDetailPage() {
       toast.success("Documento eliminado");
     },
   });
+
+  const [nuevaClave, setNuevaClave] = useState("");
+  const [forzarCambio, setForzarCambio] = useState(false);
+  const [savingClave, setSavingClave] = useState(false);
+  const handleSetClave = async () => {
+    if (nuevaClave.trim().length < 6) { toast.error("La clave debe tener al menos 6 caracteres"); return; }
+    setSavingClave(true);
+    try {
+      await setSuscriptorClave(id, nuevaClave.trim(), forzarCambio);
+      setNuevaClave("");
+      setForzarCambio(false);
+      queryClient.invalidateQueries({ queryKey: ["suscriptor", id] });
+      toast.success("Clave actualizada");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al cambiar la clave");
+    } finally {
+      setSavingClave(false);
+    }
+  };
 
   const [approving, setApproving] = useState(false);
   const handleAprobar = async () => {
@@ -142,6 +161,43 @@ export default function SuscriptorDetailPage() {
         <Card className="flex items-center gap-3"><MapPin className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Rama / Rango</p><p className="text-gray-900 text-sm">{suscriptor.rama} — {suscriptor.rango}</p></div></Card>
         <Card className="flex items-center gap-3"><Calendar className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Suscrito desde</p><p className="text-gray-900 text-sm">{new Date(suscriptor.fecha_inicio).toLocaleDateString("es-CO")}</p></div></Card>
       </div>
+
+      {/* Acceso del cliente — cambiar clave */}
+      <Card>
+        <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2 mb-2">
+          <KeyRound className="w-4 h-4 text-oro" /> Acceso del cliente
+        </h3>
+        <p className="text-gray-500 text-xs mb-3">
+          El cliente inicia sesión en <span className="font-mono">/mi-caso</span> con su cédula
+          (<strong className="text-gray-700">{suscriptor.cedula}</strong>) y su clave.
+        </p>
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex-1">
+            <label className="text-gray-500 text-xs font-medium mb-1 block">Nueva clave</label>
+            <input
+              type="text"
+              value={nuevaClave}
+              onChange={(e) => setNuevaClave(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none font-mono"
+            />
+          </div>
+          <button
+            onClick={handleSetClave}
+            disabled={savingClave || nuevaClave.trim().length < 6}
+            className="bg-oro hover:bg-oro/90 text-jungle-dark font-bold px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            <KeyRound className="w-4 h-4" /> {savingClave ? "Guardando..." : "Cambiar clave"}
+          </button>
+        </div>
+        <label className="flex items-center gap-2 mt-3 text-xs text-gray-600 cursor-pointer w-fit">
+          <input type="checkbox" checked={forzarCambio} onChange={(e) => setForzarCambio(e.target.checked)} className="rounded border-gray-300 accent-oro" />
+          Obligar al cliente a cambiarla en su próximo inicio de sesión
+        </label>
+        {suscriptor.debe_cambiar_clave && (
+          <p className="text-yellow-600 text-[11px] mt-2">⚠ Actualmente el cliente debe cambiar su clave al ingresar.</p>
+        )}
+      </Card>
 
       {/* Documentos del contrato */}
       <Card>

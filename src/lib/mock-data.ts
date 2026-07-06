@@ -14,6 +14,7 @@ export interface Suscriptor {
   notas: string;
   created_at: string;
   updated_at: string;
+  debe_cambiar_clave?: boolean;
 }
 
 export interface Caso {

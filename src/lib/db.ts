@@ -77,6 +77,19 @@ export async function updateSuscriptor(id: string, updates: Partial<Suscriptor>)
   return { ...row, fecha_inicio: row.fecha_inicio?.split("T")[0] || "", created_at: row.created_at || "", updated_at: row.updated_at || "" } as Suscriptor;
 }
 
+// Fija/reinicia la clave de acceso del suscriptor (admin). Se hashea en el servidor.
+export async function setSuscriptorClave(id: string, clave: string, debeCambiar = false): Promise<void> {
+  const res = await fetch(`/api/suscriptores/${id}/clave`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ clave, debe_cambiar_clave: debeCambiar }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(err.error || "Error al cambiar la clave");
+  }
+}
+
 // ── Casos (Supabase via API) ────────────────────────────────────
 export async function getCasos(params?: {
   search?: string; area?: string; etapa?: string; prioridad?: string; abogado?: string;
