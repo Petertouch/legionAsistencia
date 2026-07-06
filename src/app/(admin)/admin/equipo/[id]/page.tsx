@@ -11,7 +11,7 @@ import Button from "@/components/ui/button";
 import {
   ArrowLeft, Shield, Mail, Phone, Hash, Calendar, Key, Eye, EyeOff, Save, Scale,
   Briefcase, Clock, AlertTriangle, CheckCircle2, FileText, Trash2, Palmtree,
-  Power, PowerOff, BookOpen, GraduationCap, Upload, X as XIcon, Loader2,
+  Power, PowerOff, BookOpen, GraduationCap, Upload, X as XIcon, Loader2, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -175,6 +175,15 @@ export default function MemberDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Ver actividad / uso de la plataforma */}
+      {!isProfesor && (
+        <Link href={`/admin/equipo/${id}/actividad`}>
+          <Button variant="secondary" className="w-full sm:w-auto">
+            <Activity className="w-4 h-4" /> Ver actividad en la plataforma
+          </Button>
+        </Link>
+      )}
 
       {/* ══════════════════════════════════════ */}
       {/* PROFESOR SECTIONS                     */}
