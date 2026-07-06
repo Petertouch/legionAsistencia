@@ -37,7 +37,7 @@ const DOC_TIPO_COLORS: Record<DocumentoContrato["tipo"], string> = {
 export default function SuscriptorDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const { data: suscriptor } = useQuery({ queryKey: ["suscriptor", id], queryFn: () => getSuscriptor(id) });
+  const { data: suscriptor, isLoading } = useQuery({ queryKey: ["suscriptor", id], queryFn: () => getSuscriptor(id) });
   const { data: casos } = useQuery({ queryKey: ["casos-suscriptor", id], queryFn: () => getCasosBySuscriptor(id) });
   const { data: seguimientos } = useQuery({ queryKey: ["seguimientos", { suscriptor_id: id }], queryFn: () => getSeguimientos({ suscriptor_id: id }) });
   const { data: documentos } = useQuery({ queryKey: ["documentos", id], queryFn: () => getDocumentosBySuscriptor(id) });
@@ -93,7 +93,20 @@ export default function SuscriptorDetailPage() {
     addDocMutation.mutate(file);
   };
 
-  if (!suscriptor) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-50 rounded-xl" />)}</div>;
+  if (isLoading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-50 rounded-xl" />)}</div>;
+
+  if (!suscriptor) return (
+    <div className="max-w-md mx-auto text-center py-16 space-y-4">
+      <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto">
+        <Scale className="w-7 h-7 text-gray-300" />
+      </div>
+      <div>
+        <h2 className="text-gray-900 font-bold text-lg">Suscriptor no encontrado</h2>
+        <p className="text-gray-500 text-sm mt-1">No existe ningún suscriptor con el identificador <span className="font-mono text-gray-600">{id}</span>.</p>
+      </div>
+      <Link href="/admin/suscriptores"><Button variant="secondary" size="sm"><ArrowLeft className="w-4 h-4" /> Volver a suscriptores</Button></Link>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

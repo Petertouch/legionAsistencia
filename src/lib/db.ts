@@ -42,9 +42,11 @@ export async function getSuscriptores(params?: {
 }
 
 export async function getSuscriptor(id: string): Promise<Suscriptor | null> {
-  const supabase = createClient();
-  const { data } = await supabase.from("suscriptores").select("*").eq("id", id).single();
-  if (!data) return null;
+  // Vía API (service role): la tabla suscriptores tiene RLS y el cliente anon no puede leerla.
+  const res = await fetch(`/api/suscriptores/${id}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!data || data.error) return null;
   return { ...data, fecha_inicio: data.fecha_inicio?.split("T")[0] || "", created_at: data.created_at || "", updated_at: data.updated_at || "" } as Suscriptor;
 }
 
