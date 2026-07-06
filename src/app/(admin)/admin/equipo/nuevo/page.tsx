@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTeamStore, type MemberRole } from "@/lib/stores/team-store";
 import type { CaseArea } from "@/lib/pipelines";
 import Button from "@/components/ui/button";
-import { ArrowLeft, Save, CheckCircle2, Scale, GraduationCap, Upload, X as XIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle2, Scale, GraduationCap, ShieldCheck, Upload, X as XIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const ALL_AREAS: CaseArea[] = ["Disciplinario", "Penal Militar", "Familia", "Civil", "Consumidor", "Documentos"];
@@ -85,6 +85,8 @@ export default function NuevoMiembroPage() {
 
   const canSave = role === "profesor"
     ? form.nombre.trim() && form.email.trim() && form.especialidad_academica.trim()
+    : role === "admin"
+    ? Boolean(form.nombre.trim() && form.email.trim() && form.password.trim())
     : form.nombre.trim() && form.email.trim() && form.cedula.trim() && form.areas_habilitadas.length > 0;
 
   const handleSave = () => {
@@ -112,10 +114,10 @@ export default function NuevoMiembroPage() {
       <h1 className="text-gray-900 text-xl font-bold">Nuevo miembro</h1>
 
       {/* Role selector */}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <button
           onClick={() => setRole("abogado")}
-          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+          className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
             role === "abogado"
               ? "bg-blue-50 border-blue-500/30 text-blue-600"
               : "bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-900"
@@ -125,7 +127,7 @@ export default function NuevoMiembroPage() {
         </button>
         <button
           onClick={() => setRole("profesor")}
-          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+          className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
             role === "profesor"
               ? "bg-purple-500/15 border-purple-500/30 text-purple-600"
               : "bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-900"
@@ -133,7 +135,24 @@ export default function NuevoMiembroPage() {
         >
           <GraduationCap className="w-4 h-4" /> Profesor
         </button>
+        <button
+          onClick={() => setRole("admin")}
+          className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+            role === "admin"
+              ? "bg-amber-50 border-oro/40 text-oro"
+              : "bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-900"
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" /> Admin
+        </button>
       </div>
+
+      {role === "admin" && (
+        <div className="bg-amber-50 border border-oro/20 rounded-lg px-3 py-2.5 text-xs text-gray-600 flex items-start gap-2">
+          <ShieldCheck className="w-4 h-4 text-oro flex-shrink-0 mt-0.5" />
+          <span>El administrador inicia sesión con su <strong>email</strong> y <strong>contraseña</strong>, y tiene acceso completo al panel. La contraseña es obligatoria.</span>
+        </div>
+      )}
 
       <div className="space-y-4">
         {/* Basic info */}
@@ -161,7 +180,7 @@ export default function NuevoMiembroPage() {
               <input type="text" value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value })} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Contraseña inicial</label>
+              <label className={labelCls}>{role === "admin" ? "Contraseña *" : "Contraseña inicial"}</label>
               <input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className={`${inputCls} font-mono`} />
             </div>
@@ -282,7 +301,7 @@ export default function NuevoMiembroPage() {
         </div>
 
         <Button onClick={handleSave} disabled={!canSave} className="w-full">
-          <Save className="w-4 h-4" /> Crear {role === "profesor" ? "profesor" : "abogado"}
+          <Save className="w-4 h-4" /> Crear {role === "profesor" ? "profesor" : role === "admin" ? "administrador" : "abogado"}
         </Button>
       </div>
     </div>

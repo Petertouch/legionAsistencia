@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { CaseArea } from "@/lib/pipelines";
 
-export type MemberRole = "abogado" | "profesor";
+export type MemberRole = "abogado" | "profesor" | "admin";
 export type MemberEstado = "activo" | "inactivo" | "vacaciones";
 
 export interface TeamMember {
