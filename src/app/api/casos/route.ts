@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNuevoCaso } from "@/lib/kapso";
 
 // GET: list/search cases
 export async function GET(request: NextRequest) {
@@ -35,7 +36,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { suscriptor_id, area, titulo, prioridad, abogado, descripcion, fecha_limite, etapa, etapa_index } = body;
 
-    if (!suscriptor_id || !area || !titulo || !abogado) {
+    // El abogado es opcional: los casos creados por el cliente entran sin asignar
+    // y el admin los asigna después.
+    if (!suscriptor_id || !area || !titulo) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
         etapa: etapa || "Recepcion",
         etapa_index: etapa_index ?? 0,
         prioridad: prioridad || "normal",
-        abogado,
+        abogado: abogado || "",
         descripcion: descripcion || "",
         fecha_limite: fecha_limite || null,
         checklist: {},
@@ -64,6 +67,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Notificar por WhatsApp al abogado asignado (no bloquea la creación).
+    notifyNuevoCaso(data).catch((e) => console.error("[casos] notifyNuevoCaso:", e));
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

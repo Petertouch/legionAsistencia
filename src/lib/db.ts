@@ -111,7 +111,7 @@ export async function getCaso(id: string): Promise<Caso | null> {
 
 export async function createCaso(data: {
   suscriptor_id: string; area: CaseArea; titulo: string;
-  prioridad: Caso["prioridad"]; abogado: string; descripcion: string;
+  prioridad: Caso["prioridad"]; abogado?: string; descripcion: string;
   fecha_limite: string | null;
 }): Promise<Caso> {
   const pipeline = PIPELINES[data.area];
@@ -120,6 +120,7 @@ export async function createCaso(data: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...data,
+      abogado: data.abogado || "",
       etapa: pipeline.stages[0].name,
       etapa_index: 0,
     }),
@@ -131,7 +132,7 @@ export async function createCaso(data: {
     nombre: "",
     titulo_caso: data.titulo,
     area: data.area,
-    abogado: data.abogado,
+    abogado: data.abogado || "Sin asignar",
     fecha: new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }),
   });
 

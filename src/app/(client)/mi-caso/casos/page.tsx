@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
 import { PIPELINES } from "@/lib/pipelines";
 import type { Caso } from "@/lib/mock-data";
-import { Scale, ArrowRight, Check, MessageCircle } from "lucide-react";
+import { Scale, ArrowRight, Check, MessageCircle, Plus } from "lucide-react";
 import { useMessagesStore } from "@/lib/stores/messages-store";
 
 const PRIORIDAD_COLOR = {
@@ -43,9 +43,17 @@ export default function ClientCasosPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-gray-900 font-bold text-lg flex items-center gap-2">
-        <Scale className="w-5 h-5 text-gray-400" /> Mis Casos
-      </h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-gray-900 font-bold text-lg flex items-center gap-2">
+          <Scale className="w-5 h-5 text-gray-400" /> Mis Casos
+        </h1>
+        <Link
+          href="/mi-caso/casos/nuevo"
+          className="flex items-center gap-1.5 bg-oro hover:bg-oro/90 text-jungle-dark font-bold text-sm px-3.5 py-2 rounded-xl transition-colors flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" /> Nuevo caso
+        </Link>
+      </div>
 
       {/* Active */}
       {activos.length > 0 && (
@@ -126,6 +134,12 @@ export default function ClientCasosPage() {
         <div className="text-center py-12">
           <Scale className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">No tienes casos registrados</p>
+          <Link
+            href="/mi-caso/casos/nuevo"
+            className="inline-flex items-center gap-1.5 mt-4 bg-oro hover:bg-oro/90 text-jungle-dark font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Crear mi primer caso
+          </Link>
         </div>
       )}
     </div>
