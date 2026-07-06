@@ -567,3 +567,35 @@ export const PIPELINES: Record<CaseArea, Pipeline> = {
     ],
   },
 };
+
+// ── Config persistida ───────────────────────────────────────────
+// Los pipelines se pueden editar en /admin/configuracion y se guardan en
+// /api/config (key=pipelines). Esta función aplica esa config sobre el
+// objeto PIPELINES en memoria, de modo que TODOS los consumidores
+// (detalle de caso, kanban, portal cliente, etc.) usan las fases reales
+// sin tener que modificarlos uno por uno.
+let _pipelinesLoaded = false;
+
+export async function loadPipelinesConfig(force = false): Promise<void> {
+  if (_pipelinesLoaded && !force) return;
+  try {
+    const res = await fetch("/api/config?key=pipelines");
+    if (res.ok) {
+      const data = await res.json();
+      const saved = data?.value
+        ? (typeof data.value === "string" ? JSON.parse(data.value) : data.value)
+        : null;
+      if (saved && typeof saved === "object") {
+        for (const area of Object.keys(saved) as CaseArea[]) {
+          const p = saved[area];
+          if (PIPELINES[area] && p && Array.isArray(p.stages) && p.stages.length > 0) {
+            PIPELINES[area] = p as Pipeline;
+          }
+        }
+      }
+    }
+  } catch {
+    // si falla, se mantienen las fases por defecto
+  }
+  _pipelinesLoaded = true;
+}

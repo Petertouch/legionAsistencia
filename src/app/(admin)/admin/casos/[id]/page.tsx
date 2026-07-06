@@ -117,7 +117,11 @@ export default function CasoDetailPage() {
   );
 
   const pipeline = PIPELINES[caso.area];
-  const currentStage = pipeline.stages[caso.etapa_index];
+  // Si el caso quedó en una etapa que ya no existe (pipeline editado), se ubica por
+  // nombre o se limita al rango válido para no romper la vista.
+  const stageByName = pipeline.stages.findIndex((s) => s.name === caso.etapa);
+  const stageIdx = stageByName >= 0 ? stageByName : Math.min(caso.etapa_index, pipeline.stages.length - 1);
+  const currentStage = pipeline.stages[stageIdx];
   const deadlineDays = getDaysUntilDeadline(caso.fecha_limite);
   const daysInStage = getDaysInStage(caso.fecha_ingreso_etapa);
   const isCerrado = caso.etapa === "Cerrado";

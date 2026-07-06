@@ -8,6 +8,7 @@ import MobileBottomNav from "@/components/admin/mobile-bottom-nav";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useTeamStore } from "@/lib/stores/team-store";
+import { loadPipelinesConfig } from "@/lib/pipelines";
 import { syncPersistedData } from "@/lib/stores/questions-store";
 
 // Sync blog consultas/suscriptores from localStorage into mock arrays
@@ -19,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const loadEquipo = useTeamStore((s) => s.loadEquipo);
   const [hydrated, setHydrated] = useState(false);
+  const [pipelinesReady, setPipelinesReady] = useState(false);
 
   useEffect(() => {
     useAuthStore.persist.rehydrate();
@@ -37,7 +39,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (hydrated && user) loadEquipo();
   }, [hydrated, user, loadEquipo]);
 
-  if (!hydrated || !user) {
+  // Aplicar la configuración de pipelines (fases editadas) antes de renderizar.
+  useEffect(() => {
+    loadPipelinesConfig().finally(() => setPipelinesReady(true));
+  }, []);
+
+  if (!hydrated || !user || !pipelinesReady) {
     return (
       <div className="min-h-screen bg-panel flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />

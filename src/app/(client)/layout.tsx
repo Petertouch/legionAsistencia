@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientStore } from "@/lib/stores/client-store";
+import { loadPipelinesConfig } from "@/lib/pipelines";
 import { User, Scale, Gift, LogOut, MessageCircle, FileText, GraduationCap, Award, HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import OnboardingTour from "@/components/client/onboarding-tour";
@@ -25,10 +26,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, []);
   const logout = useClientStore((s) => s.logout);
   const [mounted, setMounted] = useState(false);
+  const [pipelinesReady, setPipelinesReady] = useState(false);
 
   useEffect(() => {
     useClientStore.persist.rehydrate();
     setMounted(true);
+  }, []);
+
+  // Aplicar la configuración de pipelines (fases editadas) antes de mostrar el contenido.
+  useEffect(() => {
+    loadPipelinesConfig().finally(() => setPipelinesReady(true));
   }, []);
 
   const isLoginPage = pathname === "/mi-caso";
@@ -104,7 +111,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           ? "max-w-7xl px-0 py-0"
           : "max-w-2xl px-4 py-6"
       }`}>
-        {children}
+        {session && !pipelinesReady ? (
+          <div className="flex justify-center py-16">
+            <div className="w-7 h-7 border-2 border-oro/30 border-t-oro rounded-full animate-spin" />
+          </div>
+        ) : children}
       </main>
 
       {/* WhatsApp FAB (always) */}
