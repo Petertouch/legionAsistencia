@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNuevoCaso } from "@/lib/kapso";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// Resuelve el id del abogado en `equipo` a partir de su nombre exacto.
+async function resolveAbogadoId(supabase: SupabaseClient, nombre?: string | null): Promise<string | null> {
+  if (!nombre || !nombre.trim()) return null;
+  const { data } = await supabase.from("equipo").select("id").eq("nombre", nombre.trim()).limit(1).maybeSingle();
+  return data?.id ?? null;
+}
 
 // GET: list/search cases
 export async function GET(request: NextRequest) {
@@ -46,6 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Get suscriptor name
     const { data: sus } = await supabase.from("suscriptores").select("nombre").eq("id", suscriptor_id).single();
+    const abogado_id = await resolveAbogadoId(supabase, abogado);
 
     const { data, error } = await supabase
       .from("casos")
@@ -58,6 +67,7 @@ export async function POST(request: NextRequest) {
         etapa_index: etapa_index ?? 0,
         prioridad: prioridad || "normal",
         abogado: abogado || "",
+        abogado_id,
         descripcion: descripcion || "",
         fecha_limite: fecha_limite || null,
         checklist: {},
@@ -85,6 +95,10 @@ export async function PUT(request: NextRequest) {
     if (!id) return NextResponse.json({ error: "id requerido" }, { status: 400 });
 
     const supabase = createAdminClient();
+    // Si se reasigna el abogado (por nombre), mantener abogado_id en sync.
+    if ("abogado" in updates) {
+      updates.abogado_id = await resolveAbogadoId(supabase, updates.abogado);
+    }
     const { data, error } = await supabase
       .from("casos")
       .update({ ...updates, updated_at: new Date().toISOString() })

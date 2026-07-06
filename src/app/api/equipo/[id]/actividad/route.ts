@@ -20,15 +20,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const casoCols =
       "id, titulo, area, etapa, etapa_index, prioridad, fecha_limite, fecha_ingreso_etapa, created_at, updated_at, suscriptor_nombre, respondido_por, respondido_at";
 
-    const [asignadosRes, respondidosRes, documentosRes] = await Promise.all([
+    const [asigId, asigNombre, respondidosRes, documentosRes] = await Promise.all([
+      supabase.from("casos").select(casoCols).eq("abogado_id", id).order("updated_at", { ascending: false }),
       supabase.from("casos").select(casoCols).eq("abogado", nombre).order("updated_at", { ascending: false }),
       supabase.from("casos").select("id, titulo, area, suscriptor_nombre, respondido_at").eq("respondido_por", nombre).order("respondido_at", { ascending: false }),
       supabase.from("documentos").select("id, nombre, caso_id, created_at").eq("subido_por", nombre).order("created_at", { ascending: false }),
     ]);
 
+    // Une por abogado_id (confiable) y por nombre (respaldo para casos sin migrar), sin duplicar.
+    const mapa = new Map<string, Record<string, unknown>>();
+    for (const c of [...(asigId.data || []), ...(asigNombre.data || [])]) mapa.set(c.id as string, c);
+    const asignados = [...mapa.values()].sort(
+      (a, b) => new Date(b.updated_at as string).getTime() - new Date(a.updated_at as string).getTime()
+    );
+
     return NextResponse.json({
       miembro,
-      asignados: asignadosRes.data || [],
+      asignados,
       respondidos: respondidosRes.data || [],
       documentos: documentosRes.data || [],
     });
