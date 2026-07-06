@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
-import { useMessagesStore } from "@/lib/stores/messages-store";
 import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
@@ -21,10 +20,20 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
   const session = useClientStore((s) => s.session);
-  const messages = useMessagesStore((s) => s.messages);
-  const getMessages = useMessagesStore((s) => s.getMessages);
-  const addMessage = useMessagesStore((s) => s.addMessage);
+  type ChatMsg = { id: string; sender: string; sender_name: string; content: string; created_at: string };
+  const [caseMessages, setCaseMessages] = useState<ChatMsg[]>([]);
   const [mounted, setMounted] = useState(false);
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/mensajes?caso_id=${id}`);
+      if (!r.ok) return;
+      const rows = await r.json();
+      setCaseMessages((rows as Record<string, string>[]).map((m) => ({
+        id: m.id, sender: m.autor_tipo, sender_name: m.autor_nombre, content: m.contenido, created_at: m.created_at,
+      })));
+    } catch { /* silent */ }
+  }, [id]);
   const [tab, setTab] = useState<Tab>("info");
   const [chatInput, setChatInput] = useState("");
   const [chatFullscreen, setChatFullscreen] = useState(false);
@@ -37,7 +46,14 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, chatFullscreen]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [caseMessages, chatFullscreen]);
+  // Cargar mensajes del caso + refrescar cada 6s (chat en vivo).
+  useEffect(() => {
+    if (!mounted || !id) return;
+    fetchMessages();
+    const t = setInterval(fetchMessages, 6000);
+    return () => clearInterval(t);
+  }, [mounted, id, fetchMessages]);
   useEffect(() => {
     if (mounted && id) {
       fetch(`/api/documentos?caso_id=${id}`).then((r) => r.json()).then(setDocs).catch(() => {});
@@ -93,14 +109,24 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const nextStage = caso.etapa_index + 1 < totalStages ? pipeline.stages[caso.etapa_index + 1] : null;
   const isCerrado = caso.etapa === "Cerrado";
   const daysInStage = Math.floor((Date.now() - new Date(caso.fecha_ingreso_etapa).getTime()) / 86400000);
-  const caseMessages = getMessages(caso.id);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
-    addMessage({ caso_id: caso.id, sender: "cliente", sender_name: session.nombre, content: chatInput.trim() });
+    const text = chatInput.trim();
+    if (!text) return;
     setChatInput("");
     inputRef.current?.focus();
+    // Optimista: se muestra al instante y se confirma con el refetch.
+    setCaseMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: "cliente", sender_name: session.nombre, content: text, created_at: new Date().toISOString() }]);
+    try {
+      const r = await fetch("/api/client/mensajes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caso_id: caso.id, suscriptor_id: session.suscriptor_id, nombre: session.nombre, contenido: text }),
+      });
+      if (!r.ok) { toast.error("No se pudo enviar el mensaje"); }
+      fetchMessages();
+    } catch { toast.error("Error de conexión"); }
   };
 
   const uploadFile = async (file: File) => {

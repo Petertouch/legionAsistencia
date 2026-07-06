@@ -30,6 +30,7 @@ const TIPO_LABEL: Record<string, string> = {
   subio_documento: "Subió documento",
   reasigno_abogado: "Reasignó abogado",
   agrego_nota: "Agregó nota",
+  envio_mensaje: "Envió un mensaje",
 };
 interface ActividadData {
   miembro: { id: string; nombre: string; role: string; estado: string; max_casos: number; especialidad: string; fecha_ingreso: string };

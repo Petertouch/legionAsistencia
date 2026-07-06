@@ -10,6 +10,7 @@ import Badge from "@/components/ui/badge";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import StageChecklist from "@/components/admin/stage-checklist";
+import CasoChat from "@/components/admin/caso-chat";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2, FileText, Upload, Download, Loader2, File } from "lucide-react";
 import { toast } from "sonner";
@@ -425,6 +426,9 @@ export default function CasoDetailPage() {
         <h4 className="text-gray-900 text-xs md:text-sm font-bold mb-2">{isConsulta ? "Pregunta del consultante" : "Descripción del caso"}</h4>
         <p className="text-gray-600 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{caso.descripcion}</p>
       </Card>
+
+      {/* Chat con el cliente */}
+      {!isConsulta && <CasoChat casoId={caso.id} clienteNombre={caso.suscriptor_nombre} />}
 
       {/* Consulta: Response section */}
       {isConsulta && (
