@@ -5,12 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
 import { createCaso } from "@/lib/db";
-import { AREAS, type CaseArea } from "@/lib/pipelines";
+import { getAreas, type CaseArea } from "@/lib/pipelines";
 import { ArrowLeft, Scale, Send } from "lucide-react";
 import { toast } from "sonner";
-
-// Áreas que el cliente puede solicitar (se excluye "Consulta", que es el flujo del blog).
-const AREAS_CLIENTE = AREAS.filter((a) => a !== "Consulta");
 
 export default function ClientNuevoCasoPage() {
   const router = useRouter();
@@ -28,6 +25,8 @@ export default function ClientNuevoCasoPage() {
 
   if (!mounted || !session) return null;
 
+  // Áreas que el cliente puede solicitar (se excluye "Consulta", que es el flujo del blog).
+  const areasCliente = getAreas().filter((a) => a !== "Consulta");
   const canSave = titulo.trim().length >= 3 && descripcion.trim().length >= 10;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +67,7 @@ export default function ClientNuevoCasoPage() {
         <div>
           <label className="text-gray-600 text-xs font-medium mb-1.5 block">Área legal</label>
           <select value={area} onChange={(e) => setArea(e.target.value as CaseArea)} className={`${inputCls} appearance-none`}>
-            {AREAS_CLIENTE.map((a) => <option key={a} value={a}>{a}</option>)}
+            {areasCliente.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
 

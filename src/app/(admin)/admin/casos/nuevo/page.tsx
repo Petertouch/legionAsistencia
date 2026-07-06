@@ -7,7 +7,7 @@ import Link from "next/link";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
-import { PIPELINES, AREAS, type CaseArea } from "@/lib/pipelines";
+import { PIPELINES, getAreas, type CaseArea } from "@/lib/pipelines";
 import { useTeamStore } from "@/lib/stores/team-store";
 import { createCaso, getSuscriptores } from "@/lib/db";
 import type { Suscriptor } from "@/lib/mock-data";
@@ -193,7 +193,7 @@ export default function NuevoCasoPage() {
           name="area"
           value={selectedArea}
           onChange={(e) => setSelectedArea(e.target.value as CaseArea)}
-          options={AREAS.map((a) => ({ value: a, label: a }))}
+          options={getAreas().map((a) => ({ value: a, label: a }))}
         />
 
         {/* Pipeline preview */}

@@ -1,9 +1,9 @@
 "use client";
 
-import { AREAS, PIPELINES, type CaseArea } from "@/lib/pipelines";
-import { Shield, Swords, Heart, Building2, ShoppingCart, FileText, HelpCircle } from "lucide-react";
+import { getAreas, type CaseArea } from "@/lib/pipelines";
+import { Shield, Swords, Heart, Building2, ShoppingCart, FileText, HelpCircle, Scale } from "lucide-react";
 
-const AREA_ICONS: Record<CaseArea, React.ReactNode> = {
+const AREA_ICONS: Record<string, React.ReactNode> = {
   "Disciplinario": <Shield className="w-4 h-4" />,
   "Penal Militar": <Swords className="w-4 h-4" />,
   "Familia": <Heart className="w-4 h-4" />,
@@ -12,6 +12,7 @@ const AREA_ICONS: Record<CaseArea, React.ReactNode> = {
   "Documentos": <FileText className="w-4 h-4" />,
   "Consulta": <HelpCircle className="w-4 h-4" />,
 };
+const DEFAULT_AREA_ICON = <Scale className="w-4 h-4" />;
 
 export default function PipelineTabs({
   selected,
@@ -24,7 +25,7 @@ export default function PipelineTabs({
 }) {
   return (
     <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
-      {AREAS.map((area) => {
+      {getAreas().map((area) => {
         const active = area === selected;
         const count = counts?.[area] ?? 0;
         return (
@@ -37,7 +38,7 @@ export default function PipelineTabs({
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent"
             }`}
           >
-            {AREA_ICONS[area]}
+            {AREA_ICONS[area] || DEFAULT_AREA_ICON}
             <span className="hidden sm:inline">{area}</span>
             {count > 0 && (
               <span className={`px-1.5 py-px rounded-full text-[10px] ${

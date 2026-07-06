@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCasos, getDashboardStats } from "@/lib/db";
-import { PIPELINES, AREAS, type CaseArea } from "@/lib/pipelines";
 import { useCasosStore } from "@/lib/stores/casos-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import Link from "next/link";

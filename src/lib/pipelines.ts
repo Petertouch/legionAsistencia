@@ -586,10 +586,11 @@ export async function loadPipelinesConfig(force = false): Promise<void> {
         ? (typeof data.value === "string" ? JSON.parse(data.value) : data.value)
         : null;
       if (saved && typeof saved === "object") {
-        for (const area of Object.keys(saved) as CaseArea[]) {
+        for (const area of Object.keys(saved)) {
           const p = saved[area];
-          if (PIPELINES[area] && p && Array.isArray(p.stages) && p.stages.length > 0) {
-            PIPELINES[area] = p as Pipeline;
+          // Aplica áreas editadas y también AGREGA las áreas nuevas creadas en configuración.
+          if (p && Array.isArray(p.stages) && p.stages.length > 0) {
+            (PIPELINES as Record<string, Pipeline>)[area] = p as Pipeline;
           }
         }
       }
@@ -598,4 +599,25 @@ export async function loadPipelinesConfig(force = false): Promise<void> {
     // si falla, se mantienen las fases por defecto
   }
   _pipelinesLoaded = true;
+}
+
+// Áreas legales activas (incluye las agregadas en configuración). Se lee en
+// tiempo de render, después de que loadPipelinesConfig parchea PIPELINES.
+export function getAreas(): CaseArea[] {
+  return Object.keys(PIPELINES) as CaseArea[];
+}
+
+// Pipeline inicial para un área nueva (debe incluir "Cerrado", que la app usa
+// como etapa final).
+export function makeDefaultPipeline(area: string): Pipeline {
+  const slug = area.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 4) || "area";
+  return {
+    area: area as CaseArea,
+    icon: "Scale",
+    stages: [
+      { name: "Recepcion", expectedDays: 2, color: "bg-blue-500", checklist: [{ key: `${slug}-rec-1`, label: "Registrar solicitud", required: true }] },
+      { name: "En proceso", expectedDays: 5, color: "bg-amber-500", checklist: [{ key: `${slug}-pro-1`, label: "Gestionar el caso", required: false }] },
+      { name: "Cerrado", expectedDays: 0, color: "bg-gray-500", checklist: [{ key: `${slug}-cer-1`, label: "Archivar", required: false }] },
+    ],
+  };
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
-  PIPELINES, AREAS, type CaseArea, type PipelineStage, type ChecklistItem, type Pipeline,
+  PIPELINES, type CaseArea, type PipelineStage, type ChecklistItem, type Pipeline,
+  loadPipelinesConfig, makeDefaultPipeline,
 } from "@/lib/pipelines";
 import PlanEditor, { type PlanConfig } from "@/components/contract/plan-editor";
 import Button from "@/components/ui/button";
@@ -180,11 +181,24 @@ function PlanesTab() {
 // TAB: Pipelines legales
 // ═══════════════════════════════════════════════════════════════════════════
 function PipelinesTab() {
-  const [pipelines, setPipelines] = useState<Record<CaseArea, Pipeline>>(() => structuredClone(PIPELINES));
-  const [selectedArea, setSelectedArea] = useState<CaseArea>("Disciplinario");
+  const [pipelines, setPipelines] = useState<Record<string, Pipeline>>(() => structuredClone(PIPELINES));
+  const [selectedArea, setSelectedArea] = useState<string>("Disciplinario");
   const [expandedStage, setExpandedStage] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [newAreaName, setNewAreaName] = useState("");
+
+  const addArea = () => {
+    const name = newAreaName.trim();
+    if (!name) return;
+    if (pipelines[name]) { toast.error("Ya existe un área con ese nombre"); return; }
+    setPipelines((prev) => ({ ...prev, [name]: makeDefaultPipeline(name) }));
+    setSelectedArea(name);
+    setExpandedStage(null);
+    setNewAreaName("");
+    setHasChanges(true);
+    toast.success(`Área "${name}" agregada. Ajusta sus etapas y guarda.`);
+  };
 
   useEffect(() => {
     fetch("/api/config?key=pipelines")
@@ -302,6 +316,8 @@ function PipelinesTab() {
         body: JSON.stringify({ key: "pipelines", value: pipelines }),
       });
       if (res.ok) {
+        // Reaplica la config guardada sobre PIPELINES en memoria (nuevas áreas incluidas).
+        await loadPipelinesConfig(true);
         toast.success("Pipelines guardados");
         setHasChanges(false);
       } else {
@@ -340,7 +356,7 @@ function PipelinesTab() {
 
       {/* Area tabs */}
       <div className="flex gap-1.5 flex-wrap">
-        {AREAS.map((area) => (
+        {Object.keys(pipelines).map((area) => (
           <button
             key={area}
             onClick={() => { setSelectedArea(area); setExpandedStage(null); }}
@@ -354,6 +370,21 @@ function PipelinesTab() {
             <span className="text-[10px] ml-1 opacity-60">({pipelines[area].stages.length})</span>
           </button>
         ))}
+      </div>
+
+      {/* Add area */}
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={newAreaName}
+          onChange={(e) => setNewAreaName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(); } }}
+          placeholder="Nueva área legal (ej: Laboral, Administrativo...)"
+          className="flex-1 max-w-xs bg-white border border-gray-200 text-gray-900 text-xs px-3 py-2 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40"
+        />
+        <Button size="sm" variant="secondary" onClick={addArea} disabled={!newAreaName.trim()}>
+          <Plus className="w-3.5 h-3.5" /> Agregar área
+        </Button>
       </div>
 
       {/* Pipeline summary */}
