@@ -2,6 +2,7 @@ import type { CaseArea, Prioridad } from "./pipelines";
 
 export interface Suscriptor {
   id: string;
+  contrato_id?: string;
   nombre: string;
   telefono: string;
   email: string;

@@ -11,9 +11,28 @@ import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Phone, Mail, MapPin, Calendar, Scale, MessageSquare, StickyNote,
+  ArrowLeft, Phone, Calendar, Scale, MessageSquare, StickyNote,
   FileText, Upload, Trash2, File, X, Download, Plus, KeyRound,
 } from "lucide-react";
+
+function fmtDate(v?: string) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
+}
+function fmtDateTime(v?: string) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function Field({ label, value, mono, className = "" }: { label: string; value?: string | null; mono?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-gray-400 text-[10px] uppercase tracking-wide">{label}</p>
+      <p className={`text-gray-900 text-sm break-words ${mono ? "font-mono text-xs" : ""}`}>{value || "—"}</p>
+    </div>
+  );
+}
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
   llamada: <Phone className="w-4 h-4" />, whatsapp: <MessageSquare className="w-4 h-4" />,
@@ -155,12 +174,28 @@ export default function SuscriptorDetailPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="flex items-center gap-3"><Phone className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Teléfono</p><p className="text-gray-900 text-sm">{suscriptor.telefono}</p></div></Card>
-        <Card className="flex items-center gap-3"><Mail className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Email</p><p className="text-gray-900 text-sm">{suscriptor.email}</p></div></Card>
-        <Card className="flex items-center gap-3"><MapPin className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Rama / Rango</p><p className="text-gray-900 text-sm">{suscriptor.rama} — {suscriptor.rango}</p></div></Card>
-        <Card className="flex items-center gap-3"><Calendar className="w-4 h-4 text-oro" /><div><p className="text-gray-400 text-xs">Suscrito desde</p><p className="text-gray-900 text-sm">{new Date(suscriptor.fecha_inicio).toLocaleDateString("es-CO")}</p></div></Card>
-      </div>
+      {/* Datos completos del cliente */}
+      <Card>
+        <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2 mb-4">
+          <Scale className="w-4 h-4 text-oro" /> Datos del cliente
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3.5">
+          <Field label="Nombre" value={suscriptor.nombre} />
+          <Field label="Cédula" value={suscriptor.cedula} mono />
+          <Field label="Teléfono" value={suscriptor.telefono} />
+          <Field label="Email" value={suscriptor.email} className="col-span-2 md:col-span-1" />
+          <Field label="Plan" value={suscriptor.plan} />
+          <Field label="Estado de pago" value={suscriptor.estado_pago} />
+          <Field label="Rama" value={suscriptor.rama} />
+          <Field label="Rango" value={suscriptor.rango} />
+          <Field label="Suscrito desde" value={fmtDate(suscriptor.fecha_inicio)} />
+          <Field label="Registrado" value={fmtDateTime(suscriptor.created_at)} />
+          <Field label="Última actualización" value={fmtDateTime(suscriptor.updated_at)} />
+          <Field label="ID contrato" value={suscriptor.contrato_id || "—"} mono />
+          <Field label="ID suscriptor" value={suscriptor.id} mono className="col-span-2 md:col-span-3" />
+          {suscriptor.notas && <Field label="Notas" value={suscriptor.notas} className="col-span-2 md:col-span-3" />}
+        </div>
+      </Card>
 
       {/* Acceso del cliente — cambiar clave */}
       <Card>
