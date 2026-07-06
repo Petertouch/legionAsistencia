@@ -25,13 +25,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "El administrador solo puede ver el chat, no escribir." }, { status: 403 });
   }
   try {
-    const { caso_id, contenido } = await request.json();
-    if (!caso_id || !contenido?.trim()) return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    const { caso_id, contenido, archivo_url, archivo_nombre } = await request.json();
+    if (!caso_id || (!contenido?.trim() && !archivo_url)) return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
 
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("mensajes")
-      .insert({ caso_id, autor_tipo: "abogado", autor_id: session.id, autor_nombre: session.nombre, contenido: contenido.trim() })
+      .insert({ caso_id, autor_tipo: "abogado", autor_id: session.id, autor_nombre: session.nombre, contenido: contenido?.trim() || "", archivo_url: archivo_url || null, archivo_nombre: archivo_nombre || null })
       .select()
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

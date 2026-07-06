@@ -8,7 +8,7 @@ import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
   ArrowLeft, Clock, CalendarClock, Check, ArrowRight, User, MessageCircle,
-  Send, X, FileText, Upload, Download, Trash2, Loader2, File, Scale,
+  Send, X, FileText, Upload, Download, Trash2, Loader2, File, Scale, Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,9 +20,11 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
   const session = useClientStore((s) => s.session);
-  type ChatMsg = { id: string; sender: string; sender_name: string; content: string; created_at: string };
+  type ChatMsg = { id: string; sender: string; sender_name: string; content: string; created_at: string; archivo_url?: string | null; archivo_nombre?: string | null };
   const [caseMessages, setCaseMessages] = useState<ChatMsg[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [chatUploading, setChatUploading] = useState(false);
+  const chatFileRef = useRef<HTMLInputElement>(null);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -31,6 +33,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
       const rows = await r.json();
       setCaseMessages((rows as Record<string, string>[]).map((m) => ({
         id: m.id, sender: m.autor_tipo, sender_name: m.autor_nombre, content: m.contenido, created_at: m.created_at,
+        archivo_url: m.archivo_url, archivo_nombre: m.archivo_nombre,
       })));
     } catch { /* silent */ }
   }, [id]);
@@ -129,6 +132,30 @@ export default function ClientCaseDetailPage({ params }: Props) {
     } catch { toast.error("Error de conexión"); }
   };
 
+  const handleChatFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!["pdf", "doc", "docx", "xls", "xlsx"].includes(ext)) { toast.error("Solo se permiten archivos PDF, Word o Excel"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Máximo 10MB"); return; }
+    setChatUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const up = await fetch("/api/client/upload", { method: "POST", body: fd });
+      const upd = await up.json();
+      if (!up.ok) { toast.error(upd.error || "Error subiendo archivo"); return; }
+      setCaseMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: "cliente", sender_name: session.nombre, content: "", created_at: new Date().toISOString(), archivo_url: upd.url, archivo_nombre: file.name }]);
+      await fetch("/api/client/mensajes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caso_id: caso.id, suscriptor_id: session.suscriptor_id, nombre: session.nombre, archivo_url: upd.url, archivo_nombre: file.name }),
+      });
+      fetchMessages();
+    } catch { toast.error("Error de conexión"); }
+    finally { setChatUploading(false); }
+  };
+
   const uploadFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) { toast.error("Máximo 10MB"); return; }
     setUploading(true);
@@ -183,6 +210,9 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Input de archivo del chat (compartido por las dos vistas) */}
+      <input ref={chatFileRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={handleChatFile} />
+
       <Link href="/mi-caso/casos" className="inline-flex items-center gap-1.5 text-gray-500 text-sm hover:text-gray-900 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Mis casos
       </Link>
@@ -398,7 +428,15 @@ export default function ClientCaseDetailPage({ params }: Props) {
                 <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                     {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                    <p className="text-xs leading-relaxed">{msg.content}</p>
+                    {msg.content && <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>}
+                  {msg.archivo_url && (
+                    <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] truncate flex-1">{msg.archivo_nombre || "Documento"}</span>
+                      <Download className="w-3 h-3 flex-shrink-0 opacity-70" />
+                    </a>
+                  )}
                     <p className={`text-[9px] mt-1 ${msg.sender === "cliente" ? "text-white/40" : "text-gray-400"}`}>
                       {new Date(msg.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })} {new Date(msg.created_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
                     </p>
@@ -407,7 +445,11 @@ export default function ClientCaseDetailPage({ params }: Props) {
               ))}
               <div ref={!chatFullscreen ? messagesEndRef : undefined} />
             </div>
-            <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex gap-2 bg-white">
+            <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 bg-white">
+              <button type="button" onClick={() => chatFileRef.current?.click()} disabled={chatUploading} title="Adjuntar PDF, Word o Excel"
+                className="text-gray-400 hover:text-jungle-dark p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-40">
+                {chatUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
+              </button>
               <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Escribe un mensaje..."
                 className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none" />
               <button type="submit" disabled={!chatInput.trim()} className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0">
@@ -437,13 +479,25 @@ export default function ClientCaseDetailPage({ params }: Props) {
               <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                   {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                  <p className="text-xs leading-relaxed">{msg.content}</p>
+                  {msg.content && <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>}
+                  {msg.archivo_url && (
+                    <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] truncate flex-1">{msg.archivo_nombre || "Documento"}</span>
+                      <Download className="w-3 h-3 flex-shrink-0 opacity-70" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
             <div ref={chatFullscreen ? messagesEndRef : undefined} />
           </div>
-          <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex gap-2 bg-white flex-shrink-0">
+          <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 bg-white flex-shrink-0">
+            <button type="button" onClick={() => chatFileRef.current?.click()} disabled={chatUploading} title="Adjuntar PDF, Word o Excel"
+              className="text-gray-400 hover:text-jungle-dark p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-40">
+              {chatUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
+            </button>
             <input ref={inputRef} type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Escribe un mensaje..."
               className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none" />
             <button type="submit" disabled={!chatInput.trim()} className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0">
