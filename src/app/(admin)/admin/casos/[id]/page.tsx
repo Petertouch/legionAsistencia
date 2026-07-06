@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCaso, updateCasoChecklist, createSeguimiento, respondConsulta, deleteConsultaRespuesta } from "@/lib/db";
+import { getCaso, getSeguimientos, advanceCaso, revertCaso, updateCaso, updateCasoChecklist, createSeguimiento, respondConsulta, deleteConsultaRespuesta, logActividad } from "@/lib/db";
 import { PIPELINES, getDaysUntilDeadline, getDaysInStage } from "@/lib/pipelines";
 import { useTeamStore } from "@/lib/stores/team-store";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import StageChecklist from "@/components/admin/stage-checklist";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2, FileText, Upload, Download, Loader2, File } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const TIPO_ICONS: Record<string, React.ReactNode> = {
   llamada: <Phone className="w-4 h-4" />, whatsapp: <MessageSquare className="w-4 h-4" />,
@@ -78,6 +78,7 @@ export default function CasoDetailPage() {
       const doc = await docRes.json();
       if (!docRes.ok) { toast.error(doc.error || "Error guardando documento"); return; }
       setDocs((prev) => [doc, ...prev]);
+      logActividad("subio_documento", { caso_id: id, detalle: file.name });
       toast.success("Documento subido");
     } catch { toast.error("Error subiendo documento"); }
     finally { setUploading(false); }
@@ -98,6 +99,15 @@ export default function CasoDetailPage() {
 
   const { data: caso, refetch, isLoading } = useQuery({ queryKey: ["caso", id], queryFn: () => getCaso(id) });
   const { data: seguimientos, refetch: refetchSeg } = useQuery({ queryKey: ["seguimientos", { caso_id: id }], queryFn: () => getSeguimientos({ caso_id: id }) });
+
+  // Registrar que el usuario abrió el caso (una vez por carga).
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (caso?.id && !viewedRef.current) {
+      viewedRef.current = true;
+      logActividad("vio_caso", { caso_id: caso.id, detalle: caso.titulo });
+    }
+  }, [caso?.id, caso?.titulo]);
 
   if (isLoading) return <div className="animate-pulse space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-20 md:h-24 bg-gray-50 rounded-xl" />)}</div>;
 
@@ -149,6 +159,7 @@ export default function CasoDetailPage() {
     if (!nombre || nombre === caso.abogado) { setEditingAbogado(false); return; }
     setSavingAbogado(true);
     await updateCaso(caso.id, { abogado: nombre });
+    logActividad("reasigno_abogado", { caso_id: caso.id, detalle: nombre });
     setSavingAbogado(false);
     setEditingAbogado(false);
     invalidateAll();
@@ -167,6 +178,7 @@ export default function CasoDetailPage() {
     if (!segDescripcion.trim()) return;
     setSegLoading(true);
     await createSeguimiento({ caso_id: caso.id, suscriptor_id: caso.suscriptor_id, lead_id: null, tipo: segTipo, descripcion: segDescripcion.trim() });
+    logActividad("agrego_nota", { caso_id: caso.id, detalle: segTipo });
     setSegDescripcion(""); setSegTipo("nota"); setShowAddSeguimiento(false); setSegLoading(false);
     refetchSeg();
     queryClient.invalidateQueries({ queryKey: ["seguimientos"] });

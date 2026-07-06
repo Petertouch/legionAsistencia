@@ -15,6 +15,17 @@ async function sendCasoEmail(slug: string, suscriptorId: string, variables: Reco
   } catch { /* silent */ }
 }
 
+// Registra una acción del usuario actual (audit log). Fire-and-forget.
+export async function logActividad(tipo: string, opts?: { caso_id?: string | null; detalle?: string }): Promise<void> {
+  try {
+    await fetch("/api/actividad", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo, caso_id: opts?.caso_id ?? null, detalle: opts?.detalle }),
+    });
+  } catch { /* silent */ }
+}
+
 // ── Helpers ─────────────────────────────────────────────────────
 let idCounter = 100;
 function nextId(prefix: string) { return `${prefix}${++idCounter}`; }
@@ -174,6 +185,7 @@ export async function advanceCaso(id: string): Promise<Caso | null> {
     }),
   });
   const updated = res.ok ? await res.json() : caso;
+  logActividad(isCerrado ? "cerro_caso" : "avanzo_etapa", { caso_id: id, detalle: `${etapaAnterior} → ${pipeline.stages[nextIndex].name}` });
 
   // Send email
   const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
@@ -209,6 +221,7 @@ export async function revertCaso(id: string): Promise<Caso | null> {
       fecha_cierre: null,
     }),
   });
+  logActividad("devolvio_etapa", { caso_id: id, detalle: `${caso.etapa} → ${pipeline.stages[prevIndex].name}` });
   return res.ok ? await res.json() : caso;
 }
 
@@ -232,6 +245,7 @@ export async function moveCaso(id: string, targetStage: string, targetIndex: num
     }),
   });
   const updated = res.ok ? await res.json() : caso;
+  if (etapaAnterior !== targetStage) logActividad(isCerrado ? "cerro_caso" : "movio_caso", { caso_id: id, detalle: `${etapaAnterior} → ${targetStage}` });
 
   if (etapaAnterior !== targetStage) {
     const slug = isCerrado ? "caso-cerrado" : "caso-avanzo";
@@ -266,6 +280,7 @@ export async function updateCasoChecklist(id: string, key: string, done: boolean
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, checklist }),
   });
+  logActividad("marco_checklist", { caso_id: id, detalle: `${done ? "✓" : "✗"} ${key}` });
   return res.ok ? await res.json() : caso;
 }
 
@@ -292,6 +307,7 @@ export async function respondConsulta(id: string, respuesta: string, abogado: st
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
+  logActividad("respondio_consulta", { caso_id: id, detalle: caso.titulo });
   return res.ok ? await res.json() : caso;
 }
 

@@ -17,6 +17,20 @@ interface CasoAsignado {
 }
 interface Respondido { id: string; titulo: string; area: string; suscriptor_nombre: string | null; respondido_at: string | null; }
 interface Documento { id: string; nombre: string; caso_id: string | null; created_at: string; }
+interface LogEntry { id: string; tipo: string; detalle: string | null; caso_id: string | null; created_at: string; }
+
+const TIPO_LABEL: Record<string, string> = {
+  vio_caso: "Abrió un caso",
+  avanzo_etapa: "Avanzó de etapa",
+  devolvio_etapa: "Devolvió de etapa",
+  cerro_caso: "Cerró el caso",
+  movio_caso: "Movió el caso",
+  marco_checklist: "Marcó checklist",
+  respondio_consulta: "Respondió consulta",
+  subio_documento: "Subió documento",
+  reasigno_abogado: "Reasignó abogado",
+  agrego_nota: "Agregó nota",
+};
 interface ActividadData {
   miembro: { id: string; nombre: string; role: string; estado: string; max_casos: number; especialidad: string; fecha_ingreso: string };
   asignados: CasoAsignado[];
@@ -33,6 +47,7 @@ function fmt(v?: string | null) {
 export default function ActividadAbogadoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [data, setData] = useState<ActividadData | null>(null);
+  const [log, setLog] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,6 +56,10 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
+    fetch(`/api/actividad?actor_id=${id}&limit=100`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setLog(Array.isArray(d) ? d : []))
+      .catch(() => setLog([]));
   }, [id]);
 
   if (loading) return <div className="flex justify-center py-16"><div className="w-7 h-7 border-2 border-oro/30 border-t-oro rounded-full animate-spin" /></div>;
@@ -72,8 +91,13 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
   }
 
   const carga = miembro.max_casos > 0 ? Math.round((activos.length / miembro.max_casos) * 100) : 0;
+  const ahora = Date.now();
+  const acciones7d = log.filter((l) => ahora - new Date(l.created_at).getTime() < 7 * 24 * 3600 * 1000).length;
+  const ultimaActividad = log[0]?.created_at;
 
   const kpis = [
+    { label: "Acciones (7 días)", value: acciones7d, icon: Activity, color: "text-oro" },
+    { label: "Última actividad", value: ultimaActividad ? fmt(ultimaActividad) : "—", icon: Clock, color: "text-gray-600" },
     { label: "Casos asignados", value: asignados.length, icon: Briefcase, color: "text-oro" },
     { label: "Activos", value: activos.length, icon: Scale, color: "text-blue-600" },
     { label: "Cerrados", value: cerrados.length, icon: CheckCircle2, color: "text-green-600" },
@@ -107,6 +131,31 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
           </Card>
         ))}
       </div>
+
+      {/* Actividad reciente (audit log) */}
+      <Card>
+        <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-oro" /> Actividad reciente</h3>
+        {log.length === 0 ? (
+          <p className="text-gray-400 text-sm">Sin actividad registrada aún.</p>
+        ) : (
+          <div className="relative pl-5 space-y-3">
+            <div className="absolute left-1.5 top-2 bottom-2 w-px bg-gray-100" />
+            {log.slice(0, 40).map((l) => (
+              <div key={l.id} className="relative flex items-start gap-2">
+                <div className="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full border-2 border-oro bg-white" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-gray-800 text-sm">
+                    <span className="font-medium">{TIPO_LABEL[l.tipo] || l.tipo}</span>
+                    {l.detalle && <span className="text-gray-500"> · {l.detalle}</span>}
+                    {l.caso_id && <Link href={`/admin/casos/${l.caso_id}`} className="text-oro text-xs ml-1 hover:underline">ver caso</Link>}
+                  </p>
+                  <p className="text-gray-400 text-[11px]">{new Date(l.created_at).toLocaleString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Alertas */}
       {(vencidos.length > 0 || proximos.length > 0 || estancados.length > 0) && (

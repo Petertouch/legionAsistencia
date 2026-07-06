@@ -9,7 +9,7 @@ if (!process.env.SESSION_SECRET) {
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 
 // API routes that require auth
-const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas"];
+const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas", "/api/actividad"];
 
 // Admin page role restrictions (matches sidebar.tsx)
 // Routes not listed here are accessible to any authenticated user (e.g. /admin/dashboard)
@@ -110,6 +110,8 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set("x-user-id", session.id);
     requestHeaders.set("x-user-role", session.role);
     requestHeaders.set("x-user-email", session.email);
+    // Codificado: el nombre puede tener acentos (no válidos en headers HTTP crudos).
+    requestHeaders.set("x-user-nombre", encodeURIComponent(session.nombre || ""));
 
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
@@ -120,7 +122,7 @@ export async function middleware(request: NextRequest) {
 async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, SECRET);
-    return payload as { id: string; role: string; email: string; jti?: string };
+    return payload as { id: string; nombre?: string; role: string; email: string; jti?: string };
   } catch {
     return null;
   }
@@ -154,5 +156,6 @@ export const config = {
     "/api/contratos/:path*",
     "/api/config/:path*",
     "/api/lanzas/:path*",
+    "/api/actividad/:path*",
   ],
 };

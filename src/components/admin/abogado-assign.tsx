@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTeamStore } from "@/lib/stores/team-store";
-import { updateCaso } from "@/lib/db";
+import { updateCaso, logActividad } from "@/lib/db";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ export default function AbogadoAssign({
     }
     setSaving(true);
     await updateCaso(casoId, { abogado: nombre });
+    logActividad("reasigno_abogado", { caso_id: casoId, detalle: nombre });
     setSaving(false);
     setEditing(false);
     toast.success(`Caso reasignado a ${nombre}`);
