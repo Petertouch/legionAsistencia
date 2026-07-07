@@ -397,17 +397,17 @@ export async function createSeguimiento(data: {
 
 // ── Dashboard Stats ─────────────────────────────────────────────
 export async function getDashboardStats(params?: { abogado?: string }) {
-  const supabase = createClient();
-  const { data: suscriptoresData } = await supabase.from("suscriptores").select("id, estado_pago");
-  const suscriptores = (suscriptoresData || []) as { id: string; estado_pago: string }[];
-  let casos = [...MOCK_CASOS];
-  if (params?.abogado) casos = casos.filter((c) => c.abogado === params.abogado);
+  const suscriptoresRes = await fetch("/api/suscriptores");
+  const suscriptores = (suscriptoresRes.ok ? await suscriptoresRes.json() : []) as { id: string; estado_pago: string }[];
+
+  // Casos reales desde la BD (no mock).
+  const casosRes = await fetch(`/api/casos${params?.abogado ? `?abogado=${encodeURIComponent(params.abogado)}` : ""}`);
+  const casos: Caso[] = casosRes.ok ? await casosRes.json() : [];
   const leads = MOCK_LEADS;
 
   const casosActivos = casos.filter((c) => c.etapa !== "Cerrado");
   const casosStale = casosActivos.filter((c) => {
-    const pipeline = PIPELINES[c.area];
-    const stage = pipeline.stages[c.etapa_index];
+    const stage = PIPELINES[c.area as CaseArea]?.stages[c.etapa_index];
     return stage && getDaysInStage(c.fecha_ingreso_etapa) > stage.expectedDays * 2;
   });
   const casosDeadline = casosActivos.filter((c) => {
