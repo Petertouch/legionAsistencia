@@ -46,6 +46,7 @@ export default function CasoDetailPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingAbogado, setEditingAbogado] = useState(false);
   const [savingAbogado, setSavingAbogado] = useState(false);
+  const [editingDeadline, setEditingDeadline] = useState(false);
   const abogadosTeam = useTeamStore((s) => s.abogados);
   const { user, isAdmin } = useAuth();
 
@@ -165,6 +166,16 @@ export default function CasoDetailPage() {
     setEditingAbogado(false);
     invalidateAll();
     toast.success(`Caso reasignado a ${nombre}`);
+  };
+
+  const handleSetDeadline = async (value: string) => {
+    setEditingDeadline(false);
+    const nuevo = value || null;
+    if (nuevo === (caso.fecha_limite ? caso.fecha_limite.slice(0, 10) : null)) return;
+    await updateCaso(caso.id, { fecha_limite: nuevo });
+    logActividad("cambio_deadline", { caso_id: caso.id, detalle: nuevo || "sin fecha" });
+    invalidateAll();
+    toast.success(nuevo ? "Deadline actualizado" : "Deadline quitado");
   };
 
   const handleAdvance = async () => { await advanceCaso(caso.id); invalidateAll(); toast.success("Caso avanzado"); };
@@ -335,8 +346,27 @@ export default function CasoDetailPage() {
         </Card>
         <Card className="flex items-center gap-2 md:gap-3">
           <CalendarClock className={`w-4 h-4 flex-shrink-0 ${deadlineDays !== null && deadlineDays <= 3 ? "text-red-600" : "text-oro"}`} />
-          <div><p className="text-gray-400 text-[10px]">Deadline</p>
-            <p className={`text-xs md:text-sm ${deadlineDays !== null && deadlineDays <= 3 ? "text-red-600 font-bold" : "text-gray-900"}`}>{deadlineDays !== null ? `${deadlineDays}d` : "—"}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-400 text-[10px]">Deadline</p>
+            {isAdmin && editingDeadline ? (
+              <input
+                type="date"
+                autoFocus
+                defaultValue={caso.fecha_limite ? caso.fecha_limite.slice(0, 10) : ""}
+                onChange={(e) => handleSetDeadline(e.target.value)}
+                onBlur={() => setEditingDeadline(false)}
+                className="w-full bg-white border border-oro/40 text-gray-900 text-xs rounded-md px-1 py-0.5 -ml-0.5 focus:outline-none focus:ring-1 focus:ring-oro/30"
+              />
+            ) : isAdmin ? (
+              <button type="button" onClick={() => setEditingDeadline(true)} className="group flex items-center gap-1 text-left w-full" title="Editar deadline">
+                <span className={`text-xs md:text-sm truncate ${deadlineDays !== null && deadlineDays <= 3 ? "text-red-600 font-bold" : "text-gray-900"}`}>
+                  {caso.fecha_limite ? `${new Date(caso.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}${deadlineDays !== null ? ` · ${deadlineDays}d` : ""}` : "Sin fecha"}
+                </span>
+                <Pencil className="w-3 h-3 text-gray-300 group-hover:text-oro transition-colors flex-shrink-0" />
+              </button>
+            ) : (
+              <p className={`text-xs md:text-sm ${deadlineDays !== null && deadlineDays <= 3 ? "text-red-600 font-bold" : "text-gray-900"}`}>{deadlineDays !== null ? `${deadlineDays}d` : "—"}</p>
+            )}
           </div>
         </Card>
       </div>
