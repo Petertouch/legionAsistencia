@@ -47,6 +47,10 @@ export default function CasoDetailPage() {
   const [editingAbogado, setEditingAbogado] = useState(false);
   const [savingAbogado, setSavingAbogado] = useState(false);
   const [editingDeadline, setEditingDeadline] = useState(false);
+  const [editingTitulo, setEditingTitulo] = useState(false);
+  const [tituloVal, setTituloVal] = useState("");
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descVal, setDescVal] = useState("");
   const abogadosTeam = useTeamStore((s) => s.abogados);
   const { user, isAdmin } = useAuth();
 
@@ -178,6 +182,26 @@ export default function CasoDetailPage() {
     toast.success(nuevo ? "Deadline actualizado" : "Deadline quitado");
   };
 
+  const handleSaveTitulo = async () => {
+    const v = tituloVal.trim();
+    setEditingTitulo(false);
+    if (!v || v === caso.titulo) return;
+    await updateCaso(caso.id, { titulo: v });
+    logActividad("edito_caso", { caso_id: caso.id, detalle: "Editó el título" });
+    invalidateAll();
+    toast.success("Título actualizado");
+  };
+
+  const handleSaveDesc = async () => {
+    const v = descVal.trim();
+    setEditingDesc(false);
+    if (v === (caso.descripcion || "")) return;
+    await updateCaso(caso.id, { descripcion: v });
+    logActividad("edito_caso", { caso_id: caso.id, detalle: "Editó la descripción" });
+    invalidateAll();
+    toast.success("Descripción actualizada");
+  };
+
   const handleAdvance = async () => { await advanceCaso(caso.id); invalidateAll(); toast.success("Caso avanzado"); };
   const handleRevert = async () => { await revertCaso(caso.id); invalidateAll(); toast.success("Caso devuelto"); };
 
@@ -239,7 +263,26 @@ export default function CasoDetailPage() {
         <div className="flex items-center gap-2 md:gap-4 mb-2">
           <Link href="/admin/casos" className="text-gray-400 hover:text-gray-900 transition-colors p-1"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="flex-1 min-w-0">
-            <h2 className="text-gray-900 text-base md:text-xl font-bold truncate">{caso.titulo}</h2>
+            {isAdmin && editingTitulo ? (
+              <input
+                autoFocus
+                value={tituloVal}
+                onChange={(e) => setTituloVal(e.target.value)}
+                onBlur={handleSaveTitulo}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSaveTitulo(); } if (e.key === "Escape") setEditingTitulo(false); }}
+                className="w-full bg-white border border-oro/40 text-gray-900 text-base md:text-xl font-bold rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-oro/30"
+              />
+            ) : (
+              <h2 className="text-gray-900 text-base md:text-xl font-bold flex items-center gap-1.5 group">
+                <span className="truncate">{caso.titulo}</span>
+                {isAdmin && (
+                  <button onClick={() => { setTituloVal(caso.titulo); setEditingTitulo(true); }} title="Editar título"
+                    className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-oro transition-colors flex-shrink-0">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </h2>
+            )}
             <p className="text-gray-500 text-xs md:text-sm truncate">{caso.suscriptor_nombre} — {caso.area}</p>
           </div>
           <Badge>{caso.prioridad}</Badge>
@@ -455,8 +498,32 @@ export default function CasoDetailPage() {
 
       {/* Description */}
       <Card>
-        <h4 className="text-gray-900 text-xs md:text-sm font-bold mb-2">{isConsulta ? "Pregunta del consultante" : "Descripción del caso"}</h4>
-        <p className="text-gray-600 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{caso.descripcion}</p>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-gray-900 text-xs md:text-sm font-bold">{isConsulta ? "Pregunta del consultante" : "Descripción del caso"}</h4>
+          {isAdmin && !isConsulta && !editingDesc && (
+            <button onClick={() => { setDescVal(caso.descripcion || ""); setEditingDesc(true); }}
+              className="flex items-center gap-1 text-gray-400 hover:text-oro text-xs transition-colors">
+              <Pencil className="w-3.5 h-3.5" /> Editar
+            </button>
+          )}
+        </div>
+        {isAdmin && editingDesc ? (
+          <div className="space-y-2">
+            <textarea
+              autoFocus
+              value={descVal}
+              onChange={(e) => setDescVal(e.target.value)}
+              rows={5}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-xs md:text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-oro/40 resize-none leading-relaxed"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setEditingDesc(false)} className="text-gray-400 hover:text-gray-900 text-xs px-3 py-1.5 transition-colors">Cancelar</button>
+              <button onClick={handleSaveDesc} className="bg-oro hover:bg-oro/90 text-jungle-dark text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">Guardar</button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-600 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{caso.descripcion}</p>
+        )}
       </Card>
 
       {/* Chat con el cliente */}

@@ -32,6 +32,7 @@ const TIPO_LABEL: Record<string, string> = {
   subio_documento: "Subió documento",
   reasigno_abogado: "Reasignó abogado",
   cambio_deadline: "Cambió el deadline",
+  edito_caso: "Editó el caso",
   agrego_nota: "Agregó nota",
   envio_mensaje: "Envió un mensaje",
 };
