@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
-import ChatComposer, { renderRich } from "@/components/chat-composer";
+import ChatComposer, { renderMessage, htmlToText } from "@/components/chat-composer";
 import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
@@ -39,7 +39,6 @@ export default function ClientCaseDetailPage({ params }: Props) {
     } catch { /* silent */ }
   }, [id]);
   const [tab, setTab] = useState<Tab>("info");
-  const [chatInput, setChatInput] = useState("");
   const [chatFullscreen, setChatFullscreen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [docs, setDocs] = useState<any[]>([]);
@@ -123,17 +122,16 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const isCerrado = caso.etapa === "Cerrado";
   const daysInStage = Math.floor((Date.now() - new Date(caso.fecha_ingreso_etapa).getTime()) / 86400000);
 
-  const handleSendMessage = async () => {
-    const text = chatInput.trim();
+  const handleSendMessage = async (html: string) => {
+    const text = htmlToText(html).trim();
     if (!text) return;
-    setChatInput("");
     // Optimista: se muestra al instante y se confirma con el refetch.
-    setCaseMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: "cliente", sender_name: session.nombre, content: text, created_at: new Date().toISOString() }]);
+    setCaseMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: "cliente", sender_name: session.nombre, content: html, created_at: new Date().toISOString() }]);
     try {
       const r = await fetch("/api/client/mensajes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ caso_id: caso.id, suscriptor_id: session.suscriptor_id, nombre: session.nombre, contenido: text }),
+        body: JSON.stringify({ caso_id: caso.id, suscriptor_id: session.suscriptor_id, nombre: session.nombre, contenido: html }),
       });
       if (!r.ok) { toast.error("No se pudo enviar el mensaje"); }
       fetchMessages();
@@ -436,7 +434,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
                 <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                     {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                    {msg.content && <div>{renderRich(msg.content)}</div>}
+                    {msg.content && renderMessage(msg.content)}
                   {msg.archivo_url && (
                     <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -453,7 +451,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
               ))}
               <div ref={!chatFullscreen ? messagesEndRef : undefined} />
             </div>
-            <ChatComposer value={chatInput} onChange={setChatInput} onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
+            <ChatComposer onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
           </div>
 
           {/* Mobile: tap to open fullscreen */}
@@ -477,7 +475,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
               <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                   {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                  {msg.content && <div>{renderRich(msg.content)}</div>}
+                  {msg.content && renderMessage(msg.content)}
                   {msg.archivo_url && (
                     <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -492,7 +490,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
             <div ref={chatFullscreen ? messagesEndRef : undefined} />
           </div>
           <div className="flex-shrink-0">
-            <ChatComposer value={chatInput} onChange={setChatInput} onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
+            <ChatComposer onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
           </div>
         </div>
       )}

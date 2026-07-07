@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { logActividad } from "@/lib/db";
-import ChatComposer, { renderRich } from "@/components/chat-composer";
+import ChatComposer, { renderMessage, htmlToText } from "@/components/chat-composer";
 import { MessageCircle, Lock, Scale, User, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,7 +15,6 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
   const { user, isAbogado } = useAuth();
   const canSend = isAbogado; // solo el abogado puede escribir; el admin solo ve
   const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const prevCount = useRef(0);
@@ -45,16 +44,15 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
     prevCount.current = msgs.length;
   }, [msgs]);
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (html: string) => {
+    const text = htmlToText(html).trim();
     if (!text) return;
-    setInput("");
-    setMsgs((prev) => [...prev, { id: `tmp-${Date.now()}`, autor_tipo: "abogado", autor_nombre: user?.nombre || "Abogado", contenido: text, created_at: new Date().toISOString() }]);
+    setMsgs((prev) => [...prev, { id: `tmp-${Date.now()}`, autor_tipo: "abogado", autor_nombre: user?.nombre || "Abogado", contenido: html, created_at: new Date().toISOString() }]);
     try {
       const r = await fetch("/api/mensajes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ caso_id: casoId, contenido: text }),
+        body: JSON.stringify({ caso_id: casoId, contenido: html }),
       });
       if (!r.ok) { const d = await r.json().catch(() => ({})); toast.error(d.error || "No se pudo enviar"); }
       else logActividad("envio_mensaje", { caso_id: casoId, detalle: text.slice(0, 60) });
@@ -115,7 +113,7 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
                 mine ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
               }`}>
                 <p className={`text-[10px] font-medium mb-0.5 ${mine ? "text-oro" : "text-blue-600"}`}>{m.autor_nombre}</p>
-                {m.contenido && <div>{renderRich(m.contenido)}</div>}
+                {m.contenido && renderMessage(m.contenido)}
                 {m.archivo_url && (
                   <a href={m.archivo_url} target="_blank" rel="noopener noreferrer"
                     className={`flex items-center gap-2 mt-1 px-2.5 py-2 rounded-lg ${mine ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -143,8 +141,6 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
         <>
           <input ref={fileRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={onPickFile} disabled={uploading} />
           <ChatComposer
-            value={input}
-            onChange={setInput}
             onSend={send}
             uploading={uploading}
             onAttach={() => fileRef.current?.click()}
