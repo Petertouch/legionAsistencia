@@ -11,6 +11,7 @@ import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import StageChecklist from "@/components/admin/stage-checklist";
 import CasoChat from "@/components/admin/caso-chat";
+import PlanConsumo from "@/components/admin/plan-consumo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ArrowLeft, ChevronLeft, ChevronRight, User, Scale, CalendarClock, Clock, Phone, MessageSquare, Calendar, StickyNote, Check, Share2, Copy, Plus, Send, CheckCircle2, Pencil, Trash2, FileText, Upload, Download, Loader2, File } from "lucide-react";
 import { toast } from "sonner";
@@ -309,6 +310,7 @@ export default function CasoDetailPage() {
               </>
             )}
           </div>
+          {caso.area !== "Consulta" && <PlanConsumo suscriptorId={caso.suscriptor_id} />}
           {caso.etapa_index > 0 && (
             <Button size="sm" variant="ghost" onClick={handleRevert}>
               <ChevronLeft className="w-4 h-4" /> <span className="hidden sm:inline">Devolver</span>
