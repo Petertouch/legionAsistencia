@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { logActividad } from "@/lib/db";
-import { MessageCircle, Send, Lock, Scale, User, Paperclip, Download, FileText, Loader2 } from "lucide-react";
+import ChatComposer, { renderRich } from "@/components/chat-composer";
+import { MessageCircle, Lock, Scale, User, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface Msg { id: string; autor_tipo: string; autor_nombre: string; contenido: string; created_at: string; archivo_url?: string | null; archivo_nombre?: string | null }
@@ -33,8 +34,7 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
   }, [fetchMsgs]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
-  const send = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const send = async () => {
     const text = input.trim();
     if (!text) return;
     setInput("");
@@ -104,7 +104,7 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
                 mine ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
               }`}>
                 <p className={`text-[10px] font-medium mb-0.5 ${mine ? "text-oro" : "text-blue-600"}`}>{m.autor_nombre}</p>
-                {m.contenido && <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">{m.contenido}</p>}
+                {m.contenido && <div>{renderRich(m.contenido)}</div>}
                 {m.archivo_url && (
                   <a href={m.archivo_url} target="_blank" rel="noopener noreferrer"
                     className={`flex items-center gap-2 mt-1 px-2.5 py-2 rounded-lg ${mine ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -130,23 +130,17 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
 
       {/* Input o aviso de solo-lectura */}
       {canSend ? (
-        <form onSubmit={send} className="border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 bg-white">
+        <>
           <input ref={fileRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={onPickFile} disabled={uploading} />
-          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} title="Adjuntar PDF, Word o Excel"
-            className="text-gray-400 hover:text-jungle-dark p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-40">
-            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
-          </button>
-          <input
-            type="text"
+          <ChatComposer
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={setInput}
+            onSend={send}
+            uploading={uploading}
+            onAttach={() => fileRef.current?.click()}
             placeholder="Escribe un mensaje al cliente..."
-            className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
           />
-          <button type="submit" disabled={!input.trim()} className="bg-jungle-dark text-white p-2.5 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0">
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+        </>
       ) : (
         <div className="border-t border-gray-200 px-4 py-3 flex items-center gap-2 bg-gray-50 text-gray-400 text-xs">
           <Lock className="w-3.5 h-3.5" /> Como administrador solo puedes ver este chat. Solo el abogado asignado puede responder.

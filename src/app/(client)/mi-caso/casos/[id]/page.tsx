@@ -4,11 +4,12 @@ import { useEffect, useState, useRef, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useClientStore } from "@/lib/stores/client-store";
+import ChatComposer, { renderRich } from "@/components/chat-composer";
 import type { Caso } from "@/lib/mock-data";
 import { PIPELINES } from "@/lib/pipelines";
 import {
   ArrowLeft, Clock, CalendarClock, Check, ArrowRight, User, MessageCircle,
-  Send, X, FileText, Upload, Download, Trash2, Loader2, File, Scale, Paperclip,
+  X, FileText, Upload, Download, Trash2, Loader2, File, Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -113,12 +114,10 @@ export default function ClientCaseDetailPage({ params }: Props) {
   const isCerrado = caso.etapa === "Cerrado";
   const daysInStage = Math.floor((Date.now() - new Date(caso.fecha_ingreso_etapa).getTime()) / 86400000);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async () => {
     const text = chatInput.trim();
     if (!text) return;
     setChatInput("");
-    inputRef.current?.focus();
     // Optimista: se muestra al instante y se confirma con el refetch.
     setCaseMessages((prev) => [...prev, { id: `tmp-${Date.now()}`, sender: "cliente", sender_name: session.nombre, content: text, created_at: new Date().toISOString() }]);
     try {
@@ -428,7 +427,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
                 <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                     {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                    {msg.content && <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>}
+                    {msg.content && <div>{renderRich(msg.content)}</div>}
                   {msg.archivo_url && (
                     <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -445,17 +444,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
               ))}
               <div ref={!chatFullscreen ? messagesEndRef : undefined} />
             </div>
-            <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 bg-white">
-              <button type="button" onClick={() => chatFileRef.current?.click()} disabled={chatUploading} title="Adjuntar PDF, Word o Excel"
-                className="text-gray-400 hover:text-jungle-dark p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-40">
-                {chatUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
-              </button>
-              <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Escribe un mensaje..."
-                className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none" />
-              <button type="submit" disabled={!chatInput.trim()} className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0">
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+            <ChatComposer value={chatInput} onChange={setChatInput} onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
           </div>
 
           {/* Mobile: tap to open fullscreen */}
@@ -479,7 +468,7 @@ export default function ClientCaseDetailPage({ params }: Props) {
               <div key={msg.id} className={`flex ${msg.sender === "cliente" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.sender === "cliente" ? "bg-jungle-dark text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"}`}>
                   {msg.sender === "abogado" && <p className="text-[10px] font-medium text-oro mb-0.5">{msg.sender_name}</p>}
-                  {msg.content && <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>}
+                  {msg.content && <div>{renderRich(msg.content)}</div>}
                   {msg.archivo_url && (
                     <a href={msg.archivo_url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 mt-1 px-2.5 py-1.5 rounded-lg ${msg.sender === "cliente" ? "bg-white/15 hover:bg-white/25" : "bg-gray-50 border border-gray-200 hover:bg-gray-100"} transition-colors`}>
@@ -493,17 +482,9 @@ export default function ClientCaseDetailPage({ params }: Props) {
             ))}
             <div ref={chatFullscreen ? messagesEndRef : undefined} />
           </div>
-          <form onSubmit={handleSendMessage} className="border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 bg-white flex-shrink-0">
-            <button type="button" onClick={() => chatFileRef.current?.click()} disabled={chatUploading} title="Adjuntar PDF, Word o Excel"
-              className="text-gray-400 hover:text-jungle-dark p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 disabled:opacity-40">
-              {chatUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
-            </button>
-            <input ref={inputRef} type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Escribe un mensaje..."
-              className="flex-1 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2 rounded-full border border-gray-200 focus:border-jungle-dark/40 focus:outline-none" />
-            <button type="submit" disabled={!chatInput.trim()} className="bg-jungle-dark text-white p-2 rounded-full disabled:opacity-30 hover:bg-jungle transition-colors flex-shrink-0">
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+          <div className="flex-shrink-0">
+            <ChatComposer value={chatInput} onChange={setChatInput} onSend={handleSendMessage} uploading={chatUploading} onAttach={() => chatFileRef.current?.click()} />
+          </div>
         </div>
       )}
     </div>
