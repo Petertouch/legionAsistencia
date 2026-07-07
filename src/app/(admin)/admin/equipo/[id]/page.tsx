@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTeamStore, type MemberEstado } from "@/lib/stores/team-store";
 import { MOCK_CASOS } from "@/lib/mock-data";
-import type { CaseArea } from "@/lib/pipelines";
+import { getAreas, type CaseArea } from "@/lib/pipelines";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import {
@@ -14,8 +14,6 @@ import {
   Power, PowerOff, BookOpen, GraduationCap, Upload, X as XIcon, Loader2, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-
-const ALL_AREAS: CaseArea[] = ["Disciplinario", "Penal Militar", "Familia", "Civil", "Consumidor", "Documentos"];
 
 const AREA_COLORS: Record<string, string> = {
   Disciplinario: "bg-indigo-500/20 border-indigo-500/30 text-indigo-300",
@@ -317,7 +315,7 @@ export default function MemberDetailPage({ params }: Props) {
               <Scale className="w-4 h-4 text-gray-400" /> Áreas del derecho habilitadas
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              {ALL_AREAS.map((area) => {
+              {getAreas().filter((a) => a !== "Consulta").map((area) => {
                 const enabled = member.areas_habilitadas.includes(area);
                 const isEspecialidad = member.especialidad === area;
                 return (

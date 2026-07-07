@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTeamStore, type MemberRole } from "@/lib/stores/team-store";
-import type { CaseArea } from "@/lib/pipelines";
+import { getAreas, type CaseArea } from "@/lib/pipelines";
 import Button from "@/components/ui/button";
 import { ArrowLeft, Save, CheckCircle2, Scale, GraduationCap, ShieldCheck, Upload, X as XIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-const ALL_AREAS: CaseArea[] = ["Disciplinario", "Penal Militar", "Familia", "Civil", "Consumidor", "Documentos"];
 const COLORS = ["#3b82f6", "#a855f7", "#22c55e", "#ef4444", "#f59e0b", "#ec4899", "#06b6d4", "#8b5cf6"];
 
 export default function NuevoMiembroPage() {
@@ -193,7 +191,7 @@ export default function NuevoMiembroPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
               <label className={labelCls}>Áreas habilitadas *</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
-                {ALL_AREAS.map((area) => {
+                {getAreas().filter((a) => a !== "Consulta").map((area) => {
                   const enabled = form.areas_habilitadas.includes(area);
                   return (
                     <button key={area} onClick={() => toggleArea(area)}
