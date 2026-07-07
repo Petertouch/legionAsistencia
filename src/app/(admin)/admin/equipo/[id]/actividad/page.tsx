@@ -7,7 +7,7 @@ import Badge from "@/components/ui/badge";
 import { PIPELINES, getDaysInStage, getDaysUntilDeadline, getStaleLevel } from "@/lib/pipelines";
 import {
   ArrowLeft, Scale, CheckCircle2, FileText, Clock, AlertTriangle, CalendarClock,
-  Briefcase, Layers, Activity,
+  Briefcase, Layers, Activity, HelpCircle, MessageSquare,
 } from "lucide-react";
 
 interface CasoAsignado {
@@ -17,6 +17,7 @@ interface CasoAsignado {
 }
 interface Respondido { id: string; titulo: string; area: string; suscriptor_nombre: string | null; respondido_at: string | null; }
 interface Documento { id: string; nombre: string; caso_id: string | null; created_at: string; }
+interface ConsultaGratuita { id: string; nombre: string; apellido: string; area: string; pregunta: string; respondido_at: string | null; }
 interface LogEntry { id: string; tipo: string; detalle: string | null; caso_id: string | null; created_at: string; }
 
 const TIPO_LABEL: Record<string, string> = {
@@ -27,16 +28,32 @@ const TIPO_LABEL: Record<string, string> = {
   movio_caso: "Movió el caso",
   marco_checklist: "Marcó checklist",
   respondio_consulta: "Respondió consulta",
+  respondio_consulta_gratuita: "Respondió consulta gratuita",
   subio_documento: "Subió documento",
   reasigno_abogado: "Reasignó abogado",
   agrego_nota: "Agregó nota",
   envio_mensaje: "Envió un mensaje",
 };
+
+type Periodo = "hoy" | "semana" | "mes" | "todo";
+const PERIODOS: { id: Periodo; label: string }[] = [
+  { id: "hoy", label: "Hoy" },
+  { id: "semana", label: "7 días" },
+  { id: "mes", label: "30 días" },
+  { id: "todo", label: "Todo" },
+];
+function periodStart(p: Periodo): number {
+  if (p === "todo") return 0;
+  if (p === "hoy") { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  return Date.now() - (p === "semana" ? 7 : 30) * 86400000;
+}
+
 interface ActividadData {
   miembro: { id: string; nombre: string; role: string; estado: string; max_casos: number; especialidad: string; fecha_ingreso: string };
   asignados: CasoAsignado[];
   respondidos: Respondido[];
   documentos: Documento[];
+  consultas_gratuitas: ConsultaGratuita[];
 }
 
 function fmt(v?: string | null) {
@@ -56,6 +73,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
   const [data, setData] = useState<ActividadData | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [periodo, setPeriodo] = useState<Periodo>("semana");
 
   useEffect(() => {
     fetch(`/api/equipo/${id}/actividad`)
@@ -63,7 +81,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-    fetch(`/api/actividad?actor_id=${id}&limit=100`)
+    fetch(`/api/actividad?actor_id=${id}&limit=200`)
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setLog(Array.isArray(d) ? d : []))
       .catch(() => setLog([]));
@@ -77,9 +95,18 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
     </div>
   );
 
-  const { miembro, asignados, respondidos, documentos } = data;
+  const { miembro, asignados, respondidos, documentos, consultas_gratuitas } = data;
   const activos = asignados.filter((c) => c.etapa !== "Cerrado");
   const cerrados = asignados.filter((c) => c.etapa === "Cerrado");
+
+  // Actividad filtrada por periodo (para "qué hizo hoy / esta semana")
+  const desde = periodStart(periodo);
+  const logPeriodo = log.filter((l) => new Date(l.created_at).getTime() >= desde);
+  const resumenTipos: Record<string, number> = {};
+  for (const l of logPeriodo) resumenTipos[l.tipo] = (resumenTipos[l.tipo] || 0) + 1;
+  const resumenOrdenado = Object.entries(resumenTipos).sort((a, b) => b[1] - a[1]);
+  const consultasPeriodo = (consultas_gratuitas || []).filter((c) => c.respondido_at && new Date(c.respondido_at).getTime() >= desde);
+  const periodoLabel = PERIODOS.find((p) => p.id === periodo)?.label || "";
 
   // Alertas
   const vencidos = activos.filter((c) => { const d = getDaysUntilDeadline(c.fecha_limite); return d !== null && d < 0; });
@@ -108,7 +135,8 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
     { label: "Casos asignados", value: asignados.length, icon: Briefcase, color: "text-oro" },
     { label: "Activos", value: activos.length, icon: Scale, color: "text-blue-600" },
     { label: "Cerrados", value: cerrados.length, icon: CheckCircle2, color: "text-green-600" },
-    { label: "Consultas respondidas", value: respondidos.length, icon: Activity, color: "text-purple-600" },
+    { label: "Consultas (casos)", value: respondidos.length, icon: MessageSquare, color: "text-purple-600" },
+    { label: "Consultas gratis", value: (consultas_gratuitas || []).length, icon: HelpCircle, color: "text-purple-600" },
     { label: "Documentos subidos", value: documentos.length, icon: FileText, color: "text-gray-600" },
     { label: "Carga", value: miembro.max_casos > 0 ? `${activos.length}/${miembro.max_casos}` : `${activos.length}`, icon: Layers, color: carga > 100 ? "text-red-600" : "text-gray-600" },
   ];
@@ -139,30 +167,73 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
         ))}
       </div>
 
-      {/* Actividad reciente (audit log) */}
+      {/* Trabajo del abogado por periodo */}
       <Card>
-        <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-oro" /> Actividad reciente</h3>
-        {log.length === 0 ? (
-          <p className="text-gray-400 text-sm">Sin actividad registrada aún.</p>
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-oro" /> Qué hizo el abogado</h3>
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            {PERIODOS.map((p) => (
+              <button key={p.id} onClick={() => setPeriodo(p.id)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${periodo === p.id ? "bg-white text-oro shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {logPeriodo.length === 0 ? (
+          <p className="text-gray-400 text-sm py-3">Sin actividad registrada en este periodo. {periodo !== "todo" && "Prueba con un rango mayor."}</p>
         ) : (
-          <div className="relative pl-5 space-y-3">
-            <div className="absolute left-1.5 top-2 bottom-2 w-px bg-gray-100" />
-            {log.slice(0, 40).map((l) => (
-              <div key={l.id} className="relative flex items-start gap-2">
-                <div className="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full border-2 border-oro bg-white" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-gray-800 text-sm">
-                    <span className="font-medium">{TIPO_LABEL[l.tipo] || l.tipo}</span>
-                    {l.detalle && <span className="text-gray-500"> · {l.detalle}</span>}
-                    {l.caso_id && <Link href={`/admin/casos/${l.caso_id}`} className="text-oro text-xs ml-1 hover:underline">ver caso</Link>}
-                  </p>
-                  <p className="text-gray-400 text-[11px]">{new Date(l.created_at).toLocaleString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+          <>
+            <p className="text-gray-500 text-xs mb-3"><strong className="text-gray-900">{logPeriodo.length}</strong> acciones en los últimos {periodoLabel.toLowerCase()}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+              {resumenOrdenado.map(([tipo, n]) => (
+                <div key={tipo} className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                  <p className="text-gray-900 text-lg font-bold leading-none">{n}</p>
+                  <p className="text-gray-500 text-[10px] mt-1">{TIPO_LABEL[tipo] || tipo}</p>
                 </div>
+              ))}
+            </div>
+            <div className="relative pl-5 space-y-3 border-t border-gray-100 pt-3">
+              <div className="absolute left-1.5 top-5 bottom-2 w-px bg-gray-100" />
+              {logPeriodo.slice(0, 60).map((l) => (
+                <div key={l.id} className="relative flex items-start gap-2">
+                  <div className="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full border-2 border-oro bg-white" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-800 text-sm">
+                      <span className="font-medium">{TIPO_LABEL[l.tipo] || l.tipo}</span>
+                      {l.detalle && <span className="text-gray-500"> · {l.detalle}</span>}
+                      {l.caso_id && <Link href={`/admin/casos/${l.caso_id}`} className="text-oro text-xs ml-1 hover:underline">ver caso</Link>}
+                    </p>
+                    <p className="text-gray-400 text-[11px]">{new Date(l.created_at).toLocaleString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* Consultas gratuitas del blog respondidas */}
+      {(consultas_gratuitas || []).length > 0 && (
+        <Card>
+          <h3 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-purple-600" /> Consultas gratuitas respondidas ({consultas_gratuitas.length})
+            {periodo !== "todo" && consultasPeriodo.length > 0 && <span className="text-purple-600 text-[11px] font-normal">· {consultasPeriodo.length} en {periodoLabel.toLowerCase()}</span>}
+          </h3>
+          <div className="space-y-1.5">
+            {consultas_gratuitas.slice(0, 15).map((c) => (
+              <div key={c.id} className="p-2.5 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-900 text-sm font-medium truncate">{c.nombre} {c.apellido}</span>
+                  <span className="text-gray-400 text-[11px] flex-shrink-0">{fmt(c.respondido_at)}</span>
+                </div>
+                <p className="text-gray-500 text-xs truncate">{c.area} · {c.pregunta}</p>
               </div>
             ))}
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Alertas */}
       {(vencidos.length > 0 || proximos.length > 0 || estancados.length > 0) && (

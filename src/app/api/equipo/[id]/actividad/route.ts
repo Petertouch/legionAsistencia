@@ -20,11 +20,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const casoCols =
       "id, titulo, area, etapa, etapa_index, prioridad, fecha_limite, fecha_ingreso_etapa, created_at, updated_at, suscriptor_nombre, respondido_por, respondido_at";
 
-    const [asigId, asigNombre, respondidosRes, documentosRes] = await Promise.all([
+    const [asigId, asigNombre, respondidosRes, documentosRes, consultasRes] = await Promise.all([
       supabase.from("casos").select(casoCols).eq("abogado_id", id).order("updated_at", { ascending: false }),
       supabase.from("casos").select(casoCols).eq("abogado", nombre).order("updated_at", { ascending: false }),
       supabase.from("casos").select("id, titulo, area, suscriptor_nombre, respondido_at").eq("respondido_por", nombre).order("respondido_at", { ascending: false }),
       supabase.from("documentos").select("id, nombre, caso_id, created_at").eq("subido_por", nombre).order("created_at", { ascending: false }),
+      supabase.from("consultas_blog").select("id, nombre, apellido, area, pregunta, respondido_at").eq("respondido_por", nombre).order("respondido_at", { ascending: false }),
     ]);
 
     // Une por abogado_id (confiable) y por nombre (respaldo para casos sin migrar), sin duplicar.
@@ -39,6 +40,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       asignados,
       respondidos: respondidosRes.data || [],
       documentos: documentosRes.data || [],
+      consultas_gratuitas: consultasRes.data || [],
     });
   } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

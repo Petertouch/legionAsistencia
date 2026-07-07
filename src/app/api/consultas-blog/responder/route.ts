@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMail } from "@/lib/mail";
+import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,18 @@ export async function POST(request: NextRequest) {
     if (updateErr) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
+
+    // Registrar en el audit log (actor de la sesión).
+    try {
+      const session = await getSession();
+      if (session) {
+        await supabase.from("actividad").insert({
+          actor_id: session.id, actor_nombre: session.nombre, actor_role: session.role,
+          caso_id: null, tipo: "respondio_consulta_gratuita",
+          detalle: (consulta.pregunta || "").slice(0, 60),
+        });
+      }
+    } catch { /* no bloquea la respuesta */ }
 
     // Send response email
     try {
