@@ -18,15 +18,15 @@ const nextConfig: NextConfig = {
               "font-src 'self'",
               "connect-src 'self' https://ezytsyqebczlpwbahmyw.supabase.co",
               "frame-src https://www.youtube.com https://youtube.com https://player.vimeo.com",
-              "frame-ancestors 'none'",
+              // Solo legalaidcol.com (y el propio dominio) pueden embeber la plataforma en un iframe.
+              "frame-ancestors 'self' https://www.legalaidcol.com https://legalaidcol.com",
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),
           },
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
+          // Nota: no se envía X-Frame-Options porque es todo-o-nada (DENY/SAMEORIGIN) y
+          // anularía el permiso a legalaidcol.com. El control de embebido lo hace
+          // frame-ancestors (CSP), soportado por todos los navegadores modernos.
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
