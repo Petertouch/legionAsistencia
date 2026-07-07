@@ -48,6 +48,46 @@ function periodStart(p: Periodo): number {
   return Date.now() - (p === "semana" ? 7 : 30) * 86400000;
 }
 
+// Clasificación de acciones para saber si "trabajó" o "solo miró".
+const ESCRITURA = new Set(["envio_mensaje", "agrego_nota", "respondio_consulta", "respondio_consulta_gratuita"]);
+const GESTION = new Set(["avanzo_etapa", "devolvio_etapa", "cerro_caso", "movio_caso", "marco_checklist", "subio_documento", "reasigno_abogado"]);
+const SESSION_GAP = 20 * 60 * 1000; // 20 min sin actividad = sesión distinta
+
+function durLabel(ms: number): string {
+  if (ms < 60000) return "< 1 min";
+  const m = Math.round(ms / 60000);
+  if (m < 60) return `${m} min`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+interface Sesion {
+  start: string; end: string; durMs: number;
+  casoTitulo: string | null; casoId: string | null;
+  tipos: Record<string, number>; escribio: boolean; gestiono: boolean;
+}
+
+// Agrupa el log en sesiones (acciones seguidas con < 20 min entre sí).
+function construirSesiones(log: LogEntry[]): Sesion[] {
+  const asc = [...log].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const out: Sesion[] = [];
+  let cur: (Sesion & { lastT: number }) | null = null;
+  for (const e of asc) {
+    const t = new Date(e.created_at).getTime();
+    if (!cur || t - cur.lastT > SESSION_GAP) {
+      cur = { start: e.created_at, end: e.created_at, durMs: 0, casoTitulo: null, casoId: e.caso_id, tipos: {}, escribio: false, gestiono: false, lastT: t };
+      out.push(cur);
+    } else {
+      cur.end = e.created_at; cur.lastT = t; cur.durMs = t - new Date(cur.start).getTime();
+    }
+    cur.tipos[e.tipo] = (cur.tipos[e.tipo] || 0) + 1;
+    if (e.tipo === "vio_caso" && !cur.casoTitulo && e.detalle) cur.casoTitulo = e.detalle;
+    if (!cur.casoId && e.caso_id) cur.casoId = e.caso_id;
+    if (ESCRITURA.has(e.tipo)) cur.escribio = true;
+    if (GESTION.has(e.tipo)) cur.gestiono = true;
+  }
+  return out.reverse(); // más reciente primero
+}
+
 interface ActividadData {
   miembro: { id: string; nombre: string; role: string; estado: string; max_casos: number; especialidad: string; fecha_ingreso: string };
   asignados: CasoAsignado[];
@@ -108,6 +148,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
   const resumenOrdenado = Object.entries(resumenTipos).sort((a, b) => b[1] - a[1]);
   const consultasPeriodo = (consultas_gratuitas || []).filter((c) => c.respondido_at && new Date(c.respondido_at).getTime() >= desde);
   const periodoLabel = PERIODOS.find((p) => p.id === periodo)?.label || "";
+  const sesiones = construirSesiones(logPeriodo);
 
   // Alertas
   const vencidos = activos.filter((c) => { const d = getDaysUntilDeadline(c.fecha_limite); return d !== null && d < 0; });
@@ -186,7 +227,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
           <p className="text-gray-400 text-sm py-3">Sin actividad registrada en este periodo. {periodo !== "todo" && "Prueba con un rango mayor."}</p>
         ) : (
           <>
-            <p className="text-gray-500 text-xs mb-3"><strong className="text-gray-900">{logPeriodo.length}</strong> acciones en los últimos {periodoLabel.toLowerCase()}</p>
+            <p className="text-gray-500 text-xs mb-3"><strong className="text-gray-900">{logPeriodo.length}</strong> acciones en <strong className="text-gray-900">{sesiones.length}</strong> {sesiones.length === 1 ? "sesión" : "sesiones"} · {periodoLabel.toLowerCase()}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
               {resumenOrdenado.map(([tipo, n]) => (
                 <div key={tipo} className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
@@ -195,28 +236,42 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
                 </div>
               ))}
             </div>
-            <div className="relative pl-5 space-y-3 border-t border-gray-100 pt-3">
-              <div className="absolute left-1.5 top-5 bottom-2 w-px bg-gray-100" />
-              {logPeriodo.slice(0, visibleCount).map((l) => (
-                <div key={l.id} className="relative flex items-start gap-2">
-                  <div className="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full border-2 border-oro bg-white" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-gray-800 text-sm">
-                      <span className="font-medium">{TIPO_LABEL[l.tipo] || l.tipo}</span>
-                      {l.detalle && <span className="text-gray-500"> · {l.detalle}</span>}
-                      {l.caso_id && <Link href={`/admin/casos/${l.caso_id}`} className="text-oro text-xs ml-1 hover:underline">ver caso</Link>}
+            <div className="border-t border-gray-100 pt-3 space-y-2">
+              {sesiones.slice(0, visibleCount).map((se, i) => {
+                const tag = se.escribio
+                  ? { t: "Escribió", c: "bg-green-100 text-green-700" }
+                  : se.gestiono
+                  ? { t: "Gestionó", c: "bg-blue-100 text-blue-700" }
+                  : { t: "Solo vio", c: "bg-gray-100 text-gray-500" };
+                return (
+                  <div key={i} className="rounded-lg border border-gray-100 p-3">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-900 text-sm font-medium truncate">{se.casoTitulo || "Actividad"}</span>
+                      </div>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${tag.c}`}>{tag.t}</span>
+                    </div>
+                    <p className="text-gray-400 text-[11px]">
+                      {new Date(se.start).toLocaleString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      {se.durMs >= 60000 ? ` · ${durLabel(se.durMs)} en el caso` : " · sesión breve"}
                     </p>
-                    <p className="text-gray-400 text-[11px]">{new Date(l.created_at).toLocaleString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                      {Object.entries(se.tipos).map(([t, n]) => (
+                        <span key={t} className="text-[10px] bg-gray-50 border border-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{n} · {TIPO_LABEL[t] || t}</span>
+                      ))}
+                      {se.casoId && <Link href={`/admin/casos/${se.casoId}`} className="text-oro text-[10px] hover:underline px-1">ver caso</Link>}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            {logPeriodo.length > visibleCount && (
+            {sesiones.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount((n) => n + 8)}
                 className="mt-3 w-full text-center text-oro hover:text-oro/80 text-xs font-medium py-2 rounded-lg border border-oro/20 hover:bg-amber-50 transition-colors"
               >
-                Cargar más ({logPeriodo.length - visibleCount} restantes)
+                Cargar más ({sesiones.length - visibleCount} restantes)
               </button>
             )}
           </>
