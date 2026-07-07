@@ -50,7 +50,16 @@ export default function ClientCaseDetailPage({ params }: Props) {
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { if (mounted && !session) router.replace("/mi-caso"); }, [mounted, session, router]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [caseMessages, chatFullscreen]);
+  // Bajar solo cuando llega un mensaje nuevo (no en cada refresco del polling).
+  const prevMsgLen = useRef(0);
+  useEffect(() => {
+    const isNew = caseMessages.length > prevMsgLen.current;
+    prevMsgLen.current = caseMessages.length;
+    if (isNew) messagesEndRef.current?.scrollIntoView({ block: "nearest" });
+  }, [caseMessages]);
+  useEffect(() => {
+    if (chatFullscreen) messagesEndRef.current?.scrollIntoView({ block: "nearest" });
+  }, [chatFullscreen]);
   // Cargar mensajes del caso + refrescar cada 6s (chat en vivo).
   useEffect(() => {
     if (!mounted || !id) return;

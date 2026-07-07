@@ -17,7 +17,8 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const prevCount = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchMsgs = useCallback(async () => {
@@ -32,7 +33,17 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
     const t = setInterval(fetchMsgs, 6000);
     return () => clearInterval(t);
   }, [fetchMsgs]);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  // Auto-scroll SOLO al llegar un mensaje nuevo y si ya estás cerca del fondo.
+  // Mueve solo el contenedor del chat, nunca la página (por eso no usa scrollIntoView).
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (prevCount.current === 0 || (msgs.length > prevCount.current && nearBottom)) {
+      el.scrollTop = el.scrollHeight;
+    }
+    prevCount.current = msgs.length;
+  }, [msgs]);
 
   const send = async () => {
     const text = input.trim();
@@ -87,7 +98,7 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
       </div>
 
       {/* Mensajes */}
-      <div className="max-h-[400px] overflow-y-auto px-4 py-3 space-y-3 bg-gray-50">
+      <div ref={listRef} className="max-h-[400px] overflow-y-auto px-4 py-3 space-y-3 bg-gray-50">
         {msgs.length === 0 && (
           <p className="text-gray-400 text-xs text-center py-8">Aún no hay mensajes en este caso.</p>
         )}
@@ -125,7 +136,6 @@ export default function CasoChat({ casoId, clienteNombre }: { casoId: string; cl
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
 
       {/* Input o aviso de solo-lectura */}
