@@ -12,7 +12,7 @@ import PipelineTabs from "@/components/admin/pipeline-tabs";
 import StatsBar from "@/components/admin/stats-bar";
 import KanbanBoard from "@/components/admin/kanban-board";
 import AbogadoAssign from "@/components/admin/abogado-assign";
-import { Plus, Search, LayoutGrid, List, Scale, MessageCircle, Clock, Check, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, LayoutList, Scale, MessageCircle, Clock, Check, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CasosPage() {
@@ -36,11 +36,22 @@ export default function CasosPage() {
     if (c.etapa !== "Cerrado") areaCounts[c.area] = (areaCounts[c.area] || 0) + 1;
   });
 
-  // Filtered cases for table view
+  // Filtered cases for table view (by area)
   const { data: filteredCasos } = useQuery({
     queryKey: ["casos", selectedArea, search, abogadoFilter],
     queryFn: () => getCasos({ area: selectedArea, search: search || undefined, abogado: abogadoFilter }),
   });
+
+  // Todos: todos los casos (sin filtrar por área), buscados en el cliente.
+  const q = search.trim().toLowerCase();
+  const todosCasos = (allCasos || []).filter((c) =>
+    !q ||
+    c.titulo?.toLowerCase().includes(q) ||
+    c.suscriptor_nombre?.toLowerCase().includes(q) ||
+    c.abogado?.toLowerCase().includes(q) ||
+    c.area?.toLowerCase().includes(q) ||
+    c.etapa?.toLowerCase().includes(q)
+  );
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -62,35 +73,44 @@ export default function CasosPage() {
       {/* Consultas gratuitas */}
       <ConsultasGratuitas />
 
-      {/* Pipeline tabs */}
-      <PipelineTabs selected={selectedArea} onSelect={setSelectedArea} counts={areaCounts} />
+      {/* Pipeline tabs (solo para vistas por área) */}
+      {viewMode !== "todos" && (
+        <PipelineTabs selected={selectedArea} onSelect={setSelectedArea} counts={areaCounts} />
+      )}
 
       {/* View toggle + search */}
       <div className="flex items-center gap-3">
         <div className="flex bg-gray-50 rounded-lg border border-gray-200 p-0.5">
           <button
+            onClick={() => setViewMode("todos")}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "todos" ? "bg-amber-100 text-oro" : "text-gray-400 hover:text-gray-900"}`}
+            title="Todos los casos"
+          >
+            <LayoutList className="w-4 h-4" /> Todos
+          </button>
+          <button
             onClick={() => setViewMode("kanban")}
             className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-amber-100 text-oro" : "text-gray-400 hover:text-gray-900"}`}
-            title="Vista Kanban"
+            title="Vista Kanban (por área)"
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode("tabla")}
             className={`p-1.5 rounded-md transition-colors ${viewMode === "tabla" ? "bg-amber-100 text-oro" : "text-gray-400 hover:text-gray-900"}`}
-            title="Vista Tabla"
+            title="Vista Tabla (por área)"
           >
             <List className="w-4 h-4" />
           </button>
         </div>
-        {viewMode === "tabla" && (
+        {viewMode !== "kanban" && (
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por titulo, cliente, abogado..."
+              placeholder="Buscar por título, cliente, abogado, área..."
               className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm pl-10 pr-4 py-2 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40"
             />
           </div>
@@ -98,7 +118,12 @@ export default function CasosPage() {
       </div>
 
       {/* Content */}
-      {viewMode === "kanban" ? (
+      {viewMode === "todos" ? (
+        <>
+          <p className="text-gray-400 text-xs">{todosCasos.length} caso{todosCasos.length === 1 ? "" : "s"}{q ? " encontrados" : " en total"}</p>
+          <TableView casos={todosCasos} />
+        </>
+      ) : viewMode === "kanban" ? (
         <KanbanBoard area={selectedArea} abogadoFilter={abogadoFilter} />
       ) : (
         <TableView casos={filteredCasos || []} />
