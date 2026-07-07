@@ -6,6 +6,8 @@ export interface PlanConfig {
   nombre: string;
   precio: string;
   precio_alianza?: string;
+  consultas?: number;   // consultas incluidas por mes
+  familiares?: number;  // familiares/beneficiarios incluidos
   caracteristicas: string[];
 }
 
@@ -15,7 +17,7 @@ interface PlanEditorProps {
 }
 
 export default function PlanEditor({ planes, onChange }: PlanEditorProps) {
-  const updatePlan = (index: number, field: keyof PlanConfig, value: string | string[]) => {
+  const updatePlan = (index: number, field: keyof PlanConfig, value: string | string[] | number) => {
     const updated = [...planes];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
@@ -48,7 +50,7 @@ export default function PlanEditor({ planes, onChange }: PlanEditorProps) {
   };
 
   const addPlan = () => {
-    onChange([...planes, { nombre: "Nuevo Plan", precio: "0", precio_alianza: "", caracteristicas: [] }]);
+    onChange([...planes, { nombre: "Nuevo Plan", precio: "0", precio_alianza: "", consultas: 0, familiares: 0, caracteristicas: [] }]);
   };
 
   const removePlan = (index: number) => {
@@ -102,6 +104,29 @@ export default function PlanEditor({ planes, onChange }: PlanEditorProps) {
                 className="bg-gray-50 text-green-600 font-bold text-sm px-2 py-1 rounded-lg border border-gray-200 focus:border-green-500/50 focus:outline-none w-full placeholder-gray-300"
               />
               <span className="text-gray-500 text-[10px]">/mes</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+              <div>
+                <label className="text-gray-500 text-[10px] block mb-0.5">Consultas / mes</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={plan.consultas ?? 0}
+                  onChange={(e) => updatePlan(pi, "consultas", parseInt(e.target.value) || 0)}
+                  className="w-full bg-gray-50 text-gray-900 text-sm px-2 py-1 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-gray-500 text-[10px] block mb-0.5">Familiares</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={plan.familiares ?? 0}
+                  onChange={(e) => updatePlan(pi, "familiares", parseInt(e.target.value) || 0)}
+                  className="w-full bg-gray-50 text-gray-900 text-sm px-2 py-1 rounded-lg border border-gray-200 focus:border-oro/50 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">

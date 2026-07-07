@@ -23,9 +23,9 @@ const inputCls = "w-full bg-white border border-gray-200 text-gray-900 text-sm p
 type ConfigTab = "pipelines" | "planes";
 
 const DEFAULT_PLANES: PlanConfig[] = [
-  { nombre: "Base", precio: "50.000", caracteristicas: ["Asesoría jurídica ilimitada", "1 consulta mensual"] },
-  { nombre: "Plus", precio: "66.000", caracteristicas: ["Todo lo del Plan Base", "2 revisiones de documentos/mes", "Prioridad en respuesta"] },
-  { nombre: "Elite", precio: "80.000", caracteristicas: ["Todo lo del Plan Plus", "Documentos ilimitados", "Abogado dedicado", "Atención prioritaria 24/7"] },
+  { nombre: "Base", precio: "50.000", consultas: 1, familiares: 1, caracteristicas: ["Asesoría jurídica ilimitada", "1 consulta mensual"] },
+  { nombre: "Plus", precio: "66.000", consultas: 2, familiares: 2, caracteristicas: ["Todo lo del Plan Base", "2 revisiones de documentos/mes", "Prioridad en respuesta"] },
+  { nombre: "Elite", precio: "80.000", consultas: 4, familiares: 4, caracteristicas: ["Todo lo del Plan Plus", "Documentos ilimitados", "Abogado dedicado", "Atención prioritaria 24/7"] },
 ];
 
 export default function ConfiguracionPage() {
