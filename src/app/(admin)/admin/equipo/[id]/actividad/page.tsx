@@ -74,7 +74,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
   const [log, setLog] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState<Periodo>("semana");
-  const [visibleCount, setVisibleCount] = useState(15);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   useEffect(() => {
     fetch(`/api/equipo/${id}/actividad`)
@@ -174,7 +174,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
           <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-oro" /> Qué hizo el abogado</h3>
           <div className="flex bg-gray-100 rounded-lg p-0.5">
             {PERIODOS.map((p) => (
-              <button key={p.id} onClick={() => { setPeriodo(p.id); setVisibleCount(15); }}
+              <button key={p.id} onClick={() => { setPeriodo(p.id); setVisibleCount(8); }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${periodo === p.id ? "bg-white text-oro shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
                 {p.label}
               </button>
@@ -213,7 +213,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
             </div>
             {logPeriodo.length > visibleCount && (
               <button
-                onClick={() => setVisibleCount((n) => n + 15)}
+                onClick={() => setVisibleCount((n) => n + 8)}
                 className="mt-3 w-full text-center text-oro hover:text-oro/80 text-xs font-medium py-2 rounded-lg border border-oro/20 hover:bg-amber-50 transition-colors"
               >
                 Cargar más ({logPeriodo.length - visibleCount} restantes)
