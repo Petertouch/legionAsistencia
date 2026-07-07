@@ -74,6 +74,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
   const [log, setLog] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState<Periodo>("semana");
+  const [visibleCount, setVisibleCount] = useState(15);
 
   useEffect(() => {
     fetch(`/api/equipo/${id}/actividad`)
@@ -173,7 +174,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
           <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-oro" /> Qué hizo el abogado</h3>
           <div className="flex bg-gray-100 rounded-lg p-0.5">
             {PERIODOS.map((p) => (
-              <button key={p.id} onClick={() => setPeriodo(p.id)}
+              <button key={p.id} onClick={() => { setPeriodo(p.id); setVisibleCount(15); }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${periodo === p.id ? "bg-white text-oro shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
                 {p.label}
               </button>
@@ -196,7 +197,7 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
             </div>
             <div className="relative pl-5 space-y-3 border-t border-gray-100 pt-3">
               <div className="absolute left-1.5 top-5 bottom-2 w-px bg-gray-100" />
-              {logPeriodo.slice(0, 60).map((l) => (
+              {logPeriodo.slice(0, visibleCount).map((l) => (
                 <div key={l.id} className="relative flex items-start gap-2">
                   <div className="absolute -left-3.5 top-1 w-2.5 h-2.5 rounded-full border-2 border-oro bg-white" />
                   <div className="min-w-0 flex-1">
@@ -210,6 +211,14 @@ export default function ActividadAbogadoPage({ params }: { params: Promise<{ id:
                 </div>
               ))}
             </div>
+            {logPeriodo.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount((n) => n + 15)}
+                className="mt-3 w-full text-center text-oro hover:text-oro/80 text-xs font-medium py-2 rounded-lg border border-oro/20 hover:bg-amber-50 transition-colors"
+              >
+                Cargar más ({logPeriodo.length - visibleCount} restantes)
+              </button>
+            )}
           </>
         )}
       </Card>
