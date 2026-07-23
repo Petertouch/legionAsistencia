@@ -21,6 +21,7 @@ const ROLE_CONFIG: Record<string, { label: string; cls: string }> = {
   admin: { label: "Admin", cls: "bg-amber-100 text-oro border-oro/30" },
   abogado: { label: "Abogado", cls: "bg-blue-50 text-blue-600 border-blue-200" },
   profesor: { label: "Profesor", cls: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  vendedor: { label: "Vendedor", cls: "bg-emerald-50 text-emerald-600 border-emerald-200" },
 };
 
 interface ActivoCaso { area: string; etapa: string; etapa_index: number; fecha_ingreso_etapa: string }
@@ -67,9 +68,9 @@ export default function EquipoPage() {
   }, []);
   if (!mounted) return null;
 
-  // Solo abogados en este módulo (profesores van en /admin/profesores)
-  const soloAbogados = abogados.filter((a) => a.role !== "profesor");
-  const filtered = soloAbogados.filter((a) => {
+  // El listado muestra TODOS los miembros del equipo (admins, abogados, profesores…).
+  const miembros = abogados;
+  const filtered = miembros.filter((a) => {
     if (search && !a.nombre.toLowerCase().includes(search.toLowerCase()) && !a.email.toLowerCase().includes(search.toLowerCase())) return false;
     if (estadoFilter && a.estado !== estadoFilter) return false;
     if (roleFilter && a.role !== roleFilter) return false;
@@ -93,7 +94,7 @@ export default function EquipoPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
           <UsersRound className="w-5 h-5 text-oro" />
-          <span className="text-gray-500 text-xs md:text-sm">{filtered.length} de {soloAbogados.length} miembros</span>
+          <span className="text-gray-500 text-xs md:text-sm">{filtered.length} de {miembros.length} miembros</span>
         </div>
         <Link href="/admin/equipo/nuevo">
           <Button size="sm"><Plus className="w-4 h-4" /> Nuevo</Button>
@@ -191,6 +192,8 @@ export default function EquipoPage() {
           <option value="" className="bg-white">Rol</option>
           <option value="admin" className="bg-white">Admin</option>
           <option value="abogado" className="bg-white">Abogado</option>
+          <option value="profesor" className="bg-white">Profesor</option>
+          <option value="vendedor" className="bg-white">Vendedor</option>
         </select>
         <select value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)}
           className="bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
