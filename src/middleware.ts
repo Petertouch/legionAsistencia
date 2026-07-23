@@ -18,6 +18,7 @@ const ADMIN_ROUTE_ROLES: Record<string, string[]> = {
   "/admin/contratos": ["admin"],
   "/admin/validacion-identidad": ["admin"],
   "/admin/equipo": ["admin"],
+  "/admin/api-docs": ["admin"],
   "/admin/vendedores": ["admin"],
   "/admin/conocimiento": ["admin"],
   "/admin/recomendaciones": ["admin"],

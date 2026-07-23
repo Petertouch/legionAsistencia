@@ -9,7 +9,7 @@ import { useReferidorStore } from "@/lib/stores/referidor-store";
 import {
   LayoutDashboard, Users, Scale, ClipboardList, PanelLeftClose, PanelLeftOpen,
   LogOut, X, BookOpen, Gift, UsersRound, FileText, GraduationCap, Mail, UserPen, Award,
-  BadgeDollarSign, ClipboardCheck, Settings, QrCode,
+  BadgeDollarSign, ClipboardCheck, Settings, QrCode, Webhook,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,6 +71,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Sistema",
     items: [
       { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
+      { href: "/admin/api-docs", label: "API / Integración", icon: Webhook, roles: ["admin"] },
       { href: "/admin/configuracion", label: "Configuración", icon: Settings, roles: ["admin"] },
       { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
       { href: "/admin/blueprint", label: "Blueprint QA", icon: ClipboardCheck, roles: ["admin"] },
