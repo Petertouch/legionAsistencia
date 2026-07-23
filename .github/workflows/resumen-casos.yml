@@ -1,0 +1,27 @@
+name: Resumen de casos por WhatsApp
+
+# Dispara el cron de resúmenes 3 veces al día (8am/12pm/4pm hora Colombia = UTC-5).
+# Reemplaza al cron nativo de Vercel, que en plan Hobby solo permite 1 ejecución/día.
+on:
+  schedule:
+    - cron: "0 13,17,21 * * *" # 13:00, 17:00, 21:00 UTC
+  workflow_dispatch: {} # permite dispararlo manualmente desde la pestaña Actions
+
+jobs:
+  enviar-resumen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al endpoint del resumen
+        run: |
+          echo "Disparando resumen de casos…"
+          code=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://legionjuridica.com/api/cron/resumen-casos")
+          echo "HTTP $code"
+          cat /tmp/resp.json
+          echo ""
+          # Falla el job si no fue 2xx, para que GitHub avise por email.
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "::error::El endpoint respondió $code"
+            exit 1
+          fi
