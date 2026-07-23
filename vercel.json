@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/resumen-casos",
-      "schedule": "0 13,17,21 * * *"
-    }
-  ]
-}
