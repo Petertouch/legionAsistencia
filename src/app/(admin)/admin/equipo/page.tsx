@@ -17,6 +17,12 @@ const ESTADO_CONFIG: Record<string, { label: string; variant: "success" | "warni
   vacaciones: { label: "Vacaciones", variant: "warning" },
 };
 
+const ROLE_CONFIG: Record<string, { label: string; cls: string }> = {
+  admin: { label: "Admin", cls: "bg-amber-100 text-oro border-oro/30" },
+  abogado: { label: "Abogado", cls: "bg-blue-50 text-blue-600 border-blue-200" },
+  profesor: { label: "Profesor", cls: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+};
+
 interface ActivoCaso { area: string; etapa: string; etapa_index: number; fecha_ingreso_etapa: string }
 interface ResumenEntry { activos: ActivoCaso[]; cerrados: number; ultima_actividad: string | null; acciones_7d: number }
 type Resumen = Record<string, ResumenEntry>;
@@ -52,6 +58,7 @@ export default function EquipoPage() {
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
   const [estadoFilter, setEstadoFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
   const [resumen, setResumen] = useState<Resumen>({});
 
   useEffect(() => { setMounted(true); }, []);
@@ -65,6 +72,7 @@ export default function EquipoPage() {
   const filtered = soloAbogados.filter((a) => {
     if (search && !a.nombre.toLowerCase().includes(search.toLowerCase()) && !a.email.toLowerCase().includes(search.toLowerCase())) return false;
     if (estadoFilter && a.estado !== estadoFilter) return false;
+    if (roleFilter && a.role !== roleFilter) return false;
     return true;
   });
 
@@ -85,7 +93,7 @@ export default function EquipoPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
           <UsersRound className="w-5 h-5 text-oro" />
-          <span className="text-gray-500 text-xs md:text-sm">{soloAbogados.length} abogados</span>
+          <span className="text-gray-500 text-xs md:text-sm">{filtered.length} de {soloAbogados.length} miembros</span>
         </div>
         <Link href="/admin/equipo/nuevo">
           <Button size="sm"><Plus className="w-4 h-4" /> Nuevo</Button>
@@ -178,6 +186,12 @@ export default function EquipoPage() {
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar miembro..."
             className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm pl-10 pr-4 py-2.5 rounded-lg placeholder-gray-400 focus:outline-none focus:border-oro/40" />
         </div>
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
+          className="bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
+          <option value="" className="bg-white">Rol</option>
+          <option value="admin" className="bg-white">Admin</option>
+          <option value="abogado" className="bg-white">Abogado</option>
+        </select>
         <select value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)}
           className="bg-gray-50 border border-gray-200 text-gray-900 text-sm px-3 py-2.5 rounded-lg focus:outline-none focus:border-oro/40 appearance-none">
           <option value="" className="bg-white">Estado</option>
@@ -205,6 +219,9 @@ export default function EquipoPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="text-gray-900 font-semibold text-sm truncate group-hover:text-oro transition-colors">{member.nombre}</h3>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${(ROLE_CONFIG[member.role] || ROLE_CONFIG.abogado).cls}`}>
+                        {(ROLE_CONFIG[member.role] || ROLE_CONFIG.abogado).label}
+                      </span>
                       <Badge size="xs" variant={est.variant}>{est.label}</Badge>
                       {member.estado === "vacaciones" && <Palmtree className="w-3 h-3 text-yellow-600" />}
                     </div>
