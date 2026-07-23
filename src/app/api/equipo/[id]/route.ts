@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { validatePassword } from "@/lib/password";
 import bcrypt from "bcryptjs";
 
 const PUBLIC_COLS =
@@ -13,7 +14,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id: _ignore, created_at, ...updates } = body;
 
     if (typeof updates.password === "string") {
-      updates.password = updates.password ? await bcrypt.hash(updates.password, 12) : "";
+      if (updates.password) {
+        const pwError = validatePassword(updates.password);
+        if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
+        updates.password = await bcrypt.hash(updates.password, 12);
+      } else {
+        updates.password = "";
+      }
     }
     updates.updated_at = new Date().toISOString();
 

@@ -4,6 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import bcrypt from "bcryptjs";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+// Break-glass admin: se prefiere el hash bcrypt (ADMIN_PASSWORD_HASH).
+// ADMIN_PASSWORD (texto plano) solo se acepta como fallback temporal de migración.
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Rate limiting: 5 attempts per 15 minutes per IP
@@ -36,19 +39,7 @@ export async function POST(request: NextRequest) {
 
     const emailNorm = email.toLowerCase().trim();
 
-    // ── 1. Verificar si es admin ──
-    if (ADMIN_EMAIL && ADMIN_PASSWORD && emailNorm === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const session: SessionPayload = {
-        id: "admin-1",
-        nombre: "Admin",
-        email: emailNorm,
-        role: "admin",
-      };
-      await setSessionCookie(session);
-      return NextResponse.json({ user: session });
-    }
-
-    // ── 2. Verificar en tabla equipo ──
+    // ── 1. Verificar en tabla equipo (fuente de verdad principal) ──
     const supabase = createAdminClient();
     const { data: miembro } = await supabase
       .from("equipo")
@@ -75,6 +66,21 @@ export async function POST(request: NextRequest) {
           email: miembro.email,
           role: miembro.role || "abogado",
         };
+        await setSessionCookie(session);
+        return NextResponse.json({ user: session });
+      }
+    }
+
+    // ── 2. Break-glass admin por env (solo si la cuenta de tabla no aplicó) ──
+    // Se compara contra el hash bcrypt; el texto plano queda como fallback de transición.
+    if (ADMIN_EMAIL && emailNorm === ADMIN_EMAIL.toLowerCase()) {
+      const ok = ADMIN_PASSWORD_HASH
+        ? await bcrypt.compare(password, ADMIN_PASSWORD_HASH)
+        : ADMIN_PASSWORD
+          ? password === ADMIN_PASSWORD
+          : false;
+      if (ok) {
+        const session: SessionPayload = { id: "admin-1", nombre: "Admin", email: emailNorm, role: "admin" };
         await setSessionCookie(session);
         return NextResponse.json({ user: session });
       }

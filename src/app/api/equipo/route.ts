@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { validatePassword } from "@/lib/password";
 import bcrypt from "bcryptjs";
 
 // Columnas seguras para devolver al cliente (nunca el password).
@@ -33,7 +34,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
     const insert: Record<string, unknown> = { ...rest };
-    if (password) insert.password = await bcrypt.hash(password, 12);
+    if (password) {
+      const pwError = validatePassword(password);
+      if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
+      insert.password = await bcrypt.hash(password, 12);
+    }
 
     const { data, error } = await supabase
       .from("equipo")
