@@ -2,30 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTemplate, normalizePhone, kapsoReady, TPL_RESUMEN } from "@/lib/kapso";
 
-// Ejecutado por Vercel Cron (ver vercel.json) a las 8am/12pm/4pm America/Bogota.
+// Disparado por GitHub Actions (.github/workflows/resumen-casos.yml) a las
+// 8am/12pm/4pm America/Bogota. (Vercel Hobby solo permite crons 1/día.)
 // Modos (configurables por env):
 //   RESUMEN_PERSONAL=true      → a cada abogado activo, SOLO sus casos (default on)
 //   RESUMEN_ADMIN=true         → resumen global al número ADMIN_WHATSAPP (default on si hay número)
 //   RESUMEN_GLOBAL_TODOS=true  → resumen global a TODOS los abogados (default off)
 
-interface CasoRow { area: string; etapa: string; abogado: string | null; abogado_id: string | null }
+interface CasoRow {
+  area: string; etapa: string; abogado: string | null; abogado_id: string | null;
+  titulo: string; fecha_limite: string | null;
+}
 
 function buildResumen(casos: CasoRow[]): { total: number; texto: string } {
   const activos = casos.filter((c) => c.etapa !== "Cerrado");
-  const byArea: Record<string, Record<string, number>> = {};
+  const byArea: Record<string, number> = {};
   for (const c of activos) {
     const area = c.area || "Sin área";
-    byArea[area] ??= {};
-    byArea[area][c.etapa] = (byArea[area][c.etapa] || 0) + 1;
+    byArea[area] = (byArea[area] || 0) + 1;
   }
-  const lines = Object.entries(byArea).map(([area, etapas]) => {
-    const total = Object.values(etapas).reduce((a, b) => a + b, 0);
-    const detalle = Object.entries(etapas).map(([e, n]) => `${e} ${n}`).join(", ");
-    return `${area}: ${total} (${detalle})`;
-  });
+  const lines = Object.entries(byArea).map(([area, n]) => `${area}: ${n}`);
   // Los parámetros de plantilla de WhatsApp no admiten saltos de línea:
   // unimos el detalle por área en una sola línea con separador " · ".
   return { total: activos.length, texto: lines.join(" · ") || "Sin casos activos" };
+}
+
+// Casos con fecha límite dentro de 2 días o ya vencidos (activos), ordenados por urgencia.
+function buildPorVencer(casos: CasoRow[]): { count: number; texto: string } {
+  const now = Date.now();
+  const cutoff = now + 2 * 24 * 3600 * 1000;
+  const urgentes = casos
+    .filter((c) => c.etapa !== "Cerrado" && c.fecha_limite && new Date(c.fecha_limite).getTime() <= cutoff)
+    .sort((a, b) => new Date(a.fecha_limite!).getTime() - new Date(b.fecha_limite!).getTime());
+
+  const cuando = (iso: string): string => {
+    const dias = Math.ceil((new Date(iso).getTime() - now) / (24 * 3600 * 1000));
+    if (dias < 0) return "vencido";
+    if (dias === 0) return "vence hoy";
+    if (dias === 1) return "vence mañana";
+    return `vence en ${dias} días`;
+  };
+
+  const items = urgentes.map((c) => `${c.titulo} (${cuando(c.fecha_limite!)})`);
+  const shown = items.slice(0, 5);
+  let texto = shown.join(" · ") || "Ninguno";
+  if (items.length > 5) texto += ` · y ${items.length - 5} más`;
+  return { count: urgentes.length, texto };
 }
 
 async function handler(request: NextRequest) {
@@ -43,7 +65,7 @@ async function handler(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const { data: casos } = await supabase.from("casos").select("area, etapa, abogado, abogado_id");
+  const { data: casos } = await supabase.from("casos").select("area, etapa, abogado, abogado_id, titulo, fecha_limite");
   const { data: abogados } = await supabase
     .from("equipo")
     .select("id, nombre, telefono")
@@ -51,15 +73,19 @@ async function handler(request: NextRequest) {
     .eq("estado", "activo");
 
   const allCasos = (casos || []) as CasoRow[];
-  const fecha = new Date().toLocaleString("es-CO", {
+  // Fecha corta para la plantilla ("23 de julio") y sello con hora para la respuesta.
+  const fecha = new Date().toLocaleDateString("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "long" });
+  const sello = new Date().toLocaleString("es-CO", {
     timeZone: "America/Bogota", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
   });
 
   const enviar = async (to: string, nombre: string, lista: CasoRow[]) => {
     const { total, texto } = buildResumen(lista);
     if (total === 0) return { ok: false, skipped: true };
-    // Plantilla `resumen_casos`: {{1}} fecha · {{2}} nombre · {{3}} total · {{4}} lista
-    const r = await sendTemplate(to, TPL_RESUMEN, [fecha, nombre, String(total), texto]);
+    const pv = buildPorVencer(lista);
+    // Plantilla `resumen_casos`:
+    //   {{1}} nombre · {{2}} total · {{3}} fecha · {{4}} detalle por área · {{5}} nº por vencer · {{6}} lista por vencer
+    const r = await sendTemplate(to, TPL_RESUMEN, [nombre, String(total), fecha, texto, String(pv.count), pv.texto]);
     return { ...r, skipped: false };
   };
 
@@ -97,7 +123,7 @@ async function handler(request: NextRequest) {
     track(await enviar(adminTo!, "Admin", allCasos));
   }
 
-  return NextResponse.json({ ok: true, enviados, omitidos, fallidos, hora: fecha });
+  return NextResponse.json({ ok: true, enviados, omitidos, fallidos, hora: sello });
 }
 
 export const GET = handler;
