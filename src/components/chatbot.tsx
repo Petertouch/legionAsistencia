@@ -103,6 +103,7 @@ export default function ChatBot() {
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [cedula, setCedula] = useState("");
   const [clave, setClave] = useState("");
+  const emailMode = (process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy") === "supabase";
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
@@ -154,7 +155,7 @@ export default function ChatBot() {
       const res = await fetch("/api/chat-auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim(), clave }),
+        body: JSON.stringify(emailMode ? { email: cedula.trim(), clave } : { cedula: cedula.trim(), clave }),
       });
 
       if (res.status === 401) {
@@ -163,7 +164,7 @@ export default function ChatBot() {
         return;
       }
       if (!res.ok) {
-        setAuthError("Cédula no encontrada. Verifica el número.");
+        setAuthError(emailMode ? "Correo no encontrado. Verifícalo." : "Cédula no encontrada. Verifica el número.");
         setAuthLoading(false);
         return;
       }
@@ -548,11 +549,11 @@ export default function ChatBot() {
             <div className="flex justify-start">
               <form onSubmit={handleAuth} className="bg-white/10 rounded-2xl rounded-bl-md p-3.5 space-y-2.5 w-[85%]">
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Número de cédula"
+                  type={emailMode ? "email" : "text"}
+                  inputMode={emailMode ? "email" : "numeric"}
+                  placeholder={emailMode ? "Correo electrónico" : "Número de cédula"}
                   value={cedula}
-                  onChange={(e) => { setCedula(e.target.value.replace(/\D/g, "")); setAuthError(""); }}
+                  onChange={(e) => { setCedula(emailMode ? e.target.value : e.target.value.replace(/\D/g, "")); setAuthError(""); }}
                   className="w-full bg-white/10 text-white placeholder-beige/40 text-sm px-3 py-2 rounded-lg border border-white/10 focus:border-oro/40 focus:outline-none"
                   required
                   autoFocus
