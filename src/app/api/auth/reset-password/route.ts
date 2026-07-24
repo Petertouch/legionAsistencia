@@ -7,6 +7,7 @@ import { revokeAllUserSessions } from "@/lib/sessions";
 import bcrypt from "bcryptjs";
 
 const AUTH_PROVIDER = process.env.AUTH_PROVIDER || "legacy";
+const CLIENT_AUTH = process.env.CLIENT_AUTH_PROVIDER || process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy";
 
 // Track used reset tokens (single-use)
 const usedResetTokens = new Set<string>();
@@ -197,12 +198,19 @@ export async function PUT(request: NextRequest) {
       }
     } else {
       const hashed = await bcrypt.hash(newPassword, 12);
-      const { error } = await supabase
+      const { data: sus, error } = await supabase
         .from("suscriptores")
         .update({ clave: hashed })
-        .eq("id", payload.userId);
+        .eq("id", payload.userId)
+        .select("auth_user_id")
+        .single();
 
       if (error) throw error;
+
+      // En modo Supabase Auth: fijar la clave también en auth.users.
+      if (CLIENT_AUTH === "supabase" && sus?.auth_user_id) {
+        await supabase.auth.admin.updateUserById(sus.auth_user_id as string, { password: newPassword }).catch(() => {});
+      }
     }
 
     // Mark token as used

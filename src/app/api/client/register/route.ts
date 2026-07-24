@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import bcrypt from "bcryptjs";
 
+const CLIENT_AUTH = process.env.CLIENT_AUTH_PROVIDER || process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy";
+
 // Rate limiting: 3 registrations per 15 minutes per IP
 const registerAttempts = new Map<string, number[]>();
 const MAX_ATTEMPTS = 3;
@@ -60,22 +62,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Create suscriptor with hashed password and flag to change it
-    const { error: suscError } = await supabase.from("suscriptores").insert({
+    const emailNorm = email?.trim().toLowerCase() || null;
+    const { data: nuevo, error: suscError } = await supabase.from("suscriptores").insert({
       contrato_id,
       nombre: nombre.trim(),
       cedula: cedula.trim(),
       telefono: telefono.trim(),
-      email: email?.trim() || null,
+      email: emailNorm,
       plan,
       estado_pago: "Pendiente",
       rama: fuerza || null,
       rango: grado || null,
       clave: hashedClave,
       debe_cambiar_clave: true,
-    });
+    }).select("id").single();
 
     if (suscError) {
       return NextResponse.json({ error: suscError.message }, { status: 500 });
+    }
+
+    // En modo Supabase Auth: crear el usuario en auth.users (login por email).
+    if (CLIENT_AUTH === "supabase" && emailNorm && nuevo?.id) {
+      const { data: created, error: authErr } = await supabase.auth.admin.createUser({
+        email: emailNorm,
+        password: tempClave,
+        email_confirm: true,
+        app_metadata: { role: "cliente", profile_id: nuevo.id },
+        user_metadata: { nombre: nombre.trim() },
+      });
+      if (!authErr && created?.user) {
+        await supabase.from("suscriptores").update({ auth_user_id: created.user.id }).eq("id", nuevo.id);
+      } else {
+        console.error("[client/register] createUser:", authErr?.message);
+      }
     }
 
     // Return the temp password so it can be included in the welcome email

@@ -17,6 +17,8 @@ export default function ClientLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showAliado, setShowAliado] = useState(false);
+  // En modo Supabase, el cliente entra por EMAIL; en legacy, por cédula.
+  const emailMode = (process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy") === "supabase";
 
   // Change password flow
   const [showCambioClave, setShowCambioClave] = useState(false);
@@ -43,7 +45,7 @@ export default function ClientLoginPage() {
       const res = await fetch("/api/client/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim(), clave }),
+        body: JSON.stringify(emailMode ? { email: cedula.trim(), clave } : { cedula: cedula.trim(), clave }),
       });
 
       if (!res.ok) {
@@ -82,7 +84,11 @@ export default function ClientLoginPage() {
       const res = await fetch("/api/client/cambiar-clave", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }),
+        body: JSON.stringify(
+          emailMode
+            ? { email: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }
+            : { cedula: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }
+        ),
       });
 
       if (!res.ok) {
@@ -158,7 +164,9 @@ export default function ClientLoginPage() {
           </button>
 
           <p className="text-gray-400 text-[10px] text-center">
-            Tu cédula ({pendingSession.cedula}) es tu usuario. Guarda tu nueva clave en un lugar seguro.
+            {emailMode
+              ? `Tu correo (${pendingSession.email}) es tu usuario. Guarda tu nueva clave en un lugar seguro.`
+              : `Tu cédula (${pendingSession.cedula}) es tu usuario. Guarda tu nueva clave en un lugar seguro.`}
           </p>
         </form>
       </div>
@@ -177,13 +185,13 @@ export default function ClientLoginPage() {
         </div>
 
         <div>
-          <label className="text-gray-600 text-xs font-medium mb-1 block">Número de cédula</label>
+          <label className="text-gray-600 text-xs font-medium mb-1 block">{emailMode ? "Correo electrónico" : "Número de cédula"}</label>
           <input
-            type="text"
-            inputMode="numeric"
+            type={emailMode ? "email" : "text"}
+            inputMode={emailMode ? "email" : "numeric"}
             value={cedula}
-            onChange={(e) => { setCedula(e.target.value.replace(/\D/g, "")); setError(""); }}
-            placeholder="Ej: 1098765432"
+            onChange={(e) => { setCedula(emailMode ? e.target.value : e.target.value.replace(/\D/g, "")); setError(""); }}
+            placeholder={emailMode ? "correo@ejemplo.com" : "Ej: 1098765432"}
             required
             className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:border-jungle-dark/40 focus:outline-none"
           />

@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import bcrypt from "bcryptjs";
+
+const CLIENT_AUTH = process.env.CLIENT_AUTH_PROVIDER || process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy";
+
+const SESSION_COLS = "id, nombre, cedula, email, telefono, plan, estado_pago, rama, rango, debe_cambiar_clave";
+type SuscriptorRow = {
+  id: string; nombre: string; cedula: string; email: string | null; telefono: string | null;
+  plan: string | null; estado_pago: string | null; rama: string | null; rango: string | null;
+  debe_cambiar_clave: boolean | null;
+};
+const sessionShape = (s: SuscriptorRow) => ({
+  suscriptor_id: s.id, nombre: s.nombre, cedula: s.cedula, email: s.email || "",
+  telefono: s.telefono, plan: s.plan, estado_pago: s.estado_pago,
+  rama: s.rama || "", rango: s.rango || "", debe_cambiar_clave: s.debe_cambiar_clave ?? false,
+});
 
 // Rate limiting: 5 attempts per 15 minutes per IP
 const loginAttempts = new Map<string, number[]>();
@@ -24,7 +39,34 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { cedula, clave } = await request.json();
+    const body = await request.json();
+
+    // ══ Modo Supabase Auth: login por EMAIL ══
+    if (CLIENT_AUTH === "supabase") {
+      const email = (body.email || "").toLowerCase().trim();
+      const clave = body.clave;
+      if (!email || !clave) {
+        return NextResponse.json({ error: "Email y contraseña requeridos" }, { status: 400 });
+      }
+      const ssr = await createServerSupabase();
+      const { data, error } = await ssr.auth.signInWithPassword({ email, password: clave });
+      if (error || !data.user) {
+        await new Promise((r) => setTimeout(r, 300 + Math.random() * 200));
+        return NextResponse.json({ error: "Email o contraseña incorrectos" }, { status: 401 });
+      }
+      const admin = createAdminClient();
+      const { data: s } = await admin
+        .from("suscriptores").select(SESSION_COLS)
+        .eq("auth_user_id", data.user.id).maybeSingle();
+      if (!s) {
+        await ssr.auth.signOut();
+        return NextResponse.json({ error: "Esta cuenta no es de cliente" }, { status: 403 });
+      }
+      return NextResponse.json(sessionShape(s as SuscriptorRow));
+    }
+
+    // ══ Modo legacy: login por CÉDULA ══
+    const { cedula, clave } = body;
 
     if (!cedula || !clave) {
       return NextResponse.json({ error: "Cédula y contraseña requeridos" }, { status: 400 });

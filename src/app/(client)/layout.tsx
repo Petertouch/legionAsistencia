@@ -43,6 +43,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const showNav = mounted && session && !isLoginPage;
 
   const handleLogout = () => {
+    // Cierra la sesión de Supabase (cookie sb-*) además del store local.
+    fetch("/api/client/logout", { method: "POST" }).catch(() => {});
     logout();
     router.push("/mi-caso");
   };
