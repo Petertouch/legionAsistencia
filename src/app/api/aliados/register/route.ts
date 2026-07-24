@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendMail } from "@/lib/mail";
+import { sendTemplate } from "@/lib/mail-templates";
 import bcrypt from "bcryptjs";
 
 const ALIADO_AUTH = process.env.ALIADO_AUTH_PROVIDER || process.env.NEXT_PUBLIC_ALIADO_AUTH_PROVIDER || "legacy";
@@ -123,24 +123,17 @@ export async function POST(request: NextRequest) {
         });
         if (created?.user) {
           await supabase.from("lanzas").update({ auth_user_id: created.user.id }).eq("id", data.id);
-          const firstName = nombre.trim().split(" ")[0];
-          await sendMail({
+          // Cuerpo desde la BD (mail_templates → "bienvenida-aliado").
+          await sendTemplate({
+            slug: "bienvenida-aliado",
             to: emailNorm,
-            subject: "Tu acceso al portal de aliados — Legión Jurídica",
-            html: `<div style="max-width:520px;margin:0 auto;font-family:Arial,sans-serif">
-              <div style="background:#1a1a1a;border-radius:12px 12px 0 0;padding:24px;text-align:center">
-                <h1 style="margin:0;font-size:16px;color:#C8A96E;letter-spacing:2px">LEGIÓN JURÍDICA</h1>
-              </div>
-              <div style="background:#fff;padding:28px;border:1px solid #eee">
-                <h2 style="margin:0 0 8px;font-size:18px;color:#1a1a1a">¡Bienvenido(a), ${firstName}!</h2>
-                <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.6">Ya puedes ingresar al portal de aliados con tu correo y esta clave temporal:</p>
-                <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">
-                  <p style="margin:0 0 4px;font-size:11px;color:#64748b;text-transform:uppercase">Clave temporal</p>
-                  <p style="margin:0;font-size:22px;color:#1a1a1a;font-weight:900;font-family:monospace;letter-spacing:2px">${tempPassword}</p>
-                </div>
-                <p style="margin:0 0 16px;font-size:13px;color:#777">Entra en <a href="https://legionjuridica.com/aliados" style="color:#C8A96E;font-weight:600">legionjuridica.com/aliados</a> con tu correo. Te pediremos cambiarla la primera vez.</p>
-              </div>
-            </div>`,
+            force: true,
+            variables: {
+              nombre: nombre.trim(),
+              tipo: tipo === "esposa" ? "Aliada" : "Lanza",
+              code: data.code || "",
+              clave_temporal: tempPassword,
+            },
           }).catch(() => {});
         }
       }

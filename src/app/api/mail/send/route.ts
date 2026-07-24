@@ -1,31 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendMail, renderTemplate } from "@/lib/mail";
+import { sendTemplate } from "@/lib/mail-templates";
 
+// Envío genérico por slug: el asunto/cuerpo/activo salen de la BD (mail_templates).
 export async function POST(request: NextRequest) {
-  // Auth check (inyectado por middleware)
-  const userRole = request.headers.get("x-user-role");
-  if (userRole !== "admin") {
+  if (request.headers.get("x-user-role") !== "admin") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
   try {
-    const { to, slug, subject, html, variables } = await request.json();
-
-    if (!to || !subject || !html) {
-      return NextResponse.json({ error: "Faltan campos: to, subject, html" }, { status: 400 });
+    const { to, slug, variables } = await request.json();
+    if (!to || !slug) {
+      return NextResponse.json({ error: "Faltan campos: to, slug" }, { status: 400 });
     }
 
-    // Renderizar variables en asunto y cuerpo
-    const renderedSubject = renderTemplate(subject, variables || {});
-    const renderedHtml = renderTemplate(html, variables || {});
-
-    const data = await sendMail({
-      to,
-      subject: renderedSubject,
-      html: renderedHtml,
-    });
-
-    return NextResponse.json({ success: true, id: data?.id, slug });
+    const sent = await sendTemplate({ slug, to, variables: variables || {} });
+    return NextResponse.json({ success: sent, slug });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Error enviando email" },

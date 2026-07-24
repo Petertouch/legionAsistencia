@@ -38,11 +38,26 @@ export async function sendMail({ to, subject, html, attachments }: SendMailOptio
   return data;
 }
 
-// Reemplaza {{variables}} en el template
+// Reemplaza {{variables}} y bloques condicionales {{#if var}}...{{/if}} en el template.
+// - {{#if var}}...{{/if}} → renderiza el contenido solo si `var` tiene valor no vacío.
+// - {{var}} → reemplaza por el valor (o "" si no existe).
+// - Cualquier {{token}} sobrante se elimina para no filtrar placeholders en el correo.
 export function renderTemplate(template: string, variables: Record<string, string>): string {
-  let result = template;
+  const val = (k: string) => (variables[k] ?? "").toString();
+
+  // 1) Bloques condicionales
+  let result = template.replace(
+    /\{\{#if\s+([\w.]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    (_m, key: string, inner: string) => (val(key).trim() !== "" ? inner : "")
+  );
+
+  // 2) Variables simples
   for (const [key, value] of Object.entries(variables)) {
-    result = result.replaceAll(`{{${key}}}`, value);
+    result = result.replaceAll(`{{${key}}}`, (value ?? "").toString());
   }
+
+  // 3) Limpiar tokens sobrantes ({{algo}} no provisto)
+  result = result.replace(/\{\{[\w.]+\}\}/g, "");
+
   return result;
 }

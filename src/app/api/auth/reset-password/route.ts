@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateStaffAuthUser } from "@/lib/supabase/auth-sync";
-import { sendMail } from "@/lib/mail";
+import { sendTemplate } from "@/lib/mail-templates";
 import { revokeAllUserSessions } from "@/lib/sessions";
 import bcrypt from "bcryptjs";
 
@@ -108,33 +108,12 @@ export async function POST(request: NextRequest) {
     const resetPath = resetType === "admin" ? "/reset-clave" : "/mi-caso/reset-clave";
     const resetLink = `${BASE_URL}${resetPath}?token=${token}`;
 
-    // Email HTML
-    const emailHtml = `<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;background:#0f1a0f;border-radius:12px;overflow:hidden">
-  <div style="background:linear-gradient(135deg,#1a2e1a 0%,#0f1a0f 100%);padding:24px 32px 16px;text-align:center;border-bottom:2px solid #C8A96E">
-    <div style="width:48px;height:48px;margin:0 auto 12px;background:rgba(200,169,110,0.1);border-radius:50%;border:1px solid rgba(200,169,110,0.2);line-height:48px;font-size:22px">🔐</div>
-    <h1 style="margin:0;font-size:18px;font-weight:bold;color:#C8A96E;letter-spacing:1px">RECUPERAR CONTRASEÑA</h1>
-    <p style="margin:4px 0 0;font-size:10px;color:rgba(200,169,110,0.4);letter-spacing:2px;text-transform:uppercase">Legión Jurídica</p>
-  </div>
-  <div style="padding:28px 32px">
-    <h2 style="margin:0 0 6px;font-size:18px;color:#ffffff;font-weight:bold">Hola, ${nombre}</h2>
-    <p style="margin:0 0 16px;font-size:14px;color:rgba(212,197,160,0.65);line-height:1.6">Recibimos una solicitud para restablecer tu contraseña. Haz click en el botón para crear una nueva.</p>
-    <div style="text-align:center;padding:20px 0">
-      <a href="${resetLink}" style="display:inline-block;padding:13px 32px;background:#C8A96E;color:#1a1a1a;text-decoration:none;border-radius:8px;font-weight:bold;font-size:14px;letter-spacing:0.3px">Restablecer contraseña</a>
-    </div>
-    <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:8px;padding:14px 16px;margin:16px 0">
-      <p style="margin:0;font-size:13px;color:rgba(234,179,8,0.8);line-height:1.5">⏰ Este enlace expira en <strong>1 hora</strong>. Si no solicitaste este cambio, ignora este email.</p>
-    </div>
-    <p style="margin:16px 0 0;font-size:12px;color:rgba(212,197,160,0.35);line-height:1.5">Si el botón no funciona, copia y pega este enlace:<br/><span style="color:rgba(200,169,110,0.5);word-break:break-all">${resetLink}</span></p>
-  </div>
-  <div style="background:rgba(0,0,0,0.3);padding:16px 32px;text-align:center;border-top:1px solid rgba(255,255,255,0.05)">
-    <p style="margin:0;font-size:10px;color:rgba(212,197,160,0.25)">Legión Jurídica · Cra 7 # 81-49 Of. 301, Bogotá</p>
-  </div>
-</div>`;
-
-    await sendMail({
+    // Cuerpo desde la BD (mail_templates → "recuperar-clave").
+    await sendTemplate({
+      slug: "recuperar-clave",
       to: email,
-      subject: "Recuperar contraseña — Legión Jurídica",
-      html: emailHtml,
+      force: true,
+      variables: { nombre, reset_link: resetLink },
     });
 
     return NextResponse.json({ ok: true, message: "Si el usuario existe, se enviará un email" });
