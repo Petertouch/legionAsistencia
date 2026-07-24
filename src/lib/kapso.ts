@@ -26,12 +26,13 @@ export function normalizePhone(raw?: string | null): string | null {
 }
 
 // ── Enviar una plantilla ─────────────────────────────────────────
-type TemplateParam = string;
-
+// Meta exige parámetros CON NOMBRE (minúsculas + guion bajo), p.ej. {{abogado}}.
+// Por eso el body va como Record<nombre_variable, valor> y cada parámetro
+// se envía con `parameter_name`.
 export async function sendTemplate(
   to: string,
   templateName: string,
-  bodyParams: TemplateParam[],
+  bodyParams: Record<string, string>,
 ): Promise<{ ok: boolean; error?: string }> {
   if (!kapsoReady()) {
     console.warn("[kapso] KAPSO_API_KEY / KAPSO_PHONE_NUMBER_ID no configurados — se omite el envío");
@@ -40,6 +41,7 @@ export async function sendTemplate(
   const phone = normalizePhone(to);
   if (!phone) return { ok: false, error: "telefono_invalido" };
 
+  const entries = Object.entries(bodyParams);
   const body = {
     messaging_product: "whatsapp",
     to: phone,
@@ -47,8 +49,8 @@ export async function sendTemplate(
     template: {
       name: templateName,
       language: { code: LANG },
-      components: bodyParams.length
-        ? [{ type: "body", parameters: bodyParams.map((t) => ({ type: "text", text: t || "-" })) }]
+      components: entries.length
+        ? [{ type: "body", parameters: entries.map(([name, text]) => ({ type: "text", parameter_name: name, text: text || "-" })) }]
         : [],
     },
   };
@@ -101,16 +103,15 @@ export async function notifyNuevoCaso(caso: CasoLike): Promise<void> {
     ? new Date(caso.fecha_limite).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })
     : "Sin fecha límite";
 
-  // Variables de la plantilla `nuevo_caso_asignado`:
-  // {{1}} abogado · {{2}} título · {{3}} cliente · {{4}} área · {{5}} prioridad · {{6}} deadline
-  await sendTemplate(phone, TPL_NUEVO_CASO, [
-    caso.abogado,
-    caso.titulo,
-    caso.suscriptor_nombre || "Sin cliente",
-    caso.area,
-    caso.prioridad || "normal",
-    deadline,
-  ]);
+  // Variables (con nombre) de la plantilla `nuevo_caso_asignado`.
+  await sendTemplate(phone, TPL_NUEVO_CASO, {
+    abogado: caso.abogado,
+    caso: caso.titulo,
+    cliente: caso.suscriptor_nombre || "Sin cliente",
+    area: caso.area,
+    prioridad: caso.prioridad || "normal",
+    fecha_limite: deadline,
+  });
 }
 
 export { TPL_RESUMEN };

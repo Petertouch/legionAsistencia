@@ -83,9 +83,15 @@ async function handler(request: NextRequest) {
     const { total, texto } = buildResumen(lista);
     if (total === 0) return { ok: false, skipped: true };
     const pv = buildPorVencer(lista);
-    // Plantilla `resumen_casos`:
-    //   {{1}} nombre · {{2}} total · {{3}} fecha · {{4}} detalle por área · {{5}} nº por vencer · {{6}} lista por vencer
-    const r = await sendTemplate(to, TPL_RESUMEN, [nombre, String(total), fecha, texto, String(pv.count), pv.texto]);
+    // Plantilla `resumen_casos` (variables con nombre).
+    const r = await sendTemplate(to, TPL_RESUMEN, {
+      nombre,
+      total: String(total),
+      fecha,
+      por_area: texto,
+      por_vencer_num: String(pv.count),
+      por_vencer_lista: pv.texto,
+    });
     return { ...r, skipped: false };
   };
 
