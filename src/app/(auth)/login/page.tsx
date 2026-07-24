@@ -19,9 +19,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const emailNorm = email.toLowerCase().trim();
-
-    // ── 1. Intentar login de admin/abogado via API (server-side) ──
+    // ── Login del staff via API (valida contra Supabase Auth o tabla equipo según AUTH_PROVIDER) ──
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -37,27 +35,7 @@ export default function LoginPage() {
         return;
       }
     } catch {
-      // Error de red — continuar con login local
-    }
-
-    // ── 2. Intentar create-session (valida contra tabla equipo server-side) ──
-    try {
-      const res = await fetch("/api/auth/create-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailNorm, password }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        login(data.user);
-        toast.success(`Bienvenido, ${data.user.nombre}`);
-        router.push("/admin/dashboard");
-        setLoading(false);
-        return;
-      }
-    } catch {
-      // fall through
+      // Error de red
     }
 
     toast.error("Email o contraseña incorrectos");

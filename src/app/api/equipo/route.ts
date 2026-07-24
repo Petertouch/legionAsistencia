@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validatePassword } from "@/lib/password";
+import { createStaffAuthUser } from "@/lib/supabase/auth-sync";
 import bcrypt from "bcryptjs";
+
+const AUTH_PROVIDER = process.env.AUTH_PROVIDER || "legacy";
 
 // Columnas seguras para devolver al cliente (nunca el password).
 const PUBLIC_COLS =
@@ -47,6 +50,21 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // En modo Supabase Auth: crear también el usuario en auth.users y enlazarlo.
+    if (AUTH_PROVIDER === "supabase" && password && data?.id) {
+      const authUserId = await createStaffAuthUser({
+        email: rest.email,
+        password,
+        role: rest.role || "abogado",
+        profileId: data.id,
+        nombre: rest.nombre,
+      });
+      if (authUserId) {
+        await supabase.from("equipo").update({ auth_user_id: authUserId }).eq("id", data.id);
+      }
+    }
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });

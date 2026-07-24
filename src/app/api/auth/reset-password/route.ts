@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateStaffAuthUser } from "@/lib/supabase/auth-sync";
 import { sendMail } from "@/lib/mail";
 import { revokeAllUserSessions } from "@/lib/sessions";
 import bcrypt from "bcryptjs";
+
+const AUTH_PROVIDER = process.env.AUTH_PROVIDER || "legacy";
 
 // Track used reset tokens (single-use)
 const usedResetTokens = new Set<string>();
@@ -180,8 +183,18 @@ export async function PUT(request: NextRequest) {
 
       if (error) throw error;
 
-      // Revoke all existing sessions for this user
-      await revokeAllUserSessions(payload.userId).catch(() => {});
+      if (AUTH_PROVIDER === "supabase") {
+        // Escribir la clave también en Supabase Auth (fuente de verdad del login).
+        const { data: row } = await supabase
+          .from("equipo")
+          .select("auth_user_id")
+          .eq("id", payload.userId)
+          .maybeSingle();
+        if (row?.auth_user_id) await updateStaffAuthUser(row.auth_user_id as string, { password: newPassword });
+      } else {
+        // legacy: revocar todas las sesiones existentes del usuario
+        await revokeAllUserSessions(payload.userId).catch(() => {});
+      }
     } else {
       const hashed = await bcrypt.hash(newPassword, 12);
       const { error } = await supabase

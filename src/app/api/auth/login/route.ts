@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { setSessionCookie, type SessionPayload } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import bcrypt from "bcryptjs";
 
+const AUTH_PROVIDER = process.env.AUTH_PROVIDER || "legacy";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 // Break-glass admin: se prefiere el hash bcrypt (ADMIN_PASSWORD_HASH).
 // ADMIN_PASSWORD (texto plano) solo se acepta como fallback temporal de migración.
@@ -39,6 +41,33 @@ export async function POST(request: NextRequest) {
 
     const emailNorm = email.toLowerCase().trim();
 
+    // ══ Modo Supabase Auth ══
+    if (AUTH_PROVIDER === "supabase") {
+      const ssr = await createServerSupabase();
+      const { data, error } = await ssr.auth.signInWithPassword({ email: emailNorm, password });
+      if (error || !data.user) {
+        await new Promise((r) => setTimeout(r, 300 + Math.random() * 200));
+        return NextResponse.json({ error: "Email o contraseña incorrectos" }, { status: 401 });
+      }
+      // Construir el MISMO shape { user: {id,nombre,email,role} } (id = equipo.id).
+      const admin = createAdminClient();
+      const { data: miembro } = await admin
+        .from("equipo")
+        .select("id, nombre, email, role")
+        .eq("auth_user_id", data.user.id)
+        .maybeSingle();
+      const meta = (data.user.app_metadata || {}) as Record<string, unknown>;
+      const um = (data.user.user_metadata || {}) as Record<string, unknown>;
+      const user: SessionPayload = {
+        id: miembro?.id || (meta.profile_id as string) || data.user.id,
+        nombre: miembro?.nombre || (um.nombre as string) || "",
+        email: data.user.email || emailNorm,
+        role: (miembro?.role || (meta.role as string) || "abogado") as SessionPayload["role"],
+      };
+      return NextResponse.json({ user });
+    }
+
+    // ══ Modo legacy (JWT propio) ══
     // ── 1. Verificar en tabla equipo (fuente de verdad principal) ──
     const supabase = createAdminClient();
     const { data: miembro } = await supabase

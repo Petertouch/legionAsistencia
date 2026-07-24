@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { createClient } from "@supabase/supabase-js";
+import { createMiddlewareClient } from "@/lib/supabase/server";
 
+const AUTH_PROVIDER = process.env.AUTH_PROVIDER || "legacy";
 const COOKIE_NAME = "legion-session";
-if (!process.env.SESSION_SECRET) {
-  throw new Error("SESSION_SECRET environment variable is required");
-}
-const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
+const SECRET = process.env.SESSION_SECRET
+  ? new TextEncoder().encode(process.env.SESSION_SECRET)
+  : null;
 
 // API routes that require auth
 const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas", "/api/actividad"];
@@ -32,7 +33,15 @@ const ADMIN_ROUTE_ROLES: Record<string, string[]> = {
   "/admin/mi-panel-vendedor": ["vendedor"],
 };
 
-function getSupabase() {
+interface Session {
+  id: string;
+  role: string;
+  email: string;
+  nombre: string;
+  jti?: string; // solo legacy
+}
+
+function getSupabaseAdmin() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -47,17 +56,54 @@ export async function middleware(request: NextRequest) {
   requestHeaders.delete("x-user-id");
   requestHeaders.delete("x-user-role");
   requestHeaders.delete("x-user-email");
+  requestHeaders.delete("x-user-nombre");
+
+  // Cliente Supabase para el middleware (solo en modo supabase); refresca cookies sb-*.
+  const sb = AUTH_PROVIDER === "supabase" ? createMiddlewareClient(request) : null;
+
+  const nextResponse = () => {
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    return sb ? sb.applyCookies(res) : res;
+  };
+  const redirect = (to: string) => {
+    const res = NextResponse.redirect(new URL(to, request.url));
+    return sb ? sb.applyCookies(res) : res;
+  };
+  const unauthorized = (msg: string) => {
+    const res = NextResponse.json({ error: msg }, { status: 401 });
+    return sb ? sb.applyCookies(res) : res;
+  };
+
+  // ── Resolver la sesión según el proveedor ──
+  async function getSession(): Promise<Session | null> {
+    if (AUTH_PROVIDER === "supabase") {
+      const { data: { user } } = await sb!.supabase.auth.getUser();
+      if (!user) return null;
+      const meta = (user.app_metadata || {}) as Record<string, unknown>;
+      return {
+        id: (meta.profile_id as string) || user.id,
+        role: (meta.role as string) || "abogado",
+        email: user.email || "",
+        nombre: ((user.user_metadata as Record<string, unknown>)?.nombre as string) || "",
+      };
+    }
+    // legacy (JWT propio)
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    if (!token || !SECRET) return null;
+    try {
+      const { payload } = await jwtVerify(token, SECRET);
+      const p = payload as unknown as Session;
+      return { id: p.id, role: p.role, email: p.email, nombre: p.nombre || "", jti: p.jti };
+    } catch {
+      return null;
+    }
+  }
 
   // ── Login: redirect to admin if already authenticated ──
   if (pathname === "/login") {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (token) {
-      const session = await verifyToken(token);
-      if (session) {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      }
-    }
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    const session = await getSession();
+    if (session) return redirect("/admin/dashboard");
+    return nextResponse();
   }
 
   // ── Admin routes and protected APIs ──
@@ -66,23 +112,11 @@ export async function middleware(request: NextRequest) {
   const isProtectedApi = PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p)) && !PUBLIC_API_EXCEPTIONS.some((p) => pathname.startsWith(p));
 
   if (isAdminRoute || isProtectedApi) {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-
-    if (!token) {
-      if (isProtectedApi) {
-        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-      }
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    const session = await verifyToken(token);
+    const session = await getSession();
 
     if (!session) {
-      const response = isProtectedApi
-        ? NextResponse.json({ error: "Sesión expirada" }, { status: 401 })
-        : NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete(COOKIE_NAME);
-      return response;
+      if (isProtectedApi) return unauthorized("No autorizado");
+      return redirect("/login");
     }
 
     // ── Role-based access control for admin pages ──
@@ -93,13 +127,13 @@ export async function middleware(request: NextRequest) {
       if (matchedRoute) {
         const [, allowedRoles] = matchedRoute;
         if (!allowedRoles.includes(session.role)) {
-          return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+          return redirect("/admin/dashboard");
         }
       }
     }
 
-    // ── Revocation check for API routes ──
-    if (isProtectedApi && session.jti) {
+    // ── Revocation check for API routes (solo legacy; Supabase maneja validez de sesión) ──
+    if (AUTH_PROVIDER !== "supabase" && isProtectedApi && session.jti) {
       const revoked = await isSessionRevoked(session.jti, session.id);
       if (revoked) {
         const response = NextResponse.json({ error: "Sesión revocada" }, { status: 401 });
@@ -114,24 +148,15 @@ export async function middleware(request: NextRequest) {
     // Codificado: el nombre puede tener acentos (no válidos en headers HTTP crudos).
     requestHeaders.set("x-user-nombre", encodeURIComponent(session.nombre || ""));
 
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return nextResponse();
   }
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
-}
-
-async function verifyToken(token: string) {
-  try {
-    const { payload } = await jwtVerify(token, SECRET);
-    return payload as { id: string; nombre?: string; role: string; email: string; jti?: string };
-  } catch {
-    return null;
-  }
+  return nextResponse();
 }
 
 async function isSessionRevoked(jti: string, userId: string): Promise<boolean> {
   try {
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
     const { data } = await supabase
       .from("revoked_sessions")
       .select("jti")
