@@ -17,6 +17,7 @@ export default function LanzaRegistroPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [code, setCode] = useState("");
+  const emailMode = (process.env.NEXT_PUBLIC_ALIADO_AUTH_PROVIDER || "legacy") === "supabase";
   const [comision, setComision] = useState(50000);
 
   useEffect(() => { getComisionLanza().then(setComision); }, []);
@@ -76,6 +77,11 @@ export default function LanzaRegistroPage() {
           <p className="text-gray-500 text-xs">
             Comparte tu link personalizado con tus contactos y gana {formatMoney(comision)} por cada cliente que se afilie.
           </p>
+          {emailMode && (
+            <p className="text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs">
+              📧 Te enviamos una <strong>clave temporal</strong> a tu correo para entrar al portal desde <span className="font-mono">/aliados</span>.
+            </p>
+          )}
           <div className="space-y-2 pt-2">
             <button
               onClick={() => router.push(`/aliados/panel?code=${code}`)}
@@ -130,8 +136,8 @@ export default function LanzaRegistroPage() {
         </div>
 
         <div>
-          <label className="text-gray-600 text-xs font-medium mb-1 block">Email</label>
-          <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="correo@ejemplo.com" className={inputCls} />
+          <label className="text-gray-600 text-xs font-medium mb-1 block">Email {emailMode && <span className="text-red-500">*</span>}</label>
+          <input type="email" required={emailMode} value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="correo@ejemplo.com" className={inputCls} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
