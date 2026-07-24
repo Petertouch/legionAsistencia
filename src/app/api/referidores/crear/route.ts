@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMail } from "@/lib/mail";
 import bcrypt from "bcryptjs";
 
+const ALIADO_AUTH = process.env.ALIADO_AUTH_PROVIDER || process.env.NEXT_PUBLIC_ALIADO_AUTH_PROVIDER || "legacy";
+
 function generateCode(tipo: string): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -59,6 +61,31 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // En modo Supabase Auth: crear/enlazar el usuario en auth.users (login por email).
+    const emailNorm = email?.trim().toLowerCase() || "";
+    if (ALIADO_AUTH === "supabase" && emailNorm && data?.id) {
+      const { data: list } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      const existing = list.users.find((u) => (u.email || "").toLowerCase() === emailNorm);
+      if (existing) {
+        // Persona que ya tiene cuenta (staff/cliente): una cuenta, varios roles.
+        await supabase.from("lanzas").update({ auth_user_id: existing.id }).eq("id", data.id);
+        await supabase.auth.admin.updateUserById(existing.id, { app_metadata: { ...existing.app_metadata, es_aliado: true, aliado_profile_id: data.id } });
+      } else {
+        const { data: created, error: authErr } = await supabase.auth.admin.createUser({
+          email: emailNorm,
+          password: tempPassword,
+          email_confirm: true,
+          app_metadata: { role: "aliado", tipo, profile_id: data.id },
+          user_metadata: { nombre: nombre.trim() },
+        });
+        if (!authErr && created?.user) {
+          await supabase.from("lanzas").update({ auth_user_id: created.user.id }).eq("id", data.id);
+        } else {
+          console.error("[referidores/crear] createUser:", authErr?.message);
+        }
+      }
     }
 
     // Send welcome email directly (not via HTTP to avoid serverless self-call issues)

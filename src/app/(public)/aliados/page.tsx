@@ -10,6 +10,8 @@ export default function AliadoLoginPage() {
   const router = useRouter();
   const [cedula, setCedula] = useState("");
   const [clave, setClave] = useState("");
+  // En modo Supabase, el aliado entra por EMAIL; en legacy, por cédula.
+  const emailMode = (process.env.NEXT_PUBLIC_ALIADO_AUTH_PROVIDER || "legacy") === "supabase";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,7 +31,7 @@ export default function AliadoLoginPage() {
       const res = await fetch("/api/aliados/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim(), clave }),
+        body: JSON.stringify(emailMode ? { email: cedula.trim(), clave } : { cedula: cedula.trim(), clave }),
       });
 
       const data = await res.json();
@@ -65,7 +67,11 @@ export default function AliadoLoginPage() {
       const res = await fetch("/api/aliados/cambiar-clave", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cedula: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }),
+        body: JSON.stringify(
+          emailMode
+            ? { email: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }
+            : { cedula: cedula.trim(), clave_actual: clave, clave_nueva: nuevaClave }
+        ),
       });
 
       if (!res.ok) {
@@ -126,14 +132,14 @@ export default function AliadoLoginPage() {
             <Shield className="w-8 h-8 text-oro" />
           </div>
           <h1 className="text-jungle-dark text-2xl font-bold">Portal Aliados</h1>
-          <p className="text-gray-600 text-sm">Ingresa con tu cédula y clave</p>
+          <p className="text-gray-600 text-sm">{emailMode ? "Ingresa con tu correo y clave" : "Ingresa con tu cédula y clave"}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
           <div>
-            <label className="text-gray-600 text-xs font-bold mb-1 block uppercase tracking-wider">Cédula</label>
-            <input type="text" value={cedula} onChange={(e) => { setCedula(e.target.value.replace(/\D/g, "")); setError(""); }}
-              placeholder="Tu número de cédula" required inputMode="numeric"
+            <label className="text-gray-600 text-xs font-bold mb-1 block uppercase tracking-wider">{emailMode ? "Correo" : "Cédula"}</label>
+            <input type={emailMode ? "email" : "text"} value={cedula} onChange={(e) => { setCedula(emailMode ? e.target.value : e.target.value.replace(/\D/g, "")); setError(""); }}
+              placeholder={emailMode ? "correo@ejemplo.com" : "Tu número de cédula"} required inputMode={emailMode ? "email" : "numeric"}
               className="w-full bg-arena text-jungle-dark placeholder-gray-400 text-sm px-4 py-2.5 rounded-lg border border-gray-200 focus:border-oro focus:outline-none focus:ring-2 focus:ring-oro/20" />
           </div>
           <div>

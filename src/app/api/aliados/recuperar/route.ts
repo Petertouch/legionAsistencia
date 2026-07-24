@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMail } from "@/lib/mail";
 import bcrypt from "bcryptjs";
 
+const ALIADO_AUTH = process.env.ALIADO_AUTH_PROVIDER || process.env.NEXT_PUBLIC_ALIADO_AUTH_PROVIDER || "legacy";
+
 export async function POST(request: NextRequest) {
   try {
     const { cedula } = await request.json();
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
     const { data: aliado } = await supabase
       .from("lanzas")
-      .select("id, nombre, email, code")
+      .select("id, nombre, email, code, auth_user_id")
       .eq("cedula", cedula.trim())
       .eq("status", "activo")
       .single();
@@ -38,6 +40,11 @@ export async function POST(request: NextRequest) {
       .from("lanzas")
       .update({ clave: hashed, debe_cambiar_clave: true })
       .eq("id", aliado.id);
+
+    // En modo Supabase Auth: fijar la misma clave temporal en auth.users.
+    if (ALIADO_AUTH === "supabase" && aliado.auth_user_id) {
+      await supabase.auth.admin.updateUserById(aliado.auth_user_id as string, { password: tempClave }).catch(() => {});
+    }
 
     // Send email
     const nombre = aliado.nombre.split(" ")[0];
