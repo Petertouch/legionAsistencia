@@ -203,8 +203,12 @@ export default function SuscriptorDetailPage() {
           <KeyRound className="w-4 h-4 text-oro" /> Acceso del cliente
         </h3>
         <p className="text-gray-500 text-xs mb-3">
-          El cliente inicia sesión en <span className="font-mono">/mi-caso</span> con su cédula
-          (<strong className="text-gray-700">{suscriptor.cedula}</strong>) y su clave.
+          El cliente inicia sesión en <span className="font-mono">/mi-caso</span>{" "}
+          {(process.env.NEXT_PUBLIC_CLIENT_AUTH_PROVIDER || "legacy") === "supabase" ? (
+            <>con su <strong className="text-gray-700">correo</strong> (<strong className="text-gray-700">{suscriptor.email || "sin correo"}</strong>) y su clave.</>
+          ) : (
+            <>con su cédula (<strong className="text-gray-700">{suscriptor.cedula}</strong>) y su clave.</>
+          )}
         </p>
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="flex-1">
