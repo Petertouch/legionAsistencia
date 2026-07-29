@@ -1,10 +1,10 @@
 name: Resumen de casos por WhatsApp
 
-# Dispara el cron de resúmenes 3 veces al día (8am/12pm/4pm hora Colombia = UTC-5).
+# Dispara el cron de resúmenes 1 vez al día (8am hora Colombia = UTC-5).
 # Reemplaza al cron nativo de Vercel, que en plan Hobby solo permite 1 ejecución/día.
 on:
   schedule:
-    - cron: "0 13,17,21 * * *" # 13:00, 17:00, 21:00 UTC
+    - cron: "0 13 * * *" # 13:00 UTC = 8:00 a.m. Bogotá
   workflow_dispatch: {} # permite dispararlo manualmente desde la pestaña Actions
 
 jobs:
