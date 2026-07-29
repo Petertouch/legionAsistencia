@@ -55,7 +55,22 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/referidores", label: "Aliados", icon: Gift, roles: ["admin"] },
       { href: "/admin/brochure", label: "Brochure", icon: FileText, roles: ["admin"] },
       { href: "/admin/qrs", label: "Códigos QR", icon: QrCode, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Comunicaciones",
+    items: [
       { href: "/admin/mails", label: "Emails", icon: Mail, roles: ["admin"] },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
+      { href: "/admin/configuracion", label: "Configuración", icon: Settings, roles: ["admin"] },
+      { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
+      { href: "/admin/api-docs", label: "API / Integración", icon: Webhook, roles: ["admin"] },
+      { href: "/admin/blueprint", label: "Blueprint QA", icon: ClipboardCheck, roles: ["admin"] },
     ],
   },
   {
@@ -65,16 +80,6 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/admin/cursos", label: "Cursos", icon: GraduationCap, roles: ["admin"] },
       { href: "/admin/profesores", label: "Profesores", icon: UserPen, roles: ["admin"] },
       { href: "/admin/diplomas", label: "Diplomas", icon: Award, roles: ["admin"] },
-    ],
-  },
-  {
-    label: "Sistema",
-    items: [
-      { href: "/admin/equipo", label: "Equipo", icon: UsersRound, roles: ["admin"] },
-      { href: "/admin/api-docs", label: "API / Integración", icon: Webhook, roles: ["admin"] },
-      { href: "/admin/configuracion", label: "Configuración", icon: Settings, roles: ["admin"] },
-      { href: "/admin/conocimiento", label: "Conocimiento IA", icon: BookOpen, roles: ["admin"] },
-      { href: "/admin/blueprint", label: "Blueprint QA", icon: ClipboardCheck, roles: ["admin"] },
     ],
   },
 ];
