@@ -82,7 +82,7 @@ function ConsultaForm() {
             </div>
             <div>
               <p className="text-gray-900 font-bold text-sm leading-tight">Escribe tu consulta</p>
-              <p className="text-gray-400 text-[11px] leading-tight">Gratis · confidencial · respuesta a tu correo</p>
+              <p className="text-gray-400 text-[11px] leading-tight">Orientación gratuita · confidencial · a tu correo</p>
             </div>
           </div>
 
@@ -121,6 +121,12 @@ function ConsultaForm() {
           </div>
 
           {error && <p className="text-red-500 text-xs">{error}</p>}
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <p className="text-amber-800 text-[11px] leading-relaxed">
+              <strong>Es una orientación gratuita:</strong> una guía general para que sepas cómo actuar. <strong>No</strong> es un concepto jurídico, <strong>ni</strong> un documento, <strong>ni</strong> una representación legal.
+            </p>
+          </div>
 
           <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3.5 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/30 flex items-center justify-center gap-2">
             {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
@@ -196,7 +202,7 @@ function ConsultaForm() {
           </div>
           <h3 className="text-gray-900 font-bold text-base mb-2">¡Consulta recibida! ⚖️</h3>
           <p className="text-gray-500 text-sm mb-4">
-            Un abogado revisará tu caso y te enviará la respuesta a <strong className="text-gray-900">{email}</strong> en un promedio de <strong className="text-jungle-dark">8 horas</strong>.
+            Un abogado revisará tu caso y te enviará una <strong className="text-gray-900">orientación</strong> a <strong className="text-gray-900">{email}</strong> en un promedio de <strong className="text-jungle-dark">8 horas</strong>. Es una guía general, no un documento ni una representación.
           </p>
           <div className="flex flex-col gap-2">
             <a href={SHARE_URL} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
@@ -241,9 +247,9 @@ function CommunityFeed({ onCount }: { onCount: (n: number) => void }) {
     <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="flex items-center gap-2 mb-1">
         <Users className="w-5 h-5 text-oro" />
-        <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Consultas resueltas por nuestros abogados</h2>
+        <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Orientaciones resueltas por nuestros abogados</h2>
       </div>
-      <p className="text-gray-500 text-sm mb-6">Preguntas reales de compañeros, respondidas gratis. Así de simple funciona.</p>
+      <p className="text-gray-500 text-sm mb-6">Preguntas reales de compañeros, orientadas gratis. Son guías generales — no conceptos, documentos ni representación.</p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {items.slice(0, 9).map((c) => {
@@ -286,7 +292,7 @@ function CommunityFeed({ onCount }: { onCount: (n: number) => void }) {
                 <div className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">{selected.respuesta}</div>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-                <p className="text-amber-800 text-[11px]"><strong>Nota:</strong> Respuesta orientativa, no constituye asesoría legal formal. Para el seguimiento de tu caso, conoce nuestros planes.</p>
+                <p className="text-amber-800 text-[11px]"><strong>Orientación general.</strong> No es un concepto jurídico, ni un documento, ni una representación legal. Para llevar tu caso, conoce nuestros planes.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a href="#consultar" onClick={() => setSelected(null)} className="flex-1 bg-jungle-dark text-white text-sm font-bold py-3 rounded-xl text-center hover:bg-jungle-dark/90 transition-colors">Hacer mi consulta gratis</a>
@@ -305,7 +311,7 @@ function HowItWorks() {
   const steps = [
     { icon: HelpCircle, t: "1. Escribe tu pregunta", d: "Cuéntanos tu situación legal. Militar, policial, disciplinaria, pensional o familiar." },
     { icon: Lock, t: "2. Verifica tu correo", d: "Te enviamos un código para confirmar que eres tú. Tus datos quedan protegidos." },
-    { icon: Scale, t: "3. Un abogado te responde", d: "Un especialista revisa tu caso y te envía la respuesta a tu correo, gratis y en ~8 horas." },
+    { icon: Scale, t: "3. Un abogado te orienta", d: "Un especialista te envía una orientación a tu correo, gratis y en ~8h. Es una guía, no un concepto, documento ni representación." },
   ];
   return (
     <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -370,8 +376,8 @@ export default function BlogPage() {
               </h1>
               <p className="text-beige/60 text-sm sm:text-base leading-relaxed mb-6 max-w-lg">
                 ¿Proceso disciplinario, penal militar, pensión, ascenso o un tema de familia?
-                Escribe tu consulta y un abogado especializado en derecho militar y policial te
-                responde a tu correo. <strong className="text-white">Confidencial y sin costo.</strong>
+                Escribe tu consulta y un abogado especializado en derecho militar y policial te da
+                una <strong className="text-white">orientación clara</strong> a tu correo — gratis y confidencial.
               </p>
 
               {/* Trust badges */}
