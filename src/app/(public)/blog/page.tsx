@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { BLOG_ARTICLES, BLOG_CATEGORIES, CATEGORY_COLORS } from "@/lib/blog-data";
 import {
-  getAnsweredConsultas,
-  syncPersistedData,
-} from "@/lib/stores/questions-store";
-import {
-  Search, ChevronRight, BookOpen, Send, CheckCircle2,
-  MessageCircle, Scale,
+  Search, ChevronRight, BookOpen, Send, CheckCircle2, MessageCircle, Scale,
+  ShieldCheck, Clock, Lock, Share2, Users, ArrowRight, HelpCircle, X,
 } from "lucide-react";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 9;
+const WA = "https://wa.me/573176689580";
+const SHARE_TEXT = "Consulta legal GRATIS para militares y policías 👉 Un abogado te responde. https://legionjuridica.com/blog";
+const SHARE_URL = `https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`;
 
-// ── Registration / Login / Question Form ────────────────────────
-function ConsultaSection() {
+// Áreas rápidas para el formulario (subconjunto de categorías).
+const AREAS_RAPIDAS = ["Disciplinarios", "Penal Militar", "Salud y Pensión", "Ascensos y Carrera", "Familia", "Derechos Laborales"];
+
+// ── Formulario de consulta (protagonista) ──────────────────────────
+function ConsultaForm() {
   const [step, setStep] = useState<"form" | "code" | "done">("form");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -68,271 +70,268 @@ function ConsultaSection() {
     finally { setLoading(false); }
   };
 
-  const inputCls = "w-full bg-white/10 border border-white/10 text-white text-sm px-3 py-2.5 rounded-lg placeholder-beige/30 focus:outline-none focus:border-oro/40";
+  const inputCls = "w-full bg-white text-gray-900 text-sm px-3.5 py-3 rounded-xl border border-gray-200 placeholder-gray-400 focus:outline-none focus:border-oro focus:ring-2 focus:ring-oro/20 transition-all";
 
   return (
-    <section className="bg-jungle-dark rounded-2xl overflow-hidden">
-      <div className="p-5 sm:p-8">
-        <div className="flex items-center gap-2 mb-1">
-          <MessageCircle className="w-5 h-5 text-oro" />
-          <h2 className="text-white text-lg sm:text-xl font-bold">Consulta legal gratuita</h2>
-        </div>
-        <p className="text-beige/50 text-xs sm:text-sm mb-5">
-          Nuestro equipo de abogados responde en un promedio de <strong className="text-oro">8 horas</strong>.
-          La respuesta es orientativa, confidencial y llega directo a tu correo.
-        </p>
+    <div id="consultar" className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-5 sm:p-6">
+      {step === "form" && (
+        <form onSubmit={handleSendCode} className="space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 bg-oro/15 rounded-lg flex items-center justify-center">
+              <MessageCircle className="w-4 h-4 text-oro" />
+            </div>
+            <div>
+              <p className="text-gray-900 font-bold text-sm leading-tight">Escribe tu consulta</p>
+              <p className="text-gray-400 text-[11px] leading-tight">Gratis · confidencial · respuesta a tu correo</p>
+            </div>
+          </div>
 
-        {/* Step 1: Form */}
-        {step === "form" && (
-          <form onSubmit={handleSendCode} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre *" className={inputCls} required />
-              <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} placeholder="Apellido *" className={inputCls} required />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))} placeholder="Teléfono / WhatsApp *" inputMode="numeric" className={inputCls} required />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico *" className={inputCls} required />
-            </div>
-            <textarea value={pregunta} onChange={(e) => setPregunta(e.target.value)} placeholder="Describe tu situación o pregunta legal... *" rows={4} className={`${inputCls} resize-none`} required />
-            {error && <p className="text-red-400 text-xs">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/20 flex items-center justify-center gap-2">
-              {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-              {loading ? "Enviando código..." : "Enviar consulta"}
-            </button>
-            <p className="text-beige/25 text-[10px] text-center">Te enviaremos un código al correo para verificar tu identidad.</p>
-          </form>
-        )}
+          <textarea
+            value={pregunta}
+            onChange={(e) => setPregunta(e.target.value)}
+            placeholder="Cuéntanos tu situación. Ej: Me notificaron una investigación disciplinaria, ¿qué debo hacer?"
+            rows={4}
+            className={`${inputCls} resize-none`}
+            required
+          />
 
-        {/* Step 2: Code verification */}
-        {step === "code" && (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-              <p className="text-white text-sm mb-1">Enviamos un código de 6 dígitos a</p>
-              <p className="text-oro font-bold text-sm">{email}</p>
-              <p className="text-beige/40 text-[10px] mt-1">Revisa tu bandeja de entrada y spam</p>
-            </div>
-            {/* 6 digit boxes */}
-            <div className="flex justify-center gap-2 sm:gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="relative">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={code[i] || ""}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      if (!val && e.nativeEvent instanceof InputEvent && e.nativeEvent.inputType === "deleteContentBackward") {
-                        const newCode = code.slice(0, i) + code.slice(i + 1);
-                        setCode(newCode);
-                        const prev = e.target.previousElementSibling as HTMLInputElement | null;
-                        if (prev) prev.focus();
-                        return;
-                      }
-                      if (!val) return;
-                      const newCode = code.slice(0, i) + val[0] + code.slice(i + 1);
-                      setCode(newCode.slice(0, 6));
-                      const next = e.target.nextElementSibling as HTMLInputElement | null;
-                      if (next && val) next.focus();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !code[i]) {
-                        const prev = (e.target as HTMLElement).previousElementSibling as HTMLInputElement | null;
-                        if (prev) prev.focus();
-                      }
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-                      if (pasted) setCode(pasted);
-                    }}
-                    className={`w-11 h-14 sm:w-13 sm:h-16 bg-white rounded-xl border-2 text-center text-2xl sm:text-3xl font-black focus:outline-none transition-all ${
-                      code[i] ? "border-oro text-gray-900" : "border-gray-200 text-gray-300"
-                    } focus:border-oro focus:ring-2 focus:ring-oro/20`}
-                    autoFocus={i === 0}
-                  />
-                  {!code[i] && (
-                    <span className="absolute inset-0 flex items-center justify-center text-gray-300 text-2xl font-bold pointer-events-none">—</span>
-                  )}
-                </div>
-              ))}
-            </div>
-            {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-            <button type="submit" disabled={loading || code.length !== 6} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/20 flex items-center justify-center gap-2">
-              {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              {loading ? "Verificando..." : "Verificar y enviar consulta"}
-            </button>
-            <button type="button" onClick={() => { setStep("form"); setCode(""); setError(""); }} className="text-beige/40 text-xs hover:text-white transition-colors block mx-auto">
-              ← Volver al formulario
-            </button>
-          </form>
-        )}
+          {/* Áreas rápidas */}
+          <div className="flex flex-wrap gap-1.5">
+            {AREAS_RAPIDAS.map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setArea(area === a ? "" : a)}
+                className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all ${
+                  area === a ? "bg-jungle-dark text-white border-jungle-dark" : "bg-gray-50 text-gray-500 border-gray-200 hover:border-oro/40"
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
 
-        {/* Step 3: Done */}
-        {step === "done" && (
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
-            <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
-            <h3 className="text-white font-bold text-base mb-2">¡Consulta recibida!</h3>
-            <p className="text-beige/50 text-sm mb-4">
-              Un abogado revisará tu caso y te enviaremos la respuesta a <strong className="text-white">{email}</strong> en un promedio de 8 horas.
-            </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre *" className={inputCls} required />
+            <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} placeholder="Apellido *" className={inputCls} required />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))} placeholder="WhatsApp *" inputMode="numeric" className={inputCls} required />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo *" className={inputCls} required />
+          </div>
+
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+
+          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3.5 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/30 flex items-center justify-center gap-2">
+            {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
+            {loading ? "Enviando..." : "Enviar mi consulta gratis"}
+          </button>
+          <p className="text-gray-400 text-[10px] text-center flex items-center justify-center gap-1">
+            <Lock className="w-3 h-3" /> Te enviaremos un código al correo para verificarte. No compartimos tus datos.
+          </p>
+        </form>
+      )}
+
+      {step === "code" && (
+        <form onSubmit={handleVerify} className="space-y-4">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-oro/15 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Lock className="w-5 h-5 text-oro" />
+            </div>
+            <p className="text-gray-900 font-bold text-sm">Verifica tu correo</p>
+            <p className="text-gray-500 text-xs mt-1">Enviamos un código de 6 dígitos a</p>
+            <p className="text-jungle-dark font-bold text-sm">{email}</p>
+            <p className="text-gray-400 text-[10px] mt-0.5">Revisa tu bandeja de entrada y spam</p>
+          </div>
+          <div className="flex justify-center gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <input
+                key={i}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={code[i] || ""}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  if (!val && e.nativeEvent instanceof InputEvent && e.nativeEvent.inputType === "deleteContentBackward") {
+                    setCode(code.slice(0, i) + code.slice(i + 1));
+                    (e.target.previousElementSibling as HTMLInputElement | null)?.focus();
+                    return;
+                  }
+                  if (!val) return;
+                  setCode((code.slice(0, i) + val[0] + code.slice(i + 1)).slice(0, 6));
+                  if (val) (e.target.nextElementSibling as HTMLInputElement | null)?.focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace" && !code[i]) {
+                    const prev = (e.target as HTMLElement).previousElementSibling;
+                    if (prev instanceof HTMLInputElement) prev.focus();
+                  }
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+                  if (pasted) setCode(pasted);
+                }}
+                className={`w-11 h-14 bg-gray-50 rounded-xl border-2 text-center text-2xl font-black focus:outline-none transition-all ${code[i] ? "border-oro text-gray-900" : "border-gray-200 text-gray-300"} focus:border-oro focus:ring-2 focus:ring-oro/20`}
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+          <button type="submit" disabled={loading || code.length !== 6} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3.5 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/30 flex items-center justify-center gap-2">
+            {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {loading ? "Verificando..." : "Verificar y enviar consulta"}
+          </button>
+          <button type="button" onClick={() => { setStep("form"); setCode(""); setError(""); }} className="text-gray-400 text-xs hover:text-gray-700 transition-colors block mx-auto">
+            ← Volver
+          </button>
+        </form>
+      )}
+
+      {step === "done" && (
+        <div className="text-center py-4">
+          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <CheckCircle2 className="w-8 h-8 text-green-500" />
+          </div>
+          <h3 className="text-gray-900 font-bold text-base mb-2">¡Consulta recibida! ⚖️</h3>
+          <p className="text-gray-500 text-sm mb-4">
+            Un abogado revisará tu caso y te enviará la respuesta a <strong className="text-gray-900">{email}</strong> en un promedio de <strong className="text-jungle-dark">8 horas</strong>.
+          </p>
+          <div className="flex flex-col gap-2">
+            <a href={SHARE_URL} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+              <Share2 className="w-4 h-4" /> Comparte con tu compañía
+            </a>
             <button onClick={() => { setStep("form"); setNombre(""); setApellido(""); setTelefono(""); setEmail(""); setArea(""); setPregunta(""); setCode(""); setError(""); }}
               className="text-oro text-sm font-medium hover:underline">
               Hacer otra consulta
             </button>
           </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function ConsultaToggle() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="mb-8 sm:mb-10">
-      {!open ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="w-full bg-jungle-dark hover:bg-jungle-dark/90 rounded-2xl p-5 sm:p-6 flex items-center justify-between transition-all group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-oro/15 rounded-xl flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-oro" />
-            </div>
-            <div className="text-left">
-              <p className="text-white font-bold text-sm sm:text-base">Consulta legal gratuita</p>
-              <p className="text-beige/50 text-xs sm:text-sm">Un abogado responde tu pregunta en promedio 8 horas</p>
-            </div>
-          </div>
-          <span className="bg-gradient-to-r from-oro to-oro-light text-jungle-dark text-xs sm:text-sm font-bold px-4 py-2 rounded-xl group-hover:scale-105 transition-transform">
-            Hacer consulta
-          </span>
-        </button>
-      ) : (
-        <ConsultaSection />
+        </div>
       )}
     </div>
   );
 }
 
-// ── Answered questions from the community ───────────────────────
-function CommunityAnswers() {
-  const [mounted, setMounted] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  useEffect(() => { syncPersistedData(); setMounted(true); }, []);
+// ── Feed de consultas resueltas (datos reales) ─────────────────────
+interface ConsultaPublica {
+  id: string;
+  nombre: string;
+  area: string;
+  pregunta: string;
+  respuesta: string;
+  respondido_por: string;
+  respondido_at: string | null;
+}
 
-  if (!mounted) return null;
+function CommunityFeed({ onCount }: { onCount: (n: number) => void }) {
+  const [items, setItems] = useState<ConsultaPublica[]>([]);
+  const [selected, setSelected] = useState<ConsultaPublica | null>(null);
 
-  const answered = getAnsweredConsultas();
-  if (answered.length === 0) return null;
+  useEffect(() => {
+    fetch("/api/consultas-blog/publicas")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d: ConsultaPublica[]) => { setItems(d); onCount(d.length); })
+      .catch(() => {});
+  }, [onCount]);
 
-  const selected = selectedId ? answered.find((c) => c.id === selectedId) : null;
+  if (items.length === 0) return null;
 
   return (
-    <>
-      <div className="mb-8 sm:mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <CheckCircle2 className="w-5 h-5 text-green-500" />
-          <h2 className="text-gray-900 text-lg font-bold">Consultas respondidas por nuestros abogados</h2>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {answered.map((c) => {
-            const respuesta = c.notas_etapa.split("\n---\n")[1] || c.notas_etapa;
-            return (
-              <button
-                key={c.id}
-                onClick={() => setSelectedId(c.id)}
-                className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 hover:shadow-md hover:border-oro/30 transition-all text-left group h-full flex flex-col"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-[10px]">{c.suscriptor_nombre}</span>
-                  <span className="text-green-600 text-[10px] font-medium flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Respondida
-                  </span>
-                </div>
-                <h3 className="text-gray-900 font-bold text-sm leading-snug mb-2 group-hover:text-jungle-dark transition-colors">
-                  {c.descripcion.length > 120 ? c.descripcion.slice(0, 117) + "..." : c.descripcion}
-                </h3>
-                <p className="text-gray-500 text-xs leading-relaxed line-clamp-3 flex-1">{respuesta}</p>
-                <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                  <p className="text-gray-300 text-[9px]">
-                    {c.abogado} • {new Date(c.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
-                  </p>
-                  <span className="text-oro text-xs font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Leer más <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="flex items-center gap-2 mb-1">
+        <Users className="w-5 h-5 text-oro" />
+        <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Consultas resueltas por nuestros abogados</h2>
+      </div>
+      <p className="text-gray-500 text-sm mb-6">Preguntas reales de compañeros, respondidas gratis. Así de simple funciona.</p>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {items.slice(0, 9).map((c) => {
+          const colors = CATEGORY_COLORS[c.area] || CATEGORY_COLORS["Disciplinarios"];
+          return (
+            <button key={c.id} onClick={() => setSelected(c)}
+              className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:border-oro/30 transition-all text-left group h-full flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${colors.bg} ${colors.text} ${colors.border}`}>{c.area}</span>
+                <span className="text-green-600 text-[10px] font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Resuelta</span>
+              </div>
+              <h3 className="text-gray-900 font-bold text-sm leading-snug mb-2 group-hover:text-jungle-dark transition-colors">
+                {c.pregunta.length > 110 ? c.pregunta.slice(0, 107) + "..." : c.pregunta}
+              </h3>
+              <p className="text-gray-500 text-xs leading-relaxed line-clamp-3 flex-1">{c.respuesta}</p>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                <span className="text-gray-400 text-[10px]">{c.nombre} · {c.respondido_por}</span>
+                <span className="text-oro text-xs font-semibold flex items-center gap-1 group-hover:gap-1.5 transition-all">Ver <ChevronRight className="w-3.5 h-3.5" /></span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Detail modal */}
+      {/* Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto" onClick={() => setSelectedId(null)}>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 pt-[8vh] overflow-y-auto" onClick={() => setSelected(null)}>
           <article className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 sm:p-8">
-              {/* Header */}
               <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex-1">
-                  <span className="text-green-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 mb-2">
-                    <CheckCircle2 className="w-3 h-3" /> Consulta respondida
-                  </span>
-                  <span className="text-gray-400 text-xs">
-                    {selected.suscriptor_nombre} • {new Date(selected.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}
-                  </span>
-                </div>
-                <button onClick={() => setSelectedId(null)} className="text-gray-400 hover:text-gray-700 transition-colors text-xl leading-none p-1">×</button>
+                <span className="text-green-600 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Consulta resuelta</span>
+                <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
               </div>
-
-              {/* Question */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
-                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1.5">Pregunta</p>
-                <p className="text-gray-900 text-sm sm:text-base leading-relaxed">{selected.descripcion}</p>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5">
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Pregunta de {selected.nombre}</p>
+                <p className="text-gray-900 text-sm sm:text-base leading-relaxed">{selected.pregunta}</p>
               </div>
-
-              {/* Answer */}
-              <div className="mb-6">
-                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1.5">Respuesta de {selected.abogado}</p>
-                <div className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">
-                  {selected.notas_etapa.split("\n---\n")[1] || selected.notas_etapa}
-                </div>
+              <div className="mb-5">
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1.5">Respuesta de {selected.respondido_por}</p>
+                <div className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">{selected.respuesta}</div>
               </div>
-
-              {/* Disclaimer */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
-                <p className="text-amber-800 text-[11px]">
-                  <strong>Nota:</strong> Esta respuesta es orientativa y no constituye asesoría legal formal. Para un seguimiento completo de tu caso, conoce nuestros planes.
-                </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
+                <p className="text-amber-800 text-[11px]"><strong>Nota:</strong> Respuesta orientativa, no constituye asesoría legal formal. Para el seguimiento de tu caso, conoce nuestros planes.</p>
               </div>
-
-              {/* CTA */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <a href="https://wa.me/573176689580" target="_blank" rel="noopener noreferrer"
-                  className="flex-1 bg-jungle-dark text-white text-sm font-bold py-3 rounded-xl text-center hover:bg-jungle-dark/90 transition-colors">
-                  Hablar con un abogado
-                </a>
-                <button onClick={() => setSelectedId(null)}
-                  className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-3 rounded-xl text-center hover:bg-gray-200 transition-colors">
-                  Cerrar
-                </button>
+                <a href="#consultar" onClick={() => setSelected(null)} className="flex-1 bg-jungle-dark text-white text-sm font-bold py-3 rounded-xl text-center hover:bg-jungle-dark/90 transition-colors">Hacer mi consulta gratis</a>
+                <a href={SHARE_URL} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#25D366] text-white text-sm font-bold py-3 rounded-xl text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-2"><Share2 className="w-4 h-4" /> Compartir</a>
               </div>
             </div>
           </article>
         </div>
       )}
-    </>
+    </section>
   );
 }
 
-// ── Main Blog Page ──────────────────────────────────────────────
+// ── Cómo funciona ──────────────────────────────────────────────────
+function HowItWorks() {
+  const steps = [
+    { icon: HelpCircle, t: "1. Escribe tu pregunta", d: "Cuéntanos tu situación legal. Militar, policial, disciplinaria, pensional o familiar." },
+    { icon: Lock, t: "2. Verifica tu correo", d: "Te enviamos un código para confirmar que eres tú. Tus datos quedan protegidos." },
+    { icon: Scale, t: "3. Un abogado te responde", d: "Un especialista revisa tu caso y te envía la respuesta a tu correo, gratis y en ~8 horas." },
+  ];
+  return (
+    <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="grid sm:grid-cols-3 gap-4">
+        {steps.map((s) => (
+          <div key={s.t} className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="w-10 h-10 bg-oro/10 rounded-xl flex items-center justify-center mb-3">
+              <s.icon className="w-5 h-5 text-oro" />
+            </div>
+            <p className="text-gray-900 font-bold text-sm mb-1">{s.t}</p>
+            <p className="text-gray-500 text-xs leading-relaxed">{s.d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Página ─────────────────────────────────────────────────────────
 export default function BlogPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
+  const [resueltas, setResueltas] = useState(0);
+
+  const onCount = useCallback((n: number) => setResueltas(n), []);
 
   const filtered = useMemo(() => {
     return BLOG_ARTICLES.filter((a) => {
@@ -347,74 +346,110 @@ export default function BlogPage() {
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
   const catCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    BLOG_ARTICLES.forEach((a) => { counts[a.categoria] = (counts[a.categoria] || 0) + 1; });
-    return counts;
+    const c: Record<string, number> = {};
+    BLOG_ARTICLES.forEach((a) => { c[a.categoria] = (c[a.categoria] || 0) + 1; });
+    return c;
   }, []);
 
   return (
-    <div className="min-h-screen bg-arena pt-20 sm:pt-24">
-      {/* Hero */}
-      <div className="bg-jungle-dark py-10 sm:py-16">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Scale className="w-6 h-6 sm:w-8 sm:h-8 text-oro" />
-              <h1 className="text-white text-2xl sm:text-4xl font-black">Guía Legal Militar</h1>
+    <div className="min-h-screen bg-arena pt-16 sm:pt-20">
+      {/* ═══ HERO — la consulta como protagonista ═══ */}
+      <div className="relative bg-jungle-dark overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, #C8A96E 0%, transparent 40%), radial-gradient(circle at 80% 70%, #C8A96E 0%, transparent 40%)" }} />
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Izquierda: mensaje */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-oro/20 rounded-full px-3 py-1 mb-4">
+                <ShieldCheck className="w-3.5 h-3.5 text-oro" />
+                <span className="text-beige/80 text-[11px] sm:text-xs font-medium">Hecho por y para la Fuerza Pública de Colombia</span>
+              </div>
+              <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] mb-4">
+                Un abogado experto te responde. <span className="text-oro">Gratis.</span>
+              </h1>
+              <p className="text-beige/60 text-sm sm:text-base leading-relaxed mb-6 max-w-lg">
+                ¿Proceso disciplinario, penal militar, pensión, ascenso o un tema de familia?
+                Escribe tu consulta y un abogado especializado en derecho militar y policial te
+                responde a tu correo. <strong className="text-white">Confidencial y sin costo.</strong>
+              </p>
+
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {[
+                  { icon: CheckCircle2, t: "100% gratis" },
+                  { icon: Clock, t: "Respuesta en ~8h" },
+                  { icon: Lock, t: "Confidencial" },
+                  { icon: Scale, t: "Abogados especializados" },
+                ].map((b) => (
+                  <span key={b.t} className="flex items-center gap-1.5 text-beige/70 text-xs sm:text-sm">
+                    <b.icon className="w-4 h-4 text-oro flex-shrink-0" /> {b.t}
+                  </span>
+                ))}
+              </div>
+
+              {/* Stat social proof */}
+              {resueltas > 0 && (
+                <div className="mt-6 inline-flex items-center gap-2 text-beige/50 text-xs">
+                  <span className="flex -space-x-1.5">
+                    {[0, 1, 2].map((i) => <span key={i} className="w-5 h-5 rounded-full bg-oro/30 border border-jungle-dark" />)}
+                  </span>
+                  <span><strong className="text-oro">{resueltas}+</strong> consultas ya resueltas para compañeros</span>
+                </div>
+              )}
             </div>
-            <Link href="/noticias"
-              className="flex items-center gap-1.5 bg-white/10 border border-white/10 text-beige/70 hover:text-oro hover:border-oro/30 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all">
-              <BookOpen className="w-4 h-4" /> Noticias
-            </Link>
-          </div>
-          <p className="text-beige/60 text-sm sm:text-base max-w-2xl mb-6 sm:mb-8">
-            Respuestas claras a las preguntas legales más comunes de militares y policías en Colombia. 
-            Haz tu propia consulta y un abogado te responde gratis.
-          </p>
-          <div className="relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-beige/30" />
-            <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Buscar por tema, palabra clave..."
-              className="w-full bg-white/10 border border-white/15 text-white text-sm sm:text-base pl-12 pr-4 py-3 sm:py-3.5 rounded-xl placeholder-beige/30 focus:outline-none focus:border-oro/50 transition-colors" />
+
+            {/* Derecha: formulario */}
+            <div className="lg:pl-4">
+              <ConsultaForm />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 sm:py-10">
-        {/* Question form — toggle */}
-        <ConsultaToggle />
+      {/* ═══ Cómo funciona ═══ */}
+      <HowItWorks />
 
-        {/* Answered community questions */}
-        <CommunityAnswers />
+      {/* ═══ Consultas resueltas (comunidad) ═══ */}
+      <CommunityFeed onCount={onCount} />
 
-        {/* Categories */}
-        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
+      {/* ═══ Guía legal (base de conocimiento) ═══ */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-oro" />
+            <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Guía legal militar</h2>
+          </div>
+          <Link href="/noticias" className="flex items-center gap-1.5 text-gray-500 hover:text-oro text-xs sm:text-sm font-medium transition-colors">
+            <BookOpen className="w-4 h-4" /> Ver noticias
+          </Link>
+        </div>
+        <p className="text-gray-500 text-sm mb-5">Respuestas claras a las dudas legales más comunes de militares y policías.</p>
+
+        {/* Búsqueda */}
+        <div className="relative max-w-xl mb-5">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Buscar por tema: pensión, ascenso, sanción..."
+            className="w-full bg-white border border-gray-200 text-gray-900 text-sm pl-12 pr-4 py-3 rounded-xl placeholder-gray-400 focus:outline-none focus:border-oro focus:ring-2 focus:ring-oro/10 transition-all" />
+        </div>
+
+        {/* Categorías */}
+        <div className="flex flex-wrap gap-2 mb-6">
           <button onClick={() => { setCategory(""); setPage(1); }}
-            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all ${
-              !category ? "bg-jungle-dark text-white border-jungle-dark" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-            }`}>
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all ${!category ? "bg-jungle-dark text-white border-jungle-dark" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"}`}>
             Todas ({BLOG_ARTICLES.length})
           </button>
           {BLOG_CATEGORIES.map((cat) => {
             const colors = CATEGORY_COLORS[cat];
             return (
               <button key={cat} onClick={() => { setCategory(category === cat ? "" : cat); setPage(1); }}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all ${
-                  category === cat ? `${colors.bg} ${colors.text} ${colors.border}` : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-                }`}>
+                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all ${category === cat ? `${colors.bg} ${colors.text} ${colors.border}` : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}>
                 {cat} ({catCounts[cat] || 0})
               </button>
             );
           })}
         </div>
-
-        <p className="text-gray-400 text-xs sm:text-sm mb-4">
-          {filtered.length} {filtered.length === 1 ? "artículo" : "artículos"}
-          {category && <span> en <strong className="text-gray-600">{category}</strong></span>}
-          {search && <span> para &quot;<strong className="text-gray-600">{search}</strong>&quot;</span>}
-        </p>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {paginated.map((article) => {
@@ -422,18 +457,10 @@ export default function BlogPage() {
             return (
               <Link key={article.id} href={`/blog/${article.slug}`}>
                 <article className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5 hover:shadow-md hover:border-oro/30 transition-all h-full flex flex-col group">
-                  <span className={`self-start text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border mb-3 ${colors.bg} ${colors.text} ${colors.border}`}>
-                    {article.categoria}
-                  </span>
-                  <h2 className="text-gray-900 font-bold text-sm sm:text-[15px] leading-snug mb-2 group-hover:text-jungle-dark transition-colors">
-                    {article.pregunta}
-                  </h2>
-                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed line-clamp-3 flex-1">
-                    {article.respuesta}
-                  </p>
-                  <div className="flex items-center gap-1 mt-3 text-oro text-xs font-semibold group-hover:gap-2 transition-all">
-                    Leer más <ChevronRight className="w-3.5 h-3.5" />
-                  </div>
+                  <span className={`self-start text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full border mb-3 ${colors.bg} ${colors.text} ${colors.border}`}>{article.categoria}</span>
+                  <h3 className="text-gray-900 font-bold text-sm sm:text-[15px] leading-snug mb-2 group-hover:text-jungle-dark transition-colors">{article.pregunta}</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed line-clamp-3 flex-1">{article.respuesta}</p>
+                  <div className="flex items-center gap-1 mt-3 text-oro text-xs font-semibold group-hover:gap-2 transition-all">Leer más <ChevronRight className="w-3.5 h-3.5" /></div>
                 </article>
               </Link>
             );
@@ -449,16 +476,37 @@ export default function BlogPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <button key={p} onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
-                  page === p ? "bg-jungle-dark text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-oro/30"
-                }`}>{p}</button>
+                className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${page === p ? "bg-jungle-dark text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-oro/30"}`}>{p}</button>
             ))}
           </div>
         )}
-      </div>
+      </section>
+
+      {/* ═══ Banner viral ═══ */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+        <div className="bg-jungle-dark rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-oro/15 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Share2 className="w-6 h-6 text-oro" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-base sm:text-lg">Un compañero también lo necesita</p>
+              <p className="text-beige/60 text-sm">Comparte la consulta gratis con tu unidad, tu compañía o tu grupo.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-shrink-0">
+            <a href={SHARE_URL} target="_blank" rel="noopener noreferrer" className="bg-[#25D366] text-white font-bold text-sm px-5 py-3 rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity">
+              <Share2 className="w-4 h-4" /> Compartir por WhatsApp
+            </a>
+            <a href={`${WA}?text=${encodeURIComponent("Hola, tengo una consulta legal")}`} target="_blank" rel="noopener noreferrer" className="bg-white/10 border border-white/15 text-white font-medium text-sm px-4 py-3 rounded-xl flex items-center gap-2 hover:bg-white/15 transition-colors">
+              Escríbenos <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
