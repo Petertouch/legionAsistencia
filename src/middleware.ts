@@ -10,7 +10,7 @@ const SECRET = process.env.SESSION_SECRET
   : null;
 
 // API routes that require auth
-const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas", "/api/actividad"];
+const PROTECTED_API_PREFIXES = ["/api/suscriptores", "/api/mail", "/api/upload", "/api/heygen", "/api/documentos", "/api/contratos", "/api/config", "/api/lanzas", "/api/actividad", "/api/notificaciones"];
 
 // Admin page role restrictions (matches sidebar.tsx)
 // Routes not listed here are accessible to any authenticated user (e.g. /admin/dashboard)
@@ -183,5 +183,6 @@ export const config = {
     "/api/config/:path*",
     "/api/lanzas/:path*",
     "/api/actividad/:path*",
+    "/api/notificaciones/:path*",
   ],
 };

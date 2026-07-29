@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useAuth } from "@/components/providers/auth-provider";
+import NotifBell from "@/components/admin/notif-bell";
 import { Shield, Scale, Menu } from "lucide-react";
 
 const TITLES: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function Topbar() {
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <span className="text-gray-400 text-xs">Sistema activo</span>
         </div>
+        <NotifBell />
         {user && (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center">
