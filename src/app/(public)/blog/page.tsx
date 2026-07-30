@@ -13,9 +13,6 @@ const WA = "https://wa.me/573176689580";
 const SHARE_TEXT = "Consulta legal GRATIS para militares y policías 👉 Un abogado te responde. https://legionjuridica.com/blog";
 const SHARE_URL = `https://wa.me/?text=${encodeURIComponent(SHARE_TEXT)}`;
 
-// Áreas rápidas para el formulario (subconjunto de categorías).
-const AREAS_RAPIDAS = ["Disciplinarios", "Penal Militar", "Salud y Pensión", "Ascensos y Carrera", "Familia", "Derechos Laborales"];
-
 // ── Formulario de consulta (protagonista) ──────────────────────────
 function ConsultaForm() {
   const [step, setStep] = useState<"form" | "code" | "done">("form");
@@ -94,22 +91,6 @@ function ConsultaForm() {
             className={`${inputCls} resize-none`}
             required
           />
-
-          {/* Áreas rápidas */}
-          <div className="flex flex-wrap gap-1.5">
-            {AREAS_RAPIDAS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => setArea(area === a ? "" : a)}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-all ${
-                  area === a ? "bg-jungle-dark text-white border-jungle-dark" : "bg-gray-50 text-gray-500 border-gray-200 hover:border-oro/40"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
 
           <div className="grid grid-cols-2 gap-2.5">
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre *" className={inputCls} required />
