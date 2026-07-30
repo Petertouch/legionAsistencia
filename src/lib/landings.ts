@@ -49,9 +49,7 @@ export const LANDINGS: Landing[] = [
 
   // ── Contenido ──
   { id: "blog", nombre: "Blog", ruta: "/blog", categoria: "contenido", estado: "activa",
-    descripcion: "Guía Legal Militar. El contenido se gestiona en la base de datos." },
-  { id: "noticias", nombre: "Noticias", ruta: "/noticias", categoria: "contenido", estado: "activa",
-    descripcion: "Noticias del sitio. El contenido se gestiona en la base de datos." },
+    descripcion: "Guía legal + consulta gratuita orientativa. Base de conocimiento en código." },
 ];
 
 export const landingUrl = (l: Landing) => `${SITE_BASE_URL}${l.ruta === "/" ? "" : l.ruta}`;

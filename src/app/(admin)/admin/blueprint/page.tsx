@@ -33,8 +33,7 @@ const JOURNEYS: Journey[] = [
     color: "text-blue-600",
     touchpoints: [
       { id: "1.1", label: "Landing page", url: "/", description: "Hero, planes, testimonios, CTA WhatsApp" },
-      { id: "1.2", label: "Blog / Guía legal", url: "/blog", description: "Artículos, búsqueda, categorías, Q&A comunidad" },
-      { id: "1.3", label: "Noticias", url: "/noticias", description: "Grid de noticias, detalle por slug" },
+      { id: "1.2", label: "Blog / Guía legal", url: "/blog", description: "Consulta gratuita orientativa, artículos, búsqueda, Q&A comunidad" },
     ],
   },
   {

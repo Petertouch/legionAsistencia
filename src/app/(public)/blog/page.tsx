@@ -422,14 +422,9 @@ export default function BlogPage() {
 
       {/* ═══ Guía legal (base de conocimiento) ═══ */}
       <section className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-oro" />
-            <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Guía legal militar</h2>
-          </div>
-          <Link href="/noticias" className="flex items-center gap-1.5 text-gray-500 hover:text-oro text-xs sm:text-sm font-medium transition-colors">
-            <BookOpen className="w-4 h-4" /> Ver noticias
-          </Link>
+        <div className="flex items-center gap-2 mb-2">
+          <BookOpen className="w-5 h-5 text-oro" />
+          <h2 className="text-gray-900 text-xl sm:text-2xl font-black">Guía legal militar</h2>
         </div>
         <p className="text-gray-500 text-sm mb-5">Respuestas claras a las dudas legales más comunes de militares y policías.</p>
 
