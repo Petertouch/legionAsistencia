@@ -122,12 +122,6 @@ function ConsultaForm() {
 
           {error && <p className="text-red-500 text-xs">{error}</p>}
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            <p className="text-amber-800 text-[11px] leading-relaxed">
-              <strong>Es una orientación gratuita:</strong> una guía general para que sepas cómo actuar. <strong>No</strong> es un concepto jurídico, <strong>ni</strong> un documento, <strong>ni</strong> una representación legal.
-            </p>
-          </div>
-
           <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-oro to-oro-light text-jungle-dark font-bold py-3.5 rounded-xl text-sm transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-oro/30 flex items-center justify-center gap-2">
             {loading ? <span className="w-4 h-4 border-2 border-jungle-dark/30 border-t-jungle-dark rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
             {loading ? "Enviando..." : "Enviar mi consulta gratis"}
@@ -403,6 +397,13 @@ export default function BlogPage() {
                   <span><strong className="text-oro">{resueltas}+</strong> consultas ya resueltas para compañeros</span>
                 </div>
               )}
+
+              {/* Aclaración: es orientativa */}
+              <div className="mt-5 bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 max-w-lg">
+                <p className="text-beige/55 text-[11px] leading-relaxed">
+                  <strong className="text-beige/90">Es una orientación gratuita:</strong> una guía general para que sepas cómo actuar. <strong className="text-beige/90">No</strong> es un concepto jurídico, <strong className="text-beige/90">ni</strong> un documento, <strong className="text-beige/90">ni</strong> una representación legal.
+                </p>
+              </div>
             </div>
 
             {/* Derecha: formulario */}
