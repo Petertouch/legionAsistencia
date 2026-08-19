@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Guía SICOD — Cargar descuento de un militar</title>
+<style>
+  :root {
+    --paper:#F6F4EE; --surface:#FFFFFF; --ink:#1E2833; --ink-soft:#55606C;
+    --ink-faint:#8A929C; --line:#E1DCD1; --line-soft:#EDE9E0;
+    --accent:#B0842B; --accent-ink:#7C5C15; --accent-soft:#F5ECD6;
+    --blue:#2C5C86; --blue-ink:#20476A; --blue-soft:#EAF1F7;
+    --good:#2E7D52; --good-soft:#E6F1EA; --bad:#C0483B; --bad-soft:#F8E9E6;
+    --warn:#A8721A; --warn-soft:#FBF1DC;
+    --shadow:0 1px 2px rgba(30,40,51,.06), 0 8px 24px rgba(30,40,51,.07);
+    --serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#111519; --surface:#191E24; --ink:#E8E5DD; --ink-soft:#AEB4BC;
+      --ink-faint:#79808A; --line:#2B323A; --line-soft:#222830;
+      --accent:#D6A343; --accent-ink:#E7BF6A; --accent-soft:#26211570;
+      --blue:#5E93C0; --blue-ink:#7DABD3; --blue-soft:#17222C;
+      --good:#57B486; --good-soft:#152219; --bad:#DB7167; --bad-soft:#241615;
+      --warn:#D2A24C; --warn-soft:#241D10;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .doc{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+
+  /* ---------- Gate ---------- */
+  #gate{position:fixed;inset:0;z-index:100;background:
+    radial-gradient(1200px 600px at 50% -10%, var(--accent-soft), transparent),
+    var(--paper);display:flex;align-items:center;justify-content:center;padding:24px}
+  .gate-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;box-shadow:var(--shadow);padding:30px 26px;text-align:center}
+  .gate-lock{width:54px;height:54px;border-radius:50%;background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px}
+  .gate-eye{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent-ink);font-weight:700}
+  .gate-card h1{font-family:var(--serif);font-size:21px;margin:6px 0 4px;line-height:1.2}
+  .gate-card p{margin:0 0 18px;font-size:13.5px;color:var(--ink-soft)}
+  #pw{width:100%;text-align:center;font-size:20px;letter-spacing:.3em;padding:12px;
+    border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);
+    font-family:var(--mono)}
+  #pw:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+  .gate-btn{width:100%;margin-top:12px;background:var(--accent);color:#fff;border:0;
+    border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+  .gate-btn:hover{filter:brightness(.96)}
+  #gate-err{color:var(--bad);font-size:12.5px;font-weight:600;margin-top:10px;min-height:16px}
+  body.locked{overflow:hidden}
+  #content{display:none}
+  body.unlocked #content{display:block}
+  body.unlocked #gate{display:none}
+
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent-ink);font-weight:700}
+  .cover{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:8px}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(28px,5vw,40px);
+    line-height:1.1;margin:.35em 0 .15em;text-wrap:balance;letter-spacing:-.01em}
+  .lede{font-size:17px;color:var(--ink-soft);margin:0;max-width:60ch}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;
+    font-size:12.5px;color:var(--ink-faint)}
+  .meta b{color:var(--ink-soft);font-weight:600}
+
+  h2{font-family:var(--serif);font-size:22px;margin:44px 0 6px;letter-spacing:-.01em;
+    display:flex;align-items:baseline;gap:12px}
+  h2 .n{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--accent-ink);letter-spacing:.1em}
+  .rule{height:1px;background:var(--line);border:0;margin:0 0 20px}
+  p{margin:.6em 0} a{color:var(--blue-ink)}
+
+  .callout{border:1px solid var(--line);border-radius:12px;background:var(--surface);
+    padding:16px 18px;box-shadow:var(--shadow);margin:18px 0}
+  .callout--req{border-left:4px solid var(--accent)}
+  .callout--warn{border-left:4px solid var(--warn);background:var(--warn-soft)}
+  .callout h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)}
+  .callout ul{margin:0;padding-left:18px}
+  .callout li{margin:5px 0}
+  .callout li::marker{color:var(--accent)}
+
+  .step{display:grid;grid-template-columns:44px 1fr;gap:18px;margin:26px 0;
+    break-inside:avoid;page-break-inside:avoid}
+  .step__num{width:38px;height:38px;border-radius:50%;background:var(--accent);
+    color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;
+    justify-content:center;font-family:var(--serif);box-shadow:var(--shadow)}
+  .step__t{font-weight:700;font-size:17px;margin:6px 0 2px;color:var(--ink)}
+  .step__b{margin:0 0 12px;color:var(--ink-soft)}
+  .step__b strong{color:var(--ink)}
+  .path{font-family:var(--mono);font-size:13px;background:var(--blue-soft);
+    color:var(--blue-ink);padding:2px 7px;border-radius:5px;white-space:nowrap}
+  .kbd{font-family:var(--mono);font-size:12.5px;background:var(--line-soft);
+    padding:1px 6px;border-radius:4px;color:var(--ink)}
+
+  figure{margin:14px 0 2px}
+  .frame{border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    background:var(--surface);box-shadow:var(--shadow)}
+  .frame__bar{background:var(--blue);color:#fff;padding:8px 12px;font-size:12px;
+    font-weight:600;display:flex;align-items:center;gap:8px;letter-spacing:.02em}
+  .frame__bar .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5)}
+  .frame__body{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+  figcaption{font-size:12px;color:var(--ink-faint);margin-top:7px;text-align:center;font-style:italic}
+
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11.5px;color:var(--ink-soft);font-weight:600;letter-spacing:.02em}
+  .input{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;
+    background:var(--paper);color:var(--ink);min-height:34px;display:flex;align-items:center;font-family:var(--sans)}
+  .input--val{color:var(--ink);font-weight:600}
+  .input--ph{color:var(--ink-faint)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:150px}
+  .btn{align-self:flex-start;background:var(--blue);color:#fff;border-radius:6px;
+    padding:8px 16px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--shadow)}
+  .btn--gold{background:var(--accent)}
+  .btn--ghost{background:transparent;color:var(--blue-ink);border:1px solid var(--blue)}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tbl th{background:var(--blue-soft);color:var(--blue-ink);text-align:left;
+    padding:7px 9px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+  .tbl td{padding:8px 9px;border-bottom:1px solid var(--line-soft);color:var(--ink-soft)}
+  .tbl td b{color:var(--ink)}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  .caps{display:flex;gap:12px;flex-wrap:wrap}
+  .cap{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper)}
+  .cap .lbl{font-size:11px;color:var(--ink-soft)}
+  .cap .amt{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums;margin-top:3px}
+  .cap--good .amt{color:var(--good)}
+  .cap--real{border-left:3px solid var(--blue)}
+  .cap--act{border-left:3px solid var(--good)}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:2px 9px;border-radius:20px;letter-spacing:.02em}
+  .pill--ok{background:var(--good-soft);color:var(--good)}
+  .pill--no{background:var(--bad-soft);color:var(--bad)}
+  .pill--pend{background:var(--warn-soft);color:var(--warn)}
+  .toast{background:var(--good-soft);color:var(--good);border:1px solid var(--good);
+    border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .note-inline{font-size:11.5px;color:var(--ink-faint)}
+  .attach{border:1.5px dashed var(--line);border-radius:8px;padding:12px;
+    display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);background:var(--paper)}
+  .recap{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:9px 11px;
+    font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:8px}
+  .recap .box{width:16px;height:16px;border:1.5px solid var(--ink-faint);border-radius:3px}
+
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:8px 0}
+  .flow .b{flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;background:var(--surface);box-shadow:var(--shadow)}
+  .flow .b .k{font-size:11px;color:var(--accent-ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .flow .b p{margin:4px 0 0;font-size:13.5px;color:var(--ink-soft)}
+  .flow .arw{align-self:center;color:var(--ink-faint);font-weight:700}
+
+  footer{margin-top:52px;border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--ink-faint)}
+  footer b{color:var(--ink-soft)}
+
+  .toolbar{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:50}
+  .toolbar button{font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    padding:8px 14px;border-radius:8px;box-shadow:var(--shadow)}
+  .toolbar button:hover{border-color:var(--accent)}
+  .disclaimer{font-size:12px;color:var(--ink-faint);background:var(--surface);
+    border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:16px 0 0}
+
+  @media (max-width:520px){ .step{grid-template-columns:1fr;gap:8px} }
+  @media print{
+    .toolbar,#gate{display:none!important}
+    body{background:#fff} body.locked{overflow:visible}
+    #content{display:block!important}
+    .doc{max-width:none;padding:0 8px}
+    .frame,.callout,.flow .b,.step{box-shadow:none}
+    .step,figure,.callout{break-inside:avoid;page-break-inside:avoid}
+    h2{break-after:avoid} a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body class="locked">
+
+  <!-- ===== GATE ===== -->
+  <div id="gate">
+    <div class="gate-card">
+      <div class="gate-lock">🔒</div>
+      <div class="gate-eye">Legión Jurídica</div>
+      <h1>Guía SICOD</h1>
+      <p>Ingresa la clave para ver la guía.</p>
+      <input id="pw" type="password" inputmode="numeric" autocomplete="off" placeholder="•••" aria-label="Clave" />
+      <button class="gate-btn" onclick="unlock()">Entrar</button>
+      <div id="gate-err" role="alert"></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="window.print()">Guardar como PDF ↓</button>
+  </div>
+
+  <!-- ===== CONTENT ===== -->
+  <div id="content">
+  <div class="doc">
+
+    <header class="cover">
+      <div class="eyebrow">Legión Jurídica · Guía operativa</div>
+      <h1>Cargar el descuento de un militar en SICOD</h1>
+      <p class="lede">Paso a paso para consultar la capacidad de endeudamiento del funcionario,
+        registrar la autorización del descuento y dejarlo listo para que se aplique en nómina.</p>
+      <div class="meta">
+        <span><b>Sistema:</b> SICOD — Ministerio de Defensa Nacional</span>
+        <span><b>Aprobación del funcionario:</b> PORTAL WEB-SIATH 2.0</span>
+        <span><b>Base:</b> Manual TI.-M-019</span>
+      </div>
+    </header>
+
+    <div class="disclaimer">
+      📎 Las pantallas de esta guía son <b>recreaciones ilustrativas</b> del proceso en SICOD/SIATH,
+      hechas para orientar cada paso. La apariencia real puede variar ligeramente.
+    </div>
+
+    <div class="callout callout--req">
+      <h3>Antes de empezar — verifica</h3>
+      <ul>
+        <li>Que exista <b>calendario abierto</b> para la fuerza del funcionario (si no, no se puede cargar).</li>
+        <li>Que el militar <b>no</b> sea soldado de escuela de formación (bonificación inferior al SMMLV) ni esté <b>retirado o con menos de 3 meses de alta</b> → esos casos <b>no tienen capacidad</b> y no admiten descuento.</li>
+        <li>Ten listos los <b>soportes</b>: cédula del funcionario y contrato de la libranza, en <b>.ZIP o .RAR (máx. 30 MB)</b>.</li>
+        <li>Avísale al funcionario que vas a consultar su capacidad — <b>recibirá un correo automático</b>.</li>
+      </ul>
+    </div>
+
+    <div class="step"><div class="step__num">1</div><div>
+      <div class="step__t">Ingresa a SICOD</div>
+      <p class="step__b">Entra a <span class="path">portalapp.mindefensa.gov.co:8445/sicod</span> con tu
+        <strong>código de descuento</strong> y tu <strong>contraseña</strong> (los asigna el MDN), marca el reCAPTCHA e <strong>Iniciar Sesión</strong>.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> SICOD — Ingreso a la Aplicación</div>
+        <div class="frame__body" style="max-width:340px;margin:0 auto">
+          <div class="field"><label>Código de Descuento *</label><div class="input input--ph">CÓDIGO</div></div>
+          <div class="field"><label>Contraseña *</label><div class="input input--ph">••••••••</div></div>
+          <div class="recap"><span class="box"></span> No soy un robot <span style="margin-left:auto;color:var(--ink-faint)">reCAPTCHA</span></div>
+          <div class="btn btn--gold">🔓 Iniciar Sesión</div>
+        </div></div>
+        <figcaption>Pantalla de acceso. La sesión se cierra tras 15 min de inactividad.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">2</div><div>
+      <div class="step__t">Abre el registro de descuentos</div>
+      <p class="step__b">En el menú de la izquierda entra a
+        <span class="path">Autorización Descuento · Consulta Capacidad</span> → <strong>Registro de Descuentos</strong>.
+        Escribe la <strong>cédula</strong> del militar y da clic en <strong>Buscar</strong>.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Registro Nueva Autorización y Consulta Capacidad de Endeudamiento</div>
+        <div class="frame__body">
+          <div class="row" style="align-items:flex-end">
+            <div class="field" style="max-width:260px"><label>Cédula de Ciudadanía</label><div class="input input--val">1 016 102 848</div></div>
+            <div class="btn" style="flex:0">🔍 Buscar</div>
+          </div>
+        </div></div>
+        <figcaption>Búsqueda del funcionario por número de cédula.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">3</div><div>
+      <div class="step__t">Verifica que exista en nómina</div>
+      <p class="step__b">El sistema muestra <strong>Nombre, Fuerza y Estado</strong>. Si aparece activo (Estado <span class="kbd">A</span>),
+        continúa. Puede aparecer en <strong>más de una fuerza</strong> si está activo en varias unidades ejecutoras.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Resultado de la búsqueda</div>
+        <div class="frame__body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Nombre</th><th>Fuerza</th><th>Estado</th><th>Aceptar consulta</th></tr></thead>
+            <tbody><tr><td><b>Yency Carolina</b></td><td>Unidad de Gestión General</td><td><span class="pill pill--ok">A</span></td><td><span class="btn btn--ghost" style="padding:4px 12px">👁 Aceptar</span></td></tr></tbody>
+          </table>
+        </div></div>
+        <figcaption>Datos del funcionario y botón para aceptar la consulta de capacidad.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">4</div><div>
+      <div class="step__t">Acepta la consulta de capacidad</div>
+      <p class="step__b">Clic en <strong>Aceptar Consulta Capacidad de Endeudamiento</strong> y confirma con <strong>SÍ</strong>.</p>
+      <div class="callout callout--warn" style="margin:8px 0 12px">
+        <h3>⚠️ Importante</h3>
+        Al dar <b>SÍ</b>, SICOD le envía <b>automáticamente un correo al funcionario</b> avisándole que su
+        capacidad fue consultada por tu entidad. Por eso conviene informarle antes.
+      </div>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Consulta Capacidad de Endeudamiento</div>
+        <div class="frame__body">
+          <p style="margin:0;font-size:12.5px;color:var(--ink-soft)">¿Desea realizar la consulta de la capacidad de endeudamiento del funcionario <b>Yency Carolina</b>?</p>
+          <div class="btn-row"><span class="btn btn--gold" style="padding:6px 20px">👍 SÍ</span><span class="btn btn--ghost" style="padding:6px 20px">👎 NO</span></div>
+        </div></div>
+        <figcaption>Confirmación previa al envío de la notificación al funcionario.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">5</div><div>
+      <div class="step__t">Revisa cuánta capacidad tiene</div>
+      <p class="step__b">Verás la <strong>Capacidad Real</strong> (el tope del funcionario) y la <strong>Capacidad Actual</strong>
+        (lo que le queda libre tras sus compromisos). <strong>Aquí decides si le alcanza</strong> para la cuota que vas a cargar.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Capacidad de Endeudamiento</div>
+        <div class="frame__body">
+          <div class="caps">
+            <div class="cap cap--real"><div class="lbl">Capacidad Real</div><div class="amt tabnum">$ 1.124.283</div></div>
+            <div class="cap cap--act cap--good"><div class="lbl">Capacidad Actual (disponible)</div><div class="amt tabnum">$ 124.283</div></div>
+          </div>
+          <p class="note-inline" style="margin:0">La Actual = Real menos lo que el funcionario ya tiene comprometido con otras entidades.</p>
+          <div class="btn-row"><span class="btn">¿Continuar con la solicitud? &nbsp; SÍ</span></div>
+        </div></div>
+        <figcaption>Comparativo de capacidad. Si la cuota supera la Actual, el sistema no dejará registrar.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">6</div><div>
+      <div class="step__t">Crea la solicitud (préstamo)</div>
+      <p class="step__b">Da clic en <strong>Crear Solicitud</strong> y diligencia el <strong>Valor del Préstamo</strong> y el
+        <strong>Valor de la Cuota</strong>. La <strong>fecha inicio, la novedad del calendario y la cantidad de cuotas se calculan solas</strong>;
+        usa <span class="kbd">Calcular Fecha Final</span>. Elige el <strong>código de descuento</strong> y agrega
+        <strong>observaciones</strong> (hasta 200 caracteres).</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Formulario de Autorización</div>
+        <div class="frame__body">
+          <div class="row">
+            <div class="field"><label>Valor del Préstamo</label><div class="input input--val tabnum">$ 5.000.000</div></div>
+            <div class="field"><label>Valor de la Cuota</label><div class="input input--val tabnum">$ 100.000</div></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Fecha Inicio (automática)</label><div class="input">01-08-2023</div></div>
+            <div class="field"><label>Fecha Final</label><div class="input input--ph">＋ Calcular Fecha Final</div></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Cantidad de Cuotas (auto)</label><div class="input">50</div></div>
+            <div class="field"><label>Código de Descuento</label><div class="input input--val">9788 · BANCO POPULAR ▾</div></div>
+          </div>
+          <div class="field"><label>Observaciones (máx. 200)</label><div class="input" style="min-height:48px;align-items:flex-start">Libranza aprobada — desembolso agosto.</div></div>
+        </div></div>
+        <figcaption>Los campos de fecha, cuotas y calendario se llenan automáticamente; no se editan a mano.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">7</div><div>
+      <div class="step__t">Adjunta los soportes (obligatorio)</div>
+      <p class="step__b">Clic en <strong>Archivos de Soportes</strong> y sube, comprimidos en <strong>.ZIP o .RAR (máx. 30 MB)</strong>:
+        la <strong>fotocopia legible de la cédula</strong> y el <strong>contrato de la libranza</strong>. Luego <strong>Enviar Archivo</strong>.
+        Sin soportes válidos no se puede continuar.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Archivos de Soportes</div>
+        <div class="frame__body">
+          <div class="attach">📁 <span><b>APP_PRUEBAS.rar</b> · 8,4 MB</span></div>
+          <div class="btn-row"><span class="btn btn--ghost">＋ Seleccionar Archivo…</span><span class="btn">⇪ Enviar Archivo</span></div>
+          <p class="note-inline" style="margin:0">Solo se aceptan .ZIP o .RAR. Otro formato o más de 30 MB → el sistema lo rechaza.</p>
+        </div></div>
+        <figcaption>Cédula + contrato comprimidos. Los auditores de la fuerza revisan estos soportes.</figcaption>
+      </figure>
+    </div></div>
+
+    <div class="step"><div class="step__num">8</div><div>
+      <div class="step__t">Guarda y confirma</div>
+      <p class="step__b">Con el archivo cargado se activa <strong>GUARDAR</strong>. Da clic y el sistema confirma
+        <strong>“Préstamo registrado”</strong> y vuelve al inicio.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Registro Nueva Autorización</div>
+        <div class="frame__body"><div class="toast">✓ Préstamo registrado exitosamente.</div></div>
+      </div>
+        <figcaption>Hasta aquí, tu parte en SICOD está lista. Falta que el militar lo apruebe.</figcaption>
+      </figure>
+    </div></div>
+
+    <h2><span class="n">SIATH 2.0</span> El militar aprueba el descuento</h2>
+    <hr class="rule">
+    <p>El descuento <b>no se aplica hasta que el funcionario lo apruebe</b> desde el
+      <b>PORTAL WEB-SIATH 2.0</b> (<span class="path">portalapp.mindefensa.gov.co:8449/siathweb-app</span>).
+      Recibe un correo (“Solicitud creada”) y debe entrar antes del <b>cierre del calendario</b>.</p>
+
+    <div class="step"><div class="step__num">9</div><div>
+      <div class="step__t">El funcionario aprueba en SIATH</div>
+      <p class="step__b">Entra con su <strong>correo institucional + token</strong> (que llega a su correo personal) →
+        menú <strong>Autorizaciones → Autorización Descuento</strong> → botón <strong>Ver</strong> → marca <strong>¿Aprueba? SÍ</strong>,
+        escribe observaciones (obligatorio) y <strong>Guardar Autorización</strong> → confirma.</p>
+      <figure><div class="frame">
+        <div class="frame__bar" style="background:var(--blue-ink)"><span class="dot"></span> SIATH · Autorización de descuentos por Nómina</div>
+        <div class="frame__body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Entidad</th><th>Código</th><th>Valor total</th><th>Cuota</th><th></th></tr></thead>
+            <tbody><tr><td><b>Banco Popular</b></td><td>9312</td><td class="tabnum">$5.000.000</td><td class="tabnum">$100.000</td><td><span class="btn btn--ghost" style="padding:4px 14px">Ver</span></td></tr></tbody>
+          </table>
+          <div class="frame__body" style="border-top:1px solid var(--line)">
+            <div class="field"><label>Aprobación</label><div class="btn-row"><span class="pill pill--ok">● SÍ</span><span class="pill pill--no">○ NO</span></div></div>
+            <div class="input" style="min-height:40px;align-items:flex-start">Se aprueba el descuento.</div>
+            <span class="btn" style="background:var(--blue-ink)">Guardar Autorización…</span>
+          </div>
+        </div></div>
+        <figcaption>El sistema pide confirmar la respuesta dos veces y luego muestra “SOLICITUD ACEPTADA POR NÓMINA”.</figcaption>
+      </figure>
+      <div class="callout callout--warn">
+        <h3>⚠️ Plazo</h3>
+        Si el funcionario <b>no aprueba antes del cierre del calendario</b>, el sistema <b>rechaza el descuento
+        automáticamente</b> y hay que volver a cargarlo el mes siguiente.
+      </div>
+    </div></div>
+
+    <div class="step"><div class="step__num">10</div><div>
+      <div class="step__t">Haz seguimiento</div>
+      <p class="step__b">En SICOD → <span class="path">Registros Solicitudes de Descuento</span> revisas el estado.
+        La columna <strong>¿Autorizado?</strong> muestra <strong>SÍ / NO / Pendiente</strong>. Mientras esté
+        <strong>Pendiente</strong> puedes <strong>eliminar</strong> la novedad si necesitas corregirla.</p>
+      <figure><div class="frame">
+        <div class="frame__bar"><span class="dot"></span> Registros de Autorizaciones</div>
+        <div class="frame__body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Funcionario</th><th>Valor</th><th>Fecha registro</th><th>¿Autorizado?</th></tr></thead>
+            <tbody>
+              <tr><td><b>Yency Carolina</b></td><td class="tabnum">$5.000.000</td><td>25-07-2023</td><td><span class="pill pill--ok">SÍ</span></td></tr>
+              <tr><td><b>William Miranda</b></td><td class="tabnum">$980.000</td><td>25-07-2023</td><td><span class="pill pill--pend">Pendiente</span></td></tr>
+              <tr><td><b>Jenny Elizabeth</b></td><td class="tabnum">$5.000.000</td><td>28-07-2023</td><td><span class="pill pill--no">NO</span></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+        <figcaption>Estados de las solicitudes. Exportable a Excel para control de la entidad.</figcaption>
+      </figure>
+    </div></div>
+
+    <h2><span class="n">En una línea</span> El circuito completo</h2>
+    <hr class="rule">
+    <div class="flow">
+      <div class="b"><div class="k">Tú · SICOD</div><p>Consultas capacidad, registras el préstamo y subes soportes.</p></div>
+      <div class="arw">→</div>
+      <div class="b"><div class="k">Militar · SIATH</div><p>Aprueba el descuento antes del cierre del calendario.</p></div>
+      <div class="arw">→</div>
+      <div class="b"><div class="k">Nómina</div><p>Queda aplicado y el funcionario recibe la confirmación por correo.</p></div>
+    </div>
+
+    <h2><span class="n">Recuerda</span> Puntos que evitan que se caiga</h2>
+    <hr class="rule">
+    <div class="callout">
+      <ul style="padding-left:18px;margin:0">
+        <li><b>Capacidad = 50% del neto</b> del salario (tras descuentos de ley — Ley 1527 de 2012). Si la cuota supera la capacidad Actual, el sistema no deja registrar.</li>
+        <li><b>Soportes obligatorios:</b> cédula + contrato, en <b>.ZIP/.RAR ≤ 30 MB</b>.</li>
+        <li><b>La aprobación es del funcionario</b>, en SIATH, y tiene <b>fecha límite</b> (cierre de calendario).</li>
+        <li><b>Retanqueo / aumento de cuota:</b> si no hay capacidad libre, primero hay que <b>suspender o dar de baja</b> el descuento vigente y luego registrar el nuevo (con el riesgo de que el funcionario lo rechace).</li>
+        <li>SICOD <b>no</b> maneja compra de cartera, encolamiento ni conciliaciones.</li>
+      </ul>
+    </div>
+
+    <footer>
+      <p><b>Fuente:</b> Manual de Usuario para Cooperativas y Entidades Financieras — SICOD, Ministerio de Defensa Nacional (Código TI.-M-019).
+      Dudas de la aplicación: <b>Sicod@mindefensa.gov.co</b> · Códigos, datos y cuentas: <b>cooperativas@mindefensa.gov.co</b>.</p>
+      <p>Guía operativa preparada para <b>Legión Jurídica</b>. Pantallas ilustrativas.</p>
+    </footer>
+
+  </div>
+  </div>
+
+<script>
+  var CLAVE = "123";
+  function reveal(){ document.body.classList.remove('locked'); document.body.classList.add('unlocked'); }
+  function unlock(){
+    var v = (document.getElementById('pw').value || "").trim();
+    if (v === CLAVE){ try{ sessionStorage.setItem('sicod_ok','1'); }catch(e){} reveal(); }
+    else { document.getElementById('gate-err').textContent = "Clave incorrecta. Intenta de nuevo."; }
+  }
+  document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') unlock(); });
+  try{ if(sessionStorage.getItem('sicod_ok')==='1') reveal(); }catch(e){}
+  if(!document.body.classList.contains('unlocked')){ document.getElementById('pw').focus(); }
+</script>
+</body>
+</html>
