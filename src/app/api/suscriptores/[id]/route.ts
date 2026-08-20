@@ -58,6 +58,18 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Si se cambió el email, sincronizarlo con Supabase Auth (es el login del cliente).
+  if (typeof safeUpdates.email === "string" && safeUpdates.email && data?.auth_user_id) {
+    try {
+      await supabase.auth.admin.updateUserById(data.auth_user_id as string, {
+        email: safeUpdates.email as string,
+        email_confirm: true,
+      });
+    } catch (e) {
+      console.error("[suscriptor email sync]", e);
+    }
+  }
+
   // When admin approves (estado_pago → "Al dia"), convert the associated lead to "convertido"
   if (safeUpdates.estado_pago === "Al dia" && data?.cedula) {
     try {

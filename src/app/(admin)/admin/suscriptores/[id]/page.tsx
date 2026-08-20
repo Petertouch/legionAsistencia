@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSuscriptor, getCasosBySuscriptor, getSeguimientos, getDocumentosBySuscriptor, createDocumento, deleteDocumento, updateSuscriptor, setSuscriptorClave } from "@/lib/db";
-import type { DocumentoContrato } from "@/lib/mock-data";
+import type { DocumentoContrato, Suscriptor } from "@/lib/mock-data";
 import Link from "next/link";
 import Badge from "@/components/ui/badge";
 import Card from "@/components/ui/card";
@@ -12,8 +12,10 @@ import Button from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   ArrowLeft, Phone, Calendar, Scale, MessageSquare, StickyNote,
-  FileText, Upload, Trash2, File, X, Download, Plus, KeyRound,
+  FileText, Upload, Trash2, File, X, Download, Plus, KeyRound, Pencil, Save,
 } from "lucide-react";
+
+const ESTADOS_PAGO: Suscriptor["estado_pago"][] = ["Al dia", "Pendiente", "Vencido"];
 
 function fmtDate(v?: string) {
   if (!v) return "—";
@@ -30,6 +32,22 @@ function Field({ label, value, mono, className = "" }: { label: string; value?: 
     <div className={className}>
       <p className="text-gray-400 text-[10px] uppercase tracking-wide">{label}</p>
       <p className={`text-gray-900 text-sm break-words ${mono ? "font-mono text-xs" : ""}`}>{value || "—"}</p>
+    </div>
+  );
+}
+function EditField({ label, value, onChange, type = "text", hint, className = "" }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; hint?: string; className?: string;
+}) {
+  return (
+    <div className={className}>
+      <label className="text-gray-500 text-[11px] font-medium mb-1 block">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-gray-50 text-gray-900 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none"
+      />
+      {hint && <p className="text-gray-400 text-[10px] mt-1">{hint}</p>}
     </div>
   );
 }
@@ -131,6 +149,51 @@ export default function SuscriptorDetailPage() {
     addDocMutation.mutate(file);
   };
 
+  // ── Editar datos del cliente ──
+  const [editing, setEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [form, setForm] = useState({
+    nombre: "", cedula: "", telefono: "", email: "",
+    plan: "", estado_pago: "" as string, rama: "", rango: "", notas: "",
+  });
+  const startEdit = () => {
+    if (!suscriptor) return;
+    setForm({
+      nombre: suscriptor.nombre || "", cedula: suscriptor.cedula || "",
+      telefono: suscriptor.telefono || "", email: suscriptor.email || "",
+      plan: suscriptor.plan || "", estado_pago: suscriptor.estado_pago || "Al dia",
+      rama: suscriptor.rama || "", rango: suscriptor.rango || "", notas: suscriptor.notas || "",
+    });
+    setEditing(true);
+  };
+  const upd = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const handleSaveEdit = async () => {
+    if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return; }
+    setSavingEdit(true);
+    try {
+      await updateSuscriptor(id, {
+        nombre: form.nombre.trim(),
+        cedula: form.cedula.trim(),
+        telefono: form.telefono.trim(),
+        email: form.email.trim(),
+        plan: form.plan.trim() as Suscriptor["plan"],
+        estado_pago: form.estado_pago as Suscriptor["estado_pago"],
+        rama: form.rama.trim(),
+        rango: form.rango.trim(),
+        notas: form.notas.trim(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["suscriptor", id] });
+      queryClient.invalidateQueries({ queryKey: ["suscriptores-activos"] });
+      queryClient.invalidateQueries({ queryKey: ["suscriptores-pendientes"] });
+      setEditing(false);
+      toast.success("Datos actualizados");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   if (isLoading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-gray-50 rounded-xl" />)}</div>;
 
   if (!suscriptor) return (
@@ -176,25 +239,73 @@ export default function SuscriptorDetailPage() {
 
       {/* Datos completos del cliente */}
       <Card>
-        <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2 mb-4">
-          <Scale className="w-4 h-4 text-oro" /> Datos del cliente
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3.5">
-          <Field label="Nombre" value={suscriptor.nombre} />
-          <Field label="Cédula" value={suscriptor.cedula} mono />
-          <Field label="Teléfono" value={suscriptor.telefono} />
-          <Field label="Email" value={suscriptor.email} className="col-span-2 md:col-span-1" />
-          <Field label="Plan" value={suscriptor.plan} />
-          <Field label="Estado de pago" value={suscriptor.estado_pago} />
-          <Field label="Rama" value={suscriptor.rama} />
-          <Field label="Rango" value={suscriptor.rango} />
-          <Field label="Suscrito desde" value={fmtDate(suscriptor.fecha_inicio)} />
-          <Field label="Registrado" value={fmtDateTime(suscriptor.created_at)} />
-          <Field label="Última actualización" value={fmtDateTime(suscriptor.updated_at)} />
-          <Field label="ID contrato" value={suscriptor.contrato_id || "—"} mono />
-          <Field label="ID suscriptor" value={suscriptor.id} mono className="col-span-2 md:col-span-3" />
-          {suscriptor.notas && <Field label="Notas" value={suscriptor.notas} className="col-span-2 md:col-span-3" />}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2">
+            <Scale className="w-4 h-4 text-oro" /> Datos del cliente
+          </h3>
+          {!editing ? (
+            <Button size="sm" variant="secondary" onClick={startEdit}>
+              <Pencil className="w-3.5 h-3.5" /> Editar
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setEditing(false)} disabled={savingEdit}>
+                <X className="w-3.5 h-3.5" /> Cancelar
+              </Button>
+              <Button size="sm" onClick={handleSaveEdit} disabled={savingEdit}>
+                <Save className="w-3.5 h-3.5" /> {savingEdit ? "Guardando..." : "Guardar"}
+              </Button>
+            </div>
+          )}
         </div>
+
+        {!editing ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3.5">
+            <Field label="Nombre" value={suscriptor.nombre} />
+            <Field label="Cédula" value={suscriptor.cedula} mono />
+            <Field label="Teléfono" value={suscriptor.telefono} />
+            <Field label="Email" value={suscriptor.email} className="col-span-2 md:col-span-1" />
+            <Field label="Plan" value={suscriptor.plan} />
+            <Field label="Estado de pago" value={suscriptor.estado_pago} />
+            <Field label="Rama" value={suscriptor.rama} />
+            <Field label="Rango" value={suscriptor.rango} />
+            <Field label="Suscrito desde" value={fmtDate(suscriptor.fecha_inicio)} />
+            <Field label="Registrado" value={fmtDateTime(suscriptor.created_at)} />
+            <Field label="Última actualización" value={fmtDateTime(suscriptor.updated_at)} />
+            <Field label="ID contrato" value={suscriptor.contrato_id || "—"} mono />
+            <Field label="ID suscriptor" value={suscriptor.id} mono className="col-span-2 md:col-span-3" />
+            {suscriptor.notas && <Field label="Notas" value={suscriptor.notas} className="col-span-2 md:col-span-3" />}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <EditField label="Nombre" value={form.nombre} onChange={(v) => upd("nombre", v)} />
+            <EditField label="Cédula" value={form.cedula} onChange={(v) => upd("cedula", v)} />
+            <EditField label="Teléfono" value={form.telefono} onChange={(v) => upd("telefono", v)} />
+            <EditField label="Email" value={form.email} onChange={(v) => upd("email", v)} type="email" hint="Es el usuario de login del cliente" className="sm:col-span-2 md:col-span-1" />
+            <EditField label="Plan" value={form.plan} onChange={(v) => upd("plan", v)} />
+            <div>
+              <label className="text-gray-500 text-[11px] font-medium mb-1 block">Estado de pago</label>
+              <select
+                value={form.estado_pago}
+                onChange={(e) => upd("estado_pago", e.target.value)}
+                className="w-full bg-gray-50 text-gray-900 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none appearance-none cursor-pointer"
+              >
+                {ESTADOS_PAGO.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <EditField label="Rama / Fuerza" value={form.rama} onChange={(v) => upd("rama", v)} />
+            <EditField label="Rango" value={form.rango} onChange={(v) => upd("rango", v)} />
+            <div className="sm:col-span-2 md:col-span-3">
+              <label className="text-gray-500 text-[11px] font-medium mb-1 block">Notas</label>
+              <textarea
+                value={form.notas}
+                onChange={(e) => upd("notas", e.target.value)}
+                rows={2}
+                className="w-full bg-gray-50 text-gray-900 text-sm px-3 py-2 rounded-lg border border-gray-200 focus:border-oro/40 focus:outline-none resize-y"
+              />
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Acceso del cliente — cambiar clave */}
