@@ -35,6 +35,14 @@ function Field({ label, value, mono, className = "" }: { label: string; value?: 
     </div>
   );
 }
+// Separa un nombre completo en nombre(s) / apellido(s) de forma aproximada.
+// Es solo para editar cómodo: al guardar se recombina en un único campo `nombre`.
+function splitNombre(full?: string | null): { nombre: string; apellido: string } {
+  const parts = (full || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { nombre: parts[0] || "", apellido: "" };
+  const cut = Math.max(1, Math.floor(parts.length / 2));
+  return { nombre: parts.slice(0, cut).join(" "), apellido: parts.slice(cut).join(" ") };
+}
 function EditField({ label, value, onChange, type = "text", hint, className = "" }: {
   label: string; value: string; onChange: (v: string) => void; type?: string; hint?: string; className?: string;
 }) {
@@ -153,13 +161,14 @@ export default function SuscriptorDetailPage() {
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [form, setForm] = useState({
-    nombre: "", cedula: "", telefono: "", email: "",
+    nombre: "", apellido: "", cedula: "", telefono: "", email: "",
     plan: "", estado_pago: "" as string, rama: "", rango: "", notas: "",
   });
   const startEdit = () => {
     if (!suscriptor) return;
+    const { nombre, apellido } = splitNombre(suscriptor.nombre);
     setForm({
-      nombre: suscriptor.nombre || "", cedula: suscriptor.cedula || "",
+      nombre, apellido, cedula: suscriptor.cedula || "",
       telefono: suscriptor.telefono || "", email: suscriptor.email || "",
       plan: suscriptor.plan || "", estado_pago: suscriptor.estado_pago || "Al dia",
       rama: suscriptor.rama || "", rango: suscriptor.rango || "", notas: suscriptor.notas || "",
@@ -169,10 +178,11 @@ export default function SuscriptorDetailPage() {
   const upd = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const handleSaveEdit = async () => {
     if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return; }
+    const nombreCompleto = [form.nombre.trim(), form.apellido.trim()].filter(Boolean).join(" ");
     setSavingEdit(true);
     try {
       await updateSuscriptor(id, {
-        nombre: form.nombre.trim(),
+        nombre: nombreCompleto,
         cedula: form.cedula.trim(),
         telefono: form.telefono.trim(),
         email: form.email.trim(),
@@ -261,7 +271,8 @@ export default function SuscriptorDetailPage() {
 
         {!editing ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3.5">
-            <Field label="Nombre" value={suscriptor.nombre} />
+            <Field label="Nombre(s)" value={splitNombre(suscriptor.nombre).nombre} />
+            <Field label="Apellido(s)" value={splitNombre(suscriptor.nombre).apellido} />
             <Field label="Cédula" value={suscriptor.cedula} mono />
             <Field label="Teléfono" value={suscriptor.telefono} />
             <Field label="Email" value={suscriptor.email} className="col-span-2 md:col-span-1" />
@@ -278,7 +289,8 @@ export default function SuscriptorDetailPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <EditField label="Nombre" value={form.nombre} onChange={(v) => upd("nombre", v)} />
+            <EditField label="Nombre(s)" value={form.nombre} onChange={(v) => upd("nombre", v)} />
+            <EditField label="Apellido(s)" value={form.apellido} onChange={(v) => upd("apellido", v)} />
             <EditField label="Cédula" value={form.cedula} onChange={(v) => upd("cedula", v)} />
             <EditField label="Teléfono" value={form.telefono} onChange={(v) => upd("telefono", v)} />
             <EditField label="Email" value={form.email} onChange={(v) => upd("email", v)} type="email" hint="Es el usuario de login del cliente" className="sm:col-span-2 md:col-span-1" />
