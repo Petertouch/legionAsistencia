@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 // Uses API routes instead of direct Supabase client for security
 import { toast } from "sonner";
-import { FileText, Save, Eye, Edit3, Trash2, Building2, Users, Plus } from "lucide-react";
+import { FileText, Save, Eye, Edit3, Trash2, Building2, Users, Plus, Upload, ExternalLink } from "lucide-react";
 import ContractView from "@/components/contract/contract-view";
+import ContratoUploader from "@/components/contract/contrato-uploader";
 import ClauseEditor, { type Clausula } from "@/components/contract/clause-editor";
 import { type PlanConfig } from "@/components/contract/plan-editor";
 
@@ -45,6 +46,9 @@ interface Contrato {
     cedula_frente?: string;
     cedula_reverso?: string;
     lanza_code?: string;
+    pdf_original_path?: string;
+    pdf_filename?: string;
+    origen?: string;
   } | null;
   created_at: string;
 }
@@ -107,7 +111,8 @@ const SAMPLE_CONTRACT_DATA = {
 export default function ContratosAdminPage() {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"firmados" | "plantilla">("firmados");
+  const [tab, setTab] = useState<"firmados" | "plantilla" | "cargar">("firmados");
+  const [loadingPdf, setLoadingPdf] = useState(false);
   const [selectedContrato, setSelectedContrato] = useState<Contrato | null>(null);
   const [plantilla, setPlantilla] = useState<PlantillaState>(DEFAULT_PLANTILLA);
   const [savingPlantilla, setSavingPlantilla] = useState(false);
@@ -180,6 +185,20 @@ export default function ContratosAdminPage() {
     }
   };
 
+  const verPdfOriginal = async (id: string) => {
+    setLoadingPdf(true);
+    try {
+      const res = await fetch(`/api/contratos/pdf-original?id=${id}`);
+      const data = await res.json();
+      if (res.ok && data.url) window.open(data.url, "_blank");
+      else toast.error(data.error || "No se pudo abrir el PDF");
+    } catch {
+      toast.error("Error de red");
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const updatePlantilla = (field: string, value: string) =>
     setPlantilla((p) => ({ ...p, [field]: value }));
 
@@ -224,7 +243,19 @@ export default function ContratosAdminPage() {
           <Edit3 className="w-4 h-4 inline mr-1.5" />
           Plantilla
         </button>
+        <button
+          onClick={() => setTab("cargar")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            tab === "cargar" ? "bg-amber-100 text-oro" : "text-gray-500 hover:text-gray-900"
+          }`}
+        >
+          <Upload className="w-4 h-4 inline mr-1.5" />
+          Cargar PDF
+        </button>
       </div>
+
+      {/* ═══ CARGAR PDF TAB ═══ */}
+      {tab === "cargar" && <ContratoUploader onCreated={fetchData} />}
 
       {/* ═══ PLANTILLA TAB ═══ */}
       {tab === "plantilla" && (
@@ -503,9 +534,21 @@ export default function ContratosAdminPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-gray-900 font-bold text-sm">Contrato de {selectedContrato.nombre_cliente}</h2>
-                  <button onClick={() => deleteContrato(selectedContrato.id)} className="text-red-600 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {selectedContrato.datos_completos?.pdf_original_path && (
+                      <button
+                        onClick={() => verPdfOriginal(selectedContrato.id)}
+                        disabled={loadingPdf}
+                        className="text-oro hover:text-oro-light text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-amber-50 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                        title="Abrir el PDF escaneado original (firmado a mano)"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Ver PDF original
+                      </button>
+                    )}
+                    <button onClick={() => deleteContrato(selectedContrato.id)} className="text-red-600 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto pr-1">
                   <ContractView
