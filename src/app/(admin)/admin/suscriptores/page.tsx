@@ -8,7 +8,7 @@ import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
 import {
   Plus, Search, Users, UserPlus, CheckCircle, XCircle, Undo2,
-  Phone, Mail, Calendar, Shield, ChevronRight,
+  Phone, Mail, Calendar, Shield, ChevronRight, Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { triggerMail } from "@/lib/send-mail";
@@ -134,9 +134,25 @@ export default function SuscriptoresPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-gray-900 text-lg font-bold">Suscriptores</h1>
-        <Link href="/admin/suscriptores/nuevo">
-          <Button size="sm"><Plus className="w-4 h-4" /> Nuevo</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/pre-aprobacion`;
+              navigator.clipboard?.writeText(url).then(
+                () => toast.success("Link de pre-aprobación copiado", { description: url }),
+                () => toast.message(url)
+              );
+              window.open("/pre-aprobacion", "_blank");
+            }}
+            className="text-xs font-medium text-gray-600 hover:text-oro border border-gray-200 hover:border-oro/40 rounded-lg px-3 py-2 flex items-center gap-1.5 transition-colors"
+            title="Link para el equipo comercial (pre-aprobación con su propio login)"
+          >
+            <Link2 className="w-3.5 h-3.5" /> Link pre-aprobación
+          </button>
+          <Link href="/admin/suscriptores/nuevo">
+            <Button size="sm"><Plus className="w-4 h-4" /> Nuevo</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
